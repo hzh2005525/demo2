@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatSysSignBindingMapper">
+    <sql id="tableName">`CMS_TAG_BINDING`</sql>
+    <sql id="cmsTagBindingTableName">`CMS_TAG_BINDING`</sql>
+    <sql id="cmsArticleTableName">`CMS_ARTICLE`</sql>
+    <sql id="cmsTagTableName">`CMS_TAG`</sql>
+    <sql id="cmsImageTableName">`CMS_IMAGE`</sql>
+
+    <delete id="deleteBindingSign" parameterType="java.lang.String">
+        DELETE FROM <include refid="tableName"/> WHERE ID = #{id}
+    </delete>
+
+    <delete id="deleteBindingSignBySignIds">
+        DELETE FROM <include refid="tableName"/> WHERE SIGN_ID IN
+        <foreach collection="list" open="(" close=")" separator="," index="index" item="item">
+            #{item}
+        </foreach>
+    </delete>
+
+    <insert id="bindingSigns" parameterType="java.util.List">
+      INSERT IGNORE INTO <include refid="tableName"/> (
+        ID,
+        REALM,
+        REALM_ID,
+        SIGN_ID,
+        SIGN_TYPE,
+        CREATOR,
+        CREATOR_ORG_ID,
+        CREATOR_ORG_NAME,
+        CREATOR_NAME
+        ) VALUES
+        <foreach collection="list" index="index" separator="," item="item">
+        (
+          #{item.id},
+          #{item.realm},
+          #{item.realmId},
+          #{item.signId},
+          #{item.signType},
+          #{item.creator},
+          #{item.creatorOrgId},
+          #{item.creatorOrgName},
+          #{item.creatorName}
+        )
+        </foreach>
+    </insert>
+
+    <insert id="bindingSign" parameterType="com.sogal.wx.core.dao.domain.sign.BindingSignDTO">
+        INSERT IGNORE INTO <include refid="tableName"/> (
+        ID,
+        REALM,
+        REALM_ID,
+        SIGN_ID,
+        SIGN_TYPE,
+        CREATOR,
+        CREATOR_ORG_ID,
+        CREATOR_ORG_NAME,
+        CREATOR_NAME
+        ) VALUES (
+          #{id},
+          #{realm},
+          #{realmId},
+          #{signId},
+          #{signType},
+          #{creator},
+          #{creatorOrgId},
+          #{creatorOrgName},
+          #{creatorName}
+        )
+    </insert>
+
+    <select id="findAllSignByCondition" parameterType="com.sogal.wx.core.dao.domain.sign.FindSignCondition"
+      resultType="com.sogal.wx.core.dao.domain.sign.BindingSignResultEntity">
+      SELECT ${columns} FROM <include refid="tableName"/> AS SB
+        LEFT JOIN <include refid="cmsTagTableName"/> AS S ON SB.`SIGN_ID` = S.ID
+        LEFT JOIN <include refid="cmsImageTableName"/> AS WI ON S.COVER = WI.ID
+      WHERE S.`VALID` = 1
+      <if test="realmId!=null">
+        AND SB.REALM_ID = #{realmId}
+      </if>
+      <if test="realm!=null">
+        AND SB.REALM = #{realm}
+      </if>
+      <if test="signId!=null">
+        AND S.ID = #{signId}
+      </if>
+      <if test="signType!=null">
+        AND S.TYPE = #{signType}
+      </if>
+      <if test="value!=null">
+        AND S.VALUE LIKE CONCAT('%', #{value}, '%')
+      </if>
+      <if test="code!=null">
+        AND S.CODE = #{code}
+      </if>
+    </select>
+
+    <select id="findSysSignsByDesignIdSysTypes" resultType="java.lang.String">
+      SELECT DISTINCT WSSB.SIGN_ID
+        FROM <include refid="cmsTagBindingTableName"/> AS WSSB
+        LEFT JOIN <include refid="cmsArticleTableName"/>  AS WD ON WSSB.REALM_ID = WD.ID
+      WHERE WSSB.SIGN_TYPE IN
+       <foreach collection="sysSigns" index="index" separator="," open="(" close=")" item="item">
+         #{item}
+       </foreach>
+      AND WD.ID = #{designId}
+    </select>
+
+    <select id="findRecommendDesignBySysSigns" resultType="com.sogal.wx.core.dao.domain.design.WechatDesign" >
+      SELECT DISTINCT WD.ID, WD.DESIGN_NO, WD.HOUSE_TYPE, WD.DESIGNER, WD.DESIGNER_NAME, WD.TITLE, WI.IMAGE_URL AS cover
+      FROM <include refid="cmsTagBindingTableName"/> AS WSSB
+      LEFT JOIN <include refid="cmsArticleTableName"/> AS WD ON WSSB.REALM_ID = WD.ID
+      LEFT JOIN <include refid="cmsImageTableName"/> AS WI ON WD.COVER = WI.ID
+      WHERE WD.VALID = 1 AND WD.SHOW_LEVEL = 'PUBLIC' AND WD.ID != #{designId}
+        <if test="dto.category != null">
+          AND WD.CATEGORY = #{dto.category}
+        </if>
+        <if test="dto.topicId != null">
+          AND WD.TOPIC_ID = #{dto.topicId}
+        </if>
+        <if test="dto.kind != null">
+          AND WD.KIND = #{dto.kind}
+        </if>
+        AND WSSB.SIGN_TYPE IN
+        <foreach collection="sysSigns" index="index" separator="," open="(" close=")" item="item">
+          #{item}
+        </foreach>
+      AND WSSB.SIGN_ID IN
+        <foreach collection="signIds" index="index" separator="," open="(" close=")" item="item">
+          #{item}
+        </foreach>
+      ORDER BY WD.SORTED DESC , WD.HOT_LEVEL DESC , WD.TIME_CREATED DESC LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="findSignsByDesignId" resultType="com.sogal.wx.core.dao.domain.sign.WechatSysSign">
+        SELECT WSSB.ID, WSS.TYPE, WSS.VALUE
+        FROM <include refid="tableName"/> AS WSSB
+        LEFT JOIN <include refid="cmsTagTableName"/> AS WSS ON WSSB.SIGN_ID = WSS.ID
+        WHERE WSS.VALID = 1 AND WSSB.REALM_ID = #{designId} ORDER BY WSSB.TIME_CREATED DESC
+    </select>
+
+    <select id="findSignBindingBySignId" resultType="com.sogal.wx.core.dao.domain.sign.WechatSysSignBinding">
+        SELECT ${columns} FROM <include refid="tableName"/> WHERE SIGN_ID = #{signId} ORDER BY TIME_CREATED DESC
+        LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="findSignBindingCount" resultType="java.lang.Integer" >
+        SELECT count(1) FROM <include refid="tableName"/> WHERE SIGN_ID = #{signId}
+    </select>
+
+    <update id="batchUpdateWechatSysSignBindingSignType">
+        UPDATE <include refid="tableName"/> SET SIGN_TYPE = #{signType}  WHERE SIGN_ID  IN
+        <foreach collection="signIds" open="(" close=")" separator="," index="index" item="item">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="findCmsTagBindingIdsToBeDeleted" resultType="java.lang.String">
+        SELECT  ID
+        FROM  <include refid="cmsTagBindingTableName"/>
+        WHERE REALM = #{realm} AND  REALM_ID = #{realmId}
+        <if test="wechatSysSignBindings != null and wechatSysSignBindings.size > 0">
+            AND SIGN_ID NOT  IN
+            <foreach collection="wechatSysSignBindings" item="item" separator="," index="index" open="(" close=")">
+                #{item.signId}
+            </foreach>
+        </if>
+    </select>
+    <delete id="deleteCmsTagBindingsByIds" >
+        DELETE  FROM <include refid="cmsTagBindingTableName"/> WHERE ID IN
+        <foreach collection="ids" item="item" separator="," index="index" open="(" close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+</mapper>

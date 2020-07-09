@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.UserCustMapper">
+    <sql id="userCustTableName">`USER_CUST`</sql>
+
+    <select id="findCustIdOfUserAtDspByUnionId" resultType="java.lang.String">
+        SELECT CUST_ID
+        FROM <include refid="userCustTableName"/>
+        WHERE UNION_ID = #{unionId}
+    </select>
+    <select id="countNumAtDspByUnionIdAndCustId" resultType="int">
+        SELECT COUNT(*)
+        FROM <include refid="userCustTableName"/>
+        WHERE UNION_ID = #{unionId} AND CUST_ID = #{custId}
+    </select>
+
+    <insert id="batchInsertIgnoreUserCust" parameterType="java.util.List">
+        INSERT IGNORE INTO USER_CUST (
+        ID,
+        USER_ID,
+        CUST_ID,
+        UNION_ID
+        ) VALUES
+        <foreach collection="list" index="index" separator="," item="item">
+            (
+            #{item.id},
+            #{item.userId},
+            #{item.custId},
+            #{item.unionId}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

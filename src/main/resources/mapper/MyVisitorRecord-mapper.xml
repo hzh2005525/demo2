@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.MyVisitorRecordMapper">
+
+    <sql id="tableName">MP_ACCESS_RECORD</sql>
+
+    <sql id="mpAccessRecordTableName">`MP_ACCESS_RECORD`</sql>
+
+    <sql id="cmsArticleTableName">`CMS_ARTICLE`</sql>
+
+    <sql id="mpUserViewTimeTableName">`MP_USER_VIEW_TIME`</sql>
+
+    <sql id="cmsImageTableName">`CMS_IMAGE`</sql>
+
+    <insert id="addMyVisitorRecord" parameterType="com.sogal.wx.core.dao.domain.mine.MyVisitorRecord">
+        INSERT  INTO <include refid="mpAccessRecordTableName"/> (
+          ID,
+          SERVANT,
+          VISITOR,
+          DESIGN_ID,
+          BEHAVIOR,
+          CATEGORY,
+         `VISIT_METHOD`,
+          VISIT_DATE,
+          VISIT_BROWSE_ID,
+          SHARE_RECORD_ID,
+        <if test="ip != null and ip != ''">
+            `IP`,
+        </if>
+          SCENE_VALUE
+        ) VALUES (
+          #{id},
+          #{servant},
+          #{visitor},
+          #{designId},
+          #{behavior},
+          #{category},
+          #{visitMethod},
+          CURRENT_DATE (),
+          #{visitBrowseId},
+          #{shareRecordId},
+        <if test="ip != null and ip != ''">
+            (SELECT INET_ATON(#{ip})),
+        </if>
+          #{sceneValue}
+        )
+    </insert>
+
+    <select id="findMyVisitorPointTotal" parameterType="com.sogal.wx.core.dao.domain.mine.MyRecordDTO" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM <include refid="tableName"/>
+        WHERE VISITOR IN
+          <foreach collection="customer" item="item" index="index" separator="," open="(" close=")">
+              #{item}
+          </foreach>
+         AND BEHAVIOR = 'VIEW' AND TIME_CREATED &gt; #{startTime} AND TIME_CREATED &lt; #{endTime} AND SERVANT = #{serventId}
+    </select>
+
+    <sql id="findUserVisitRecordPagedQueryCondition">
+        <if test="queryCondition.visitDateBegin != null">
+            AND mvr.VISIT_DATE <![CDATA[>= ]]> #{queryCondition.visitDateBegin}
+        </if>
+        <if test="queryCondition.visitDateEnd != null">
+            AND mvr.VISIT_DATE <![CDATA[<= ]]> #{queryCondition.visitDateEnd}
+        </if>
+    </sql>
+
+    <select id="findLastSharerId" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT mvr.SERVANT
+        FROM <include refid="tableName"/> mvr
+        WHERE mvr.VISITOR = #{userId} AND mvr.SERVANT IS NOT NULL
+        ORDER BY mvr.TIME_CREATED DESC
+        LIMIT 1
+    </select>
+
+
+    <select id="findVisitRecordByVisitorIdAtC" parameterType="com.sogal.wx.core.dao.domain.mine.MyRecordDTO" resultType="com.sogal.wx.core.dao.domain.mine.MyVisitorRecordDTO">
+        SELECT mvr.TIME_CREATED, mp.NICKNAME, mp.AVATAR_URL, wd.TITLE, wbt.TIME as retentionTime
+        FROM  <include refid="tableName"/> mvr
+        LEFT JOIN MP_USER mp ON  mvr.VISITOR = mp.ID
+        LEFT JOIN <include refid="cmsArticleTableName"/> wd ON mvr.DESIGN_ID = wd.ID
+        LEFT JOIN <include refid="mpUserViewTimeTableName"/> wbt ON wbt.VISIT_BROWSE_ID = mvr.VISIT_BROWSE_ID
+        WHERE mvr.VISITOR = #{visitorId} AND mvr.SERVANT = #{serventId}
+        <include refid="findVisitRecordByVisitorIdAtCQueryCondition"/>
+        ORDER BY mvr.TIME_CREATED DESC
+        LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="findVisitRecordTotalByVisitorIdAtC" parameterType="com.sogal.wx.core.dao.domain.mine.MyRecordDTO"  resultType="int">
+        SELECT COUNT(*)
+        FROM  <include refid="tableName"/> mvr
+        WHERE mvr.VISITOR = #{visitorId}  AND mvr.SERVANT = #{serventId}
+        <include refid="findVisitRecordByVisitorIdAtCQueryCondition"/>
+    </select>
+
+    <sql id="findVisitRecordByVisitorIdAtCQueryCondition">
+        <if test="startTime != null">
+            AND mvr.VISIT_DATE <![CDATA[>= ]]> #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND mvr.VISIT_DATE <![CDATA[<= ]]> #{endTime}
+        </if>
+    </sql>
+
+    <select id="findMyVisitorVisitRecordAtC" parameterType="com.sogal.wx.core.dao.domain.mine.MyRecordDTO" resultType="com.sogal.wx.core.dao.domain.mine.MyVisitorRecordDTO">
+        SELECT
+        mvr.TIME_CREATED,
+        mp.NICKNAME,
+        mp.AVATAR_URL,
+        wd.TITLE,
+        wbt.TIME as retentionTime
+        FROM  <include refid="tableName"/> mvr
+        LEFT JOIN MP_USER mp ON  mvr.VISITOR = mp.ID
+        LEFT JOIN <include refid="cmsArticleTableName"/> wd ON mvr.DESIGN_ID = wd.ID
+        LEFT JOIN <include refid="mpUserViewTimeTableName"/> wbt ON wbt.VISIT_BROWSE_ID = mvr.VISIT_BROWSE_ID
+        WHERE mvr.SERVANT = #{serventId}
+        <include refid="findVisitRecordByVisitorIdAtCQueryCondition"/>
+        ORDER BY mvr.TIME_CREATED DESC
+        LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="findMyVisitorVisitRecordTotalAtC" parameterType="com.sogal.wx.core.dao.domain.mine.MyRecordDTO"  resultType="int">
+        SELECT COUNT(*)
+        FROM  <include refid="tableName"/> mvr
+        WHERE mvr.SERVANT = #{serventId}
+        <include refid="findVisitRecordByVisitorIdAtCQueryCondition"/>
+    </select>
+
+    <select id="findUserMpExtendRecord" parameterType="com.sogal.wx.core.dao.domain.user.QueryUserExtendRecordCondition"
+            resultType="com.sogal.wx.core.dao.domain.user.UserExtendRecordDTO">
+        SELECT mvr.VISITOR, um.AVATAR_URL, um.NICKNAME,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+        (CASE WHEN urs.`MOBILE` IS NULL THEN um.`MOBILE`
+        ELSE urs.`MOBILE` END)
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+        (CASE WHEN uro.`MOBILE` IS NULL THEN um.`MOBILE`
+        ELSE uro.`MOBILE` END)
+        ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN um.`MOBILE`
+        ELSE urc.`MOBILE` END) END AS mobile,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS name,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE`
+        ELSE urc.`MOBILE` END AS authMobile,
+        ui.IS_EMISSARY,
+        wd.TITLE, wbt.TIME as retentionTime, mvr.TIME_CREATED as visitTime, mvr.VISIT_METHOD, mvr.DESIGN_ID
+        FROM
+        <include refid="tableName"/>
+        mvr
+        LEFT JOIN MP_USER um ON mvr.VISITOR = um.ID
+        LEFT JOIN USER_AUTH_BASE ui ON um.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        LEFT JOIN <include refid="cmsArticleTableName"/> wd ON mvr.DESIGN_ID = wd.ID
+        LEFT JOIN <include refid="mpUserViewTimeTableName"/> wbt ON wbt.VISIT_BROWSE_ID = mvr.VISIT_BROWSE_ID
+        WHERE mvr.SERVANT = #{userId}
+        <include refid="findUserExtendRecordConditionAtAdmin"/>
+        ORDER BY mvr.TIME_CREATED DESC
+        LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id ="countUserMpExtendRecordTotalSize" parameterType="com.sogal.wx.core.dao.domain.user.QueryUserExtendRecordCondition"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM  <include refid="tableName"/> mvr
+        WHERE mvr.SERVANT = #{userId}
+        <include refid="findUserExtendRecordConditionAtAdmin"/>
+    </select>
+
+    <sql id="findUserExtendRecordConditionAtAdmin">
+        <if test="visitTimeBegin != null">
+            AND mvr.TIME_CREATED <![CDATA[>= ]]> #{visitTimeBegin}
+        </if>
+        <if test="visitTimeEnd != null">
+            AND mvr.TIME_CREATED <![CDATA[<= ]]> #{visitTimeEnd}
+        </if>
+        <if test="visitMethods != null">
+            AND mvr.VISIT_METHOD IN (
+            <foreach collection="visitMethods" separator="," index="index" item="item" >
+                #{item}
+            </foreach>
+            )
+        </if>
+    </sql>
+
+    <select id="findUserMpVisitRecord" resultType="com.sogal.wx.core.dao.domain.user.UserVisitRecordDTO">
+        SELECT mvr.*,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS sharerName,
+        um.NICKNAME as sharerNickName, um.ID as sharerId, wd.TITLE as designTitle, wbt.TIME as retentionTime
+        FROM  <include refid="tableName"/> mvr
+        LEFT JOIN MP_USER um ON  mvr.SERVANT = um.ID
+        LEFT JOIN USER_AUTH_BASE ui ON um.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        LEFT JOIN <include refid="cmsArticleTableName"/> wd ON mvr.DESIGN_ID = wd.ID
+        LEFT JOIN <include refid="mpUserViewTimeTableName"/> wbt ON wbt.VISIT_BROWSE_ID = mvr.VISIT_BROWSE_ID
+        WHERE  mvr.VISITOR = #{userId}
+        <include refid="findUserVisitRecordPagedQueryCondition"/>
+        ORDER BY mvr.TIME_CREATED DESC
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <select id="countUserMpVisitRecord" resultType="int">
+        SELECT COUNT(*)
+        FROM  <include refid="tableName"/> mvr
+        WHERE mvr.VISITOR = #{userId}
+        <include refid="findUserVisitRecordPagedQueryCondition"/>
+    </select>
+
+    <select id="findMyFootmarkAtC" parameterType="com.sogal.wx.core.dao.domain.mine.MyFootMarkDTO"
+            resultType="com.sogal.wx.core.dao.domain.mine.MyFootMarkResultAtCDTO">
+        SELECT
+        mar1.TIME_CREATED,
+        mar1.DESIGN_ID,
+        wd.TITLE,
+        wd.PANORAMA,
+        wd.FORMALED,
+        wi.`IMAGE_URL`,
+        wi.`REDUCE_URL`
+        FROM  <include refid="tableName"/> mar1
+        LEFT JOIN <include refid="cmsArticleTableName"/> wd ON mar1.DESIGN_ID = wd.ID
+        LEFT JOIN <include refid="cmsImageTableName"/> wi ON wd.COVER = wi.ID
+        WHERE
+        <include refid="findMyFootmarkConditionAtC"/>
+        ORDER BY mar1.TIME_CREATED DESC
+        LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="findMyFootmarkTotalSizeAtC" parameterType="com.sogal.wx.core.dao.domain.mine.MyFootMarkDTO"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM  <include refid="tableName"/> mar1
+        WHERE
+        <include refid="findMyFootmarkConditionAtC"/>
+    </select>
+
+    <sql id="findMyFootmarkConditionAtC">
+        NOT EXISTS(SELECT 1 FROM  <include refid="tableName"/> mar2
+        WHERE mar2.VISITOR= mar1.VISITOR
+        AND mar2.DESIGN_ID = mar1.DESIGN_ID
+        AND mar2.TIME_CREATED > mar1.TIME_CREATED)
+        AND mar1.VISITOR = #{userId}
+        AND NOT EXISTS (
+            SELECT 1  FROM  <include refid="cmsArticleTableName"/> ca1
+            WHERE mar1.DESIGN_ID = ca1.ID AND  (ca1.KIND = 'RULE' OR ca1.VALID = 0 OR ca1.SHOW_LEVEL = 'PRIVATE'))
+        <if test="startTime != null">
+            AND mar1.TIME_CREATED <![CDATA[>= ]]> #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND mar1.TIME_CREATED <![CDATA[<= ]]> #{endTime}
+        </if>
+    </sql>
+
+    <select id="findUserVisitRecordByShareRecordIdAtadmin"
+            parameterType="com.sogal.wx.core.dao.domain.user.QueryUserVisitRecordCondition"
+            resultType="com.sogal.wx.core.dao.domain.user.UserVisitRecordDTO">
+        SELECT mvr.*,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS visitorAuthName,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE`
+        ELSE urc.`MOBILE` END AS visitorAuthMobile,
+        ui.IS_EMISSARY AS visitorIsEmissary,
+        um.NICKNAME AS visitorNickName, um.ID AS visitorId,um.MOBILE AS visitorMobile,um.AVATAR_URL AS visitorAvatarUrl,
+        wd.TITLE AS designTitle, wbt.TIME AS retentionTime
+        FROM  <include refid="tableName"/> mvr
+        LEFT JOIN MP_USER um ON  mvr.VISITOR = um.ID
+        LEFT JOIN USER_AUTH_BASE ui ON um.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        LEFT JOIN <include refid="cmsArticleTableName"/> wd ON mvr.DESIGN_ID = wd.ID
+        LEFT JOIN <include refid="mpUserViewTimeTableName"/> wbt ON wbt.VISIT_BROWSE_ID = mvr.VISIT_BROWSE_ID
+        <include refid="findUserVisitRecordPagedQueryConditionAtAdmin"/>
+        ORDER BY mvr.TIME_CREATED DESC
+        LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="countUserVisitRecordTotalByShareRecordIdAtadmin"
+            parameterType="com.sogal.wx.core.dao.domain.user.QueryUserVisitRecordCondition"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM  <include refid="tableName"/> mvr
+        <include refid="findUserVisitRecordPagedQueryConditionAtAdmin"/>
+    </select>
+
+    <select id="countMpAccessRecordByVisiterAndDesignId" resultType="int">
+        SELECT COUNT(*)
+        FROM
+        <include refid="tableName"/>
+        WHERE VISITOR = #{visiter} AND DESIGN_ID = #{designId} AND TIME_CREATED &lt; #{visitTime}
+    </select>
+
+    <sql id="findUserVisitRecordPagedQueryConditionAtAdmin">
+        <where>
+            mvr.SHARE_RECORD_ID = #{shareRecordId}
+            <if test="visitDateBegin != null">
+                AND mvr.VISIT_DATE <![CDATA[>= ]]> #{visitDateBegin}
+            </if>
+            <if test="visitDateEnd != null">
+                AND mvr.VISIT_DATE <![CDATA[<= ]]> #{visitDateEnd}
+            </if>
+            <if test="visitMethods != null">
+                AND mvr.VISIT_METHOD IN (
+                <foreach collection="visitMethods" separator="," index="index" item="item" >
+                    #{item}
+                </foreach>
+                )
+            </if>
+        </where>
+    </sql>
+
+</mapper>

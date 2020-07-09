@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.UserPromotionDayRewardMapper">
+
+    <sql id="tableName">`USER_PROMOTION_DAY_REWARD`</sql>
+
+    <select id="selectUserPromotionDayGroupReward"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionDayReward">
+        SELECT SUM(DEAL_AMOUNT) AS dealAmount, COUNT(*) AS orderNum
+        FROM
+        <include refid="tableName"/>
+        WHERE UNION_ID = #{unionId}
+        AND REWARD_TYPE = #{rewardType}
+        AND DATE(REWARD_TIME) = #{rewardTime}
+    </select>
+
+    <insert id="addUserPromotionDayRewardBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserPromotionDayReward">
+        INSERT INTO
+        <include refid="tableName"/>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                `ID`,
+            </if>
+            <if test="unionId != null and unionId != ''">
+                `UNION_ID`,
+            </if>
+            <if test="devoteId != null and devoteId != ''">
+                `DEVOTE_ID`,
+            </if>
+            <if test="rewardType != null">
+                `REWARD_TYPE`,
+            </if>
+            <if test="rewardAmount != null">
+                `REWARD_AMOUNT`,
+            </if>
+            <if test="dealAmount != null">
+                `DEAL_AMOUNT`,
+            </if>
+            <if test="calculateFactor != null and calculateFactor != ''">
+                `CALCULATE_FACTOR`,
+            </if>
+            <if test="orderNum != null">
+                `ORDER_NUM`,
+            </if>
+            <if test="currentYear != null">
+                `CURRENT_YEAR`,
+            </if>
+            <if test="currentMonth != null">
+                `CURRENT_MONTH`,
+            </if>
+            <if test="houseId != null and houseId != ''">
+                `HOUSE_ID`,
+            </if>
+            <if test="currentLevel != null and currentLevel != ''">
+                `CURRENT_LEVEL`,
+            </if>
+            <if test="rewardTime != null">
+                `REWARD_TIME`,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                #{id},
+            </if>
+            <if test="unionId != null and unionId != ''">
+                #{unionId},
+            </if>
+            <if test="devoteId != null and devoteId != ''">
+                #{devoteId},
+            </if>
+            <if test="rewardType != null">
+                #{rewardType},
+            </if>
+            <if test="rewardAmount != null">
+                #{rewardAmount},
+            </if>
+            <if test="dealAmount != null">
+                #{dealAmount},
+            </if>
+            <if test="calculateFactor != null and calculateFactor != ''">
+                #{calculateFactor},
+            </if>
+            <if test="orderNum != null">
+                #{orderNum},
+            </if>
+            <if test="currentYear != null">
+                #{currentYear},
+            </if>
+            <if test="currentMonth != null">
+                #{currentMonth},
+            </if>
+            <if test="houseId != null and houseId != ''">
+                #{houseId},
+            </if>
+            <if test="currentLevel != null and currentLevel != ''">
+                #{currentLevel},
+            </if>
+            <if test="rewardTime != null">
+                #{rewardTime},
+            </if>
+        </trim>
+    </insert>
+
+    <insert id="addUserPromotionMeasureDayRewardBatch">
+        INSERT INTO
+        <include refid="tableName"/>
+        (`ID`, `UNION_ID`, `DEVOTE_ID`, `REWARD_TYPE`, `REWARD_AMOUNT`, `CURRENT_YEAR`, `CURRENT_MONTH`,
+        `CURRENT_LEVEL`,
+        `HOUSE_ID`, `REWARD_TIME`)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id}, #{item.unionId}, #{item.devoteId}, #{item.rewardType}, #{item.rewardAmount},
+            #{item.currentYear}, #{item.currentMonth}, #{item.currentLevel}, #{item.houseId}, #{item.rewardTime})
+        </foreach>
+    </insert>
+
+    <select id="selectDirectLowerPromotionGroupRewardByUnionIdAndCy" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM(REWARD_AMOUNT), 0) FROM
+        <include refid="tableName"/>
+        WHERE DEVOTE_ID = #{unionId}
+        AND REWARD_TYPE = #{rewardType}
+        <if test="currentYear != null">
+            AND CURRENT_YEAR = #{currentYear}
+        </if>
+        <if test="currentMonth != null">
+            AND CURRENT_MONTH = #{currentMonth}
+        </if>
+    </select>
+
+    <delete id="deleteUserPromotionMeasureDayReward"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserPromotionDayReward">
+        DELETE FROM
+        <include refid="tableName"/>
+        WHERE UNION_ID = #{unionId}
+        AND REWARD_TYPE = #{rewardType}
+        AND CURRENT_YEAR = #{currentYear}
+        AND CURRENT_MONTH = #{currentMonth}
+    </delete>
+
+    <select id="calculateGoldPromotionLevelByUnionIds" resultType="java.math.BigDecimal">
+        SELECT SUM(DEAL_AMOUNT)
+        FROM
+        <include refid="tableName"/>
+        WHERE REWARD_TYPE = #{rewardType}
+        AND UNION_ID IN
+        <foreach collection="unionIds" index="index" item="unionId" open="(" separator="," close=")">
+            #{unionId}
+        </foreach>
+    </select>
+
+    <select id="selectUserPromotionDayDeals"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionDayReward">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE UNION_ID = #{unionId}
+        AND REWARD_TYPE = #{rewardType}
+        AND DATE(REWARD_TIME) = #{rewardTime}
+    </select>
+
+    <update id="updateUserPromotionDayDealRewardBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserPromotionDayReward">
+        UPDATE
+        <include refid="tableName"/>
+        <set>
+            <if test="unionId != null and unionId != ''">
+                `UNION_ID` = #{unionId},
+            </if>
+            <if test="devoteId != null and devoteId != ''">
+                `DEVOTE_ID` = #{devoteId},
+            </if>
+            <if test="rewardType != null">
+                `REWARD_TYPE` = #{rewardType},
+            </if>
+            <if test="rewardAmount != null">
+                `REWARD_AMOUNT` = #{rewardAmount},
+            </if>
+            <if test="dealAmount != null">
+                `DEAL_AMOUNT` = #{dealAmount},
+            </if>
+            <if test="calculateFactor != null and calculateFactor != ''">
+                `CALCULATE_FACTOR` = #{calculateFactor},
+            </if>
+            <if test="orderNum != null">
+                `ORDER_NUM` = #{orderNum},
+            </if>
+            <if test="currentYear != null">
+                `CURRENT_YEAR` = #{currentYear},
+            </if>
+            <if test="currentMonth != null">
+                `CURRENT_MONTH` = #{currentMonth},
+            </if>
+            <if test="currentLevel != null and currentLevel != ''">
+                `CURRENT_LEVEL` = #{currentLevel},
+            </if>
+            <if test="rewardTime != null">
+                `REWARD_TIME` = #{rewardTime},
+            </if>
+        </set>
+        WHERE `ID` = #{id}
+    </update>
+
+    <select id="selectUserPromotionMonthDealAmountCount" resultType="long">
+        SELECT COUNT(*) FROM
+        <include refid="tableName"/>
+        WHERE UNION_ID = #{unionId}
+        AND REWARD_TYPE = #{rewardType}
+    </select>
+
+    <select id="selectUserPromotionDayCommendedReward"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionDayRewardDTO">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE UNION_ID = #{unionId}
+        AND REWARD_TYPE IN
+        <foreach collection="rewardTypes" index="index" item="rewardType" open="(" separator="," close=")">
+            #{rewardType}
+        </foreach>
+        AND CURRENT_YEAR = #{currentYear}
+        AND CURRENT_MONTH = #{currentMonth}
+        ORDER BY REWARD_TIME DESC
+    </select>
+
+    <select id="selectUserPromotionDayDealRewardDTOById"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionDayRewardDTO">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE ID = #{id}
+    </select>
+
+    <select id="selectUserPromotionDayRewardAmountCountByRewardType" resultType="long">
+        SELECT COUNT(*) FROM
+        <include refid="tableName"/>
+        WHERE UNION_ID = #{unionId}
+        AND REWARD_TYPE = #{rewardType}
+        AND REWARD_TIME > #{dto.startTime} AND REWARD_TIME &lt; #{dto.endTime}
+    </select>
+
+    <select id="selectUserPromotionDayRewardAmountyRewardType"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionDayRewardDTO">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE UNION_ID = #{unionId}
+        AND REWARD_TYPE = #{rewardType}
+        AND REWARD_TIME > #{dto.startTime} AND REWARD_TIME &lt; #{dto.endTime}
+        ORDER BY REWARD_TIME DESC
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+</mapper>

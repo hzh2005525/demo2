@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.OptyMapper">
+    <sql id="mpUserRegisterTableName">`MP_USER_REGISTER`</sql>
+    <sql id="optySourceTableName">`OPTY_SOURCE`</sql>
+
+    <insert id="batchInsertOptySource" parameterType="java.util.List">
+        INSERT IGNORE INTO <include refid="optySourceTableName"/> (
+                ID,
+                OPTY_ID,
+                REGISTER_ID,
+                CREATOR_TYPE,
+                SOURCE_METHOD,
+                CREATOR_ID,
+                CREATOR_ORG,
+                SOURCE,
+                SECOND_SOURCE,
+                MOBILE
+
+        ) VALUES
+        <foreach collection="list" index="index" separator="," item="item">
+            (
+            #{item.id},
+            #{item.optyId},
+            #{item.registerId},
+            #{item.creatorType},
+            #{item.sourceMethod},
+            #{item.creatorId},
+            #{item.creatorOrg},
+            #{item.source},
+            #{item.secondSource},
+            #{item.mobile}
+            )
+        </foreach>
+    </insert>
+    <select id="findUserSignUpDataByIds" resultType="com.sogal.wx.core.dao.domain.user.UserEssentialInfoDTO">
+        SELECT  mur.*,mur.ID AS registerId,mu.UNION_ID
+        FROM <include refid="mpUserRegisterTableName"/> mur
+        INNER JOIN MP_USER mu ON mur.USER_NO = mu.USER_NO
+        WHERE
+        mur.USER_CITY ='北京市'
+        AND mur.TIME_CREATED &gt; '2020-03-07'
+        AND mur.CATEGORY ='DESIGN'
+        AND mur.ID IN (
+        <foreach collection="ids" item="item" separator="," index="index">
+            #{item}
+        </foreach>
+        )
+        ORDER BY mur.TIME_CREATED ASC
+    </select>
+
+    <select id="findEmpAndPrimaryOrgByMobile" resultType="com.sogal.common.domain.dealer.EmployeeDTO">
+        SELECT emp.* ,deo.ORG_ID
+        FROM dspdb.DEALER_EMPLOYEE emp
+        INNER JOIN dspdb.DEALER_EMPLOYEE_ORGANIZATION deo ON emp.ID = deo.EMP_ID AND deo.VALID = 1 AND deo.PRIMARY = 1
+        WHERE emp.MOBILE = #{mobile}  AND emp.DEALER_CODE = #{dealerCode} AND emp.STATUS IS NOT NULL AND emp.STATUS NOT IN ('RETIRED','DIMISSION')
+        ORDER BY emp.LAST_UPDATE_TIME LIMIT 1
+    </select>
+    <select id="findEmpAndPrimaryOrgByEmpIdAndDealerCode" resultType="com.sogal.common.domain.dealer.EmployeeDTO">
+        SELECT emp.* ,deo.ORG_ID
+        FROM dspdb.DEALER_EMPLOYEE emp
+        INNER JOIN dspdb.DEALER_EMPLOYEE_ORGANIZATION deo ON emp.ID = deo.EMP_ID AND deo.VALID = 1 AND deo.PRIMARY = 1
+        WHERE
+        emp.ID = #{empId}  AND emp.DEALER_CODE = #{dealerCode} AND emp.STATUS IS NOT NULL AND emp.STATUS NOT IN ('RETIRED','DIMISSION')
+        ORDER BY emp.LAST_UPDATE_TIME LIMIT 1
+    </select>
+    <select id="findCustInfoByMobile" resultType="com.sogal.common.domain.customer.Customer" >
+        SELECT  *
+        FROM dspdb.CUSTOMER
+        WHERE MOBILE = #{mobile}
+    </select>
+    <select id="findOptysByCustomerId" resultType="com.sogal.common.domain.sales.Opportunity">
+        SELECT *
+        FROM dspdb.CUST_OPPORTUNITY
+        WHERE CUSTOMER_ID = #{customerId} AND VALID = 1 AND CREATE_SOURCE = 'C_SOGAL_E'
+    </select>
+    <select id="findOptySourceByOptyId" resultType="com.sogal.wx.core.dao.domain.user.OptySource">
+        SELECT
+        co.CREATOR_ID AS oldCreatorId,de.`NAME` AS oldCreatorName,co.CREATOR_ORGANIZATION_ID AS oldCreatorOrg,
+        co.SOURCE AS oldSource,co.SECOND_SOURCE AS oldSecondSource,
+        os.CREATOR_ID ,cde.`NAME` AS creatorName,os.SOURCE,os.SECOND_SOURCE,os.CREATOR_ORG
+        FROM dspdb.CUST_OPPORTUNITY co
+        LEFT JOIN dspdb.DEALER_EMPLOYEE de ON co.CREATOR_ID = de.ID
+        INNER JOIN (SELECT * FROM wxdb.OPTY_SOURCE WHERE TIME_CREATED > '2020-03-17 10:52:40') os ON co.ID = os.OPTY_ID
+        LEFT JOIN dspdb.DEALER_EMPLOYEE cde ON os.CREATOR_ID = cde.ID
+        WHERE co.ID IN (
+        <foreach collection="optyIds" item="item" separator="," index="index">
+            #{item}
+        </foreach>
+        )
+    </select>
+    <update id="updateCustInfoById" parameterType="map">
+        UPDATE dspdb.CUSTOMER
+        <set>
+            <if test="c.creatorId != null">
+                CREATOR_ID = #{c.creatorId},
+            </if>
+            <if test="c.creatorName != null">
+                CREATOR_NAME = #{c.creatorName},
+            </if>
+            <if test="c.creatorOrganizationId != null">
+                CREATOR_ORGANIZATION_ID = #{c.creatorOrganizationId},
+            </if>
+            <if test="c.source != null">
+                SOURCE = #{c.source},
+            </if>
+            <if test="c.secondSource != null">
+                SECOND_SOURCE = #{c.secondSource},
+            </if>
+            TIME_LAST_UPDATED = now()
+        </set>
+        WHERE ID = #{c.id}
+    </update>
+    <update id="updateCustHouseById" parameterType="map">
+        UPDATE dspdb.CUST_HOUSE
+        <set>
+            <trim suffixOverrides=",">
+                <if test="h.creatorId != null">
+                    CREATOR_ID = #{h.creatorId},
+                </if>
+                <if test="h.creatorName != null">
+                    CREATOR_NAME = #{h.creatorName},
+                </if>
+                <if test="h.creatorOrganizationId != null">
+                    CREATOR_ORGANIZATION_ID = #{h.creatorOrganizationId},
+                </if>
+                <if test="h.source != null">
+                    SOURCE = #{h.source},
+                </if>
+                <if test="h.secondSource != null">
+                    SECOND_SOURCE = #{h.secondSource}
+                </if>
+            </trim>
+        </set>
+        WHERE ID = #{h.id}
+    </update>
+
+    <update id="updateOptyById" parameterType="map">
+        UPDATE dspdb.CUST_OPPORTUNITY
+        <set>
+            <if test="opportunity.creatorId != null">
+                CREATOR_ID = #{opportunity.creatorId},
+            </if>
+            <if test="opportunity.creatorName != null">
+                CREATOR_NAME = #{opportunity.creatorName},
+            </if>
+            <if test="opportunity.creatorOrganizationId != null">
+                CREATOR_ORGANIZATION_ID = #{opportunity.creatorOrganizationId},
+            </if>
+            <if test="opportunity.source != null">
+                SOURCE = #{opportunity.source},
+            </if>
+            <if test="opportunity.secondSource != null">
+                SECOND_SOURCE = #{opportunity.secondSource},
+            </if>
+            LAST_UPDATE_TIME = now()
+        </set>
+        WHERE ID = #{opportunity.id}
+    </update>
+
+    <select id="findTaskByOptyId" resultType="com.sogal.common.domain.task.Task">
+        SELECT
+        task.*
+        FROM
+        dspdb.TASK task
+        INNER JOIN dspdb.TASK_OPPORTUNITY opp ON opp.TASK_ID = task.ID
+        WHERE opp.OPPORTUNITY_ID = #{opportunityId}
+    </select>
+    <update id="updateTaskById" parameterType="com.sogal.common.domain.task.Task">
+        UPDATE dspdb.TASK
+        <set>
+            <trim suffixOverrides=",">
+                <if test="executorId != null">
+                    EXECUTOR_ID = #{executorId},
+                </if>
+                <if test="executorName != null">
+                    EXECUTOR_NAME = #{executorName},
+                </if>
+                <if test="executorOrg != null">
+                    EXECUTOR_ORG = #{executorOrg},
+                </if>
+            </trim>
+        </set>
+        WHERE ID = #{id}
+    </update>
+    <select id="findByKeyWord" resultType="com.sogal.common.domain.sales.Dynamic">
+        SELECT cd.ID, cd.OPERATOR_NAME, cd.CONTENT ,cd.ACTION
+        FROM dspdb.CUST_DYNAMIC cd
+        WHERE CUSTOMER_ID = #{customerId}
+        ORDER BY TIME_CREATED DESC, REALM DESC;
+    </select>
+    <update id="updateDynamic" parameterType="com.sogal.common.domain.sales.Dynamic">
+        UPDATE dspdb.CUST_DYNAMIC
+        <set>
+        <trim suffixOverrides=",">
+            <if test="content != null">
+                CONTENT = #{content},
+            </if>
+            <if test="operatorName != null">
+                OPERATOR_NAME = #{operatorName},
+            </if>
+            <if test="operatorId != null">
+                OPERATOR_ID = #{operatorId},
+            </if>
+        </trim>
+        </set>
+        WHERE ID = #{id}
+    </update>
+    <select id="findByCustomerId" parameterType="map" resultType="com.sogal.common.domain.customer.CustomerMember">
+        SELECT *
+        FROM dspdb.CUST_MEMBER
+        WHERE CUSTOMER_ID = #{customerId} AND ROLE = #{role}
+    </select>
+    <update id="updateCustMemberById" parameterType="com.sogal.common.domain.customer.CustomerMember">
+        UPDATE dspdb.CUST_MEMBER
+        SET
+        <if test="employeeId != null">
+        EMPLOYEE_ID = #{employeeId},
+        </if>
+        <if test="employeeOrganizationId != null">
+        EMPLOYEE_ORGANIZATION_ID = #{employeeOrganizationId},
+        </if>
+        <if test="employeeName != null">
+        EMPLOYEE_NAME = #{employeeName}
+        </if>
+        WHERE ID = #{id}
+    </update>
+</mapper>

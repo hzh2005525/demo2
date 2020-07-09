@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.CMSArticleRichTextMapper">
+    <sql id="cmsArticleRichTextTableName">`CMS_ARTICLE_RICH_TEXT`</sql>
+
+    <select id="findRichTextByRealmIdAndRealm" resultType="java.lang.String">
+        SELECT ID
+        FROM <include refid="cmsArticleRichTextTableName"/>
+        WHERE  REALM = #{realm} AND REALM_ID IN (
+            <foreach collection="realmIds" item="item" index="index" separator=",">
+                #{item}
+            </foreach>
+        )
+    </select>
+    <update id="markArticleRichTextInvalidByIds">
+        UPDATE
+        <include refid="cmsArticleRichTextTableName"/> cart
+        SET cart.VALID = 0
+        WHERE cart.ID IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+</mapper>

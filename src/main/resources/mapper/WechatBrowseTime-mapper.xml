@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatBrowseTimeMapper">
+    <sql id="mpUserViewTimeTableName">`MP_USER_VIEW_TIME`</sql>
+
+    <insert id="addBrowseTime" parameterType="com.sogal.wx.core.dao.domain.footmark.WechatBrowseTime">
+        INSERT INTO <include refid="mpUserViewTimeTableName"/> (
+          ID,
+          CHECKER_ID,
+          DESIGN_ID,
+          `TIME`,
+          `VISIT_BROWSE_ID`
+        ) VALUES (
+          #{id},
+          #{checkerId},
+          #{designId},
+          #{time},
+          #{visitBrowseId}
+        )
+    </insert>
+    <select id="findByVisitBrowseId" parameterType="java.lang.String" resultType="com.sogal.wx.core.dao.domain.footmark.WechatBrowseTime">
+        SELECT *  FROM <include refid="mpUserViewTimeTableName"/> WHERE  VISIT_BROWSE_ID = #{visitBrowseId}
+    </select>
+    <update id="updateBrowseTime">
+        UPDATE <include refid="mpUserViewTimeTableName"/>
+        SET  `TIME` = `TIME` + #{time}
+        WHERE ID IN (
+        <foreach collection="wechatBrowseTimes" index="index" item="item" separator="," >
+            #{item.id}
+        </foreach>
+        )
+    </update>
+
+</mapper>

@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatDesignerMapper">
+    <sql id="tableName">USER_AUTH_DESIGNER</sql>
+    <sql id="cmsArticleTableName">`CMS_ARTICLE`</sql>
+    <sql id="userAuthBaseTableName">`USER_AUTH_BASE`</sql>
+    <insert id="insertWechatDesigner" parameterType="com.sogal.wx.core.dao.domain.designer.WechatDesigner">
+        INSERT INTO
+        <include refid="tableName"/>
+        (
+        ID,
+        USER_ID,
+        UNION_ID,
+        `NAME`,
+        `LEVEL`,
+        COMPANY,
+        `IDENTITY`,
+        AVATAR_URL,
+        WX_QRCODE_URL,
+        DESIGNER_COVER_URL,
+        ADDR,
+        BRIEF_INTRODUCTION,
+        MY_STYLE,
+        CATEGORY,
+        STATUS,
+        UPDATOR,
+        CREATOR
+        ) VALUES (
+        #{id},
+        #{userId},
+        #{unionId},
+        #{name},
+        #{level},
+        #{company},
+        #{identity},
+        #{avatarUrl},
+        #{wxQrcodeUrl},
+        #{designerCoverUrl},
+        #{addr},
+        #{briefIntroduction},
+        #{myStyle},
+        #{category},
+        #{status},
+        #{updater},
+        #{creator}
+        )
+    </insert>
+    <sql id="wechatDesignerCommonColumn">
+         designer.ID,
+         designer.UNION_ID,
+         designer.`NAME`,
+         designer.`LEVEL`,
+         designer.COMPANY,
+         designer.AVATAR_URL,
+         designer.WX_QRCODE_URL,
+         designer.DESIGNER_COVER_URL,
+         designer.ADDR,
+         designer.BRIEF_INTRODUCTION,
+         designer.MY_STYLE,
+         designer.STATUS
+    </sql>
+
+    <select id="findWechatDesignerByUnionId" resultType="com.sogal.wx.core.dao.domain.designer.WechatDesigner">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE UNION_ID = #{unionId}
+    </select>
+    <select id="findDesignerDetailByIdAtC" parameterType="java.lang.String"
+            resultType="com.sogal.wx.core.dao.domain.designer.WechatDesignerDetailDTO">
+        SELECT  <include refid="wechatDesignerCommonColumn"/> FROM <include refid="tableName"/> designer WHERE designer.ID = #{designerId}
+    </select>
+    <select id="findDesignersListAtAdmin" resultType="com.sogal.wx.core.dao.domain.designer.WechatDesignerDetailDTO">
+        SELECT<include refid="wechatDesignerCommonColumn"/>,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE`
+        ELSE urc.`MOBILE` END AS mobile
+        FROM
+        <include refid="tableName"/>
+        designer
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui ON designer.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        WHERE designer.STATUS = 'PASSED'
+        <include refid="findDesignersListAtAdminQueryCondition"/>
+        ORDER BY designer.LEVEL DESC,designer.TIME_CREATED
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <sql id="findDesignersListAtAdminQueryCondition">
+        <if test="queryCondition.name != null and queryCondition.name != ''">
+            AND (designer.NAME LIKE concat('%',#{queryCondition.name},'%')
+            OR (CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE` LIKE concat('%',#{queryCondition.name},'%')
+            WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE` LIKE concat('%',#{queryCondition.name},'%')
+            ELSE urc.`MOBILE` LIKE concat('%',#{queryCondition.name},'%') END))
+        </if>
+    </sql>
+
+    <select id="countDesignersListAtAdmin" parameterType="com.sogal.wx.core.dao.domain.designer.DesignerQueryCondition"
+                    resultType="int">
+        SELECT COUNT(*) FROM
+        <include refid="tableName"/>
+        designer
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui ON designer.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        WHERE designer.STATUS = 'PASSED'
+        <include refid="findDesignersListAtAdminQueryCondition"/>
+    </select>
+
+    <select id="findDesignersPagedAtAdmin" parameterType="map" resultType="com.sogal.wx.core.dao.domain.designer.WechatDesigner">
+        SELECT  designer.*  FROM  <include refid="tableName"/>  designer
+        <include refid="findDesignersPagedAtAdminQueryCondition"/>
+        ORDER BY designer.LEVEL DESC ,designer.TIME_CREATED
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <sql id="findDesignersPagedAtAdminQueryCondition">
+        <where>
+            <if test="queryCondition.status != null">
+                designer.STATUS = #{queryCondition.status}
+            </if>
+        </where>
+    </sql>
+
+    <select id="countDesignersPagedAtAdmin" parameterType="com.sogal.wx.core.dao.domain.designer.DesignerQueryCondition"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM <include refid="tableName"/>  designer
+        <include refid="findDesignersPagedAtAdminQueryCondition"/>
+    </select>
+
+    <update id="cancelDesignerAuth" parameterType="com.sogal.wx.core.dao.domain.designer.WechatDesigner">
+        UPDATE <include refid="tableName"/> SET STATUS = 'CANCEL',UPDATOR = #{updater} WHERE ID = #{id}
+    </update>
+
+    <update id="reAuthDesigner" parameterType="com.sogal.wx.core.dao.domain.designer.WechatDesigner">
+        UPDATE <include refid="tableName"/>
+        SET STATUS = 'PASSED', UPDATOR = #{updater}, `NAME` = #{name}, `LEVEL` = #{level}, `COMPANY` = #{company},
+        `IDENTITY` = #{identity}, `AVATAR_URL` = #{avatarUrl},  `WX_QRCODE_URL` = #{wxQrcodeUrl},
+        `DESIGNER_COVER_URL` = #{designerCoverUrl}, `ADDR` = #{addr}, `BRIEF_INTRODUCTION` = #{briefIntroduction},
+        `MY_STYLE` = #{myStyle}, `USER_ID` = #{userId}
+        WHERE ID = #{id}
+    </update>
+
+    <select id="listLimit" resultType="hashmap">
+        SELECT
+        wdr.`ID` AS id,
+        wdr.`NAME` AS name,
+        wdr.`AVATAR_URL` AS avatarUrl,
+        wdr.`ADDR` AS addr,
+        COUNT(wd.`ID`) AS schemeNum,
+        IFNULL(SUM(dsin.`PRAISE_NUM`), 0) AS praiseNum
+        FROM
+        <include refid="tableName"/> wdr
+        LEFT JOIN <include refid="cmsArticleTableName"/> wd ON wdr.ID = wd.DESIGNER
+        LEFT JOIN CMS_ARTICLE_STAT dsin ON wd.ID = dsin.DESIGN_ID
+        WHERE wdr.`STATUS` = 'PASSED'
+        <choose>
+            <when test="type == 'all'">
+                AND wdr.`SHIFT` = 1
+            </when>
+            <otherwise>
+                AND wdr.`SHIFT` = 0
+            </otherwise>
+        </choose>
+        GROUP BY wdr.`ID`
+        <choose>
+            <when test="type == 'all'">
+                ORDER BY wdr.`ORDER_NUM`
+            </when>
+            <otherwise>
+                ORDER BY praiseNum DESC
+            </otherwise>
+        </choose>
+        LIMIT #{showNum}
+    </select>
+
+    <select id="findRightRecommendDesignersList" resultType="hashmap">
+        SELECT
+        wdr.`ID` AS id,
+        wdr.`NAME` AS name,
+        mp.`ID` AS uId,
+        wdr.`COMPANY` AS company,
+        wdr.`AVATAR_URL` AS avatarUrl,
+        wdr.`ADDR` AS addr,
+        wdr.`SHIFT` AS shift,
+        wdr.`ORDER_NUM` AS orderNum
+        FROM <include refid="tableName"/> wdr
+        LEFT JOIN MP_USER mp ON wdr.`USER_ID` = mp.`ID`
+        WHERE wdr.`STATUS` = 'PASSED' AND wdr.`SHIFT` = 0
+        <if test="designerQueryCondition.name != null and designerQueryCondition.name != ''">
+            AND  ( wdr.`NAME` LIKE concat('%',#{designerQueryCondition.name},'%')
+            OR wdr.`ADDR` LIKE concat('%',#{designerQueryCondition.name},'%')
+            OR  wdr.`COMPANY` LIKE concat('%',#{designerQueryCondition.name},'%'))
+        </if>
+        ORDER BY wdr.`LEVEL` DESC, wdr.`TIME_CREATED`
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <select id="countRightRecommendDesignersList" resultType="int">
+        SELECT count(*)
+        FROM <include refid="tableName"/> wdr
+        WHERE wdr.`STATUS` = 'PASSED' AND wdr.`SHIFT` = 0
+        <if test="designerQueryCondition.name != null and designerQueryCondition.name != ''">
+            AND  ( wdr.`NAME` LIKE concat('%',#{designerQueryCondition.name},'%')
+            OR wdr.`ADDR` LIKE concat('%',#{designerQueryCondition.name},'%')
+            OR  wdr.`COMPANY` LIKE concat('%',#{designerQueryCondition.name},'%'))
+        </if>
+    </select>
+
+    <select id="findLeftRecommendDesignersList" resultType="hashmap">
+        SELECT
+        wdr.`ID` AS id,
+        wdr.`NAME` AS name,
+        mp.`ID` AS uId,
+        wdr.`COMPANY` AS company,
+        wdr.`AVATAR_URL` AS avatarUrl,
+        wdr.`ADDR` AS addr,
+        wdr.`SHIFT` AS shift,
+        wdr.`ORDER_NUM` AS orderNum
+        FROM <include refid="tableName"/> wdr
+        LEFT JOIN MP_USER mp ON wdr.`USER_ID` = mp.`ID`
+        WHERE wdr.`STATUS` = 'PASSED' AND wdr.`SHIFT` = 1
+        ORDER BY wdr.`ORDER_NUM`
+    </select>
+
+    <select id="getMaxOrderNum" resultType="java.lang.Integer">
+        SELECT
+        `ORDER_NUM` AS  orderNum
+        FROM <include refid="tableName"/>
+        WHERE `STATUS` = 'PASSED'
+        AND `SHIFT` = 1
+        ORDER BY `ORDER_NUM` DESC
+        LIMIT 1
+    </select>
+
+    <update id="updateShift" parameterType="com.sogal.wx.core.dao.domain.designer.WechatDesigner">
+        UPDATE
+        <include refid="tableName"/>
+        SET
+        `SHIFT` = #{shift},
+        `ORDER_NUM` = #{orderNum},
+        `UPDATOR` = #{updater}
+        WHERE `ID` = #{id}
+    </update>
+
+    <select id="getDragAndDropIdList" resultType="com.sogal.wx.core.dao.domain.designer.WechatDesigner">
+        SELECT
+        `ID`, `SHIFT`, `ORDER_NUM`
+        FROM <include refid="tableName"/>
+        WHERE `SHIFT` = 1
+        AND `STATUS` = 'PASSED'
+        <choose>
+            <when test="type == 'up'">
+                AND `ORDER_NUM` &gt;= #{min}
+                AND `ORDER_NUM` &lt; #{max}
+                ORDER BY `ORDER_NUM` DESC
+            </when>
+            <otherwise>
+                AND `ORDER_NUM` &gt; #{min}
+                AND `ORDER_NUM` &lt;= #{max}
+                ORDER BY `ORDER_NUM`
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findWechatDesignerByUserId" resultType="com.sogal.wx.core.dao.domain.designer.WechatDesigner">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE USER_ID = #{userId}
+    </select>
+
+</mapper>

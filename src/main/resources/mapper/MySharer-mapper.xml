@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.MySharerMapper">
+    <sql id="tableName">`MP_USER_REFERRER`</sql>
+    <insert id="addMySharer" parameterType="com.sogal.wx.core.dao.domain.mine.MySharer">
+        INSERT IGNORE INTO
+        <include refid="tableName"/>
+        (
+        ID,
+        USER_ID,
+        FIRST_SHARER_ID,
+        LATEST_SHARER_ID,
+        CATEGORY
+        ) VALUES (
+        #{id},
+        #{userId},
+        #{firstSharerId},
+        #{latestSharerId},
+        #{category}
+        )
+    </insert>
+
+    <select id="findMySharerByUserId" resultType="com.sogal.wx.core.dao.domain.mine.MySharer">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE USER_ID = #{userId} AND CATEGORY = #{category}
+    </select>
+    <update id="updateLatestSharerId" parameterType="com.sogal.wx.core.dao.domain.mine.MySharer">
+        UPDATE
+        <include refid="tableName"/>
+        SET LATEST_SHARER_ID = #{latestSharerId} WHERE ID = #{id}
+    </update>
+    <select id="findUserLatestSharers" resultType="com.sogal.wx.core.dao.domain.mine.MyLatestSharer">
+        SELECT ms.USER_ID as source,ms.LATEST_SHARER_ID as target
+        FROM
+        <include refid="tableName"/>
+        ms
+        WHERE ms.USER_ID IN
+        <foreach collection="userIds" separator="," item="item" index="index" open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="findUserNextNumByUserId" resultType="com.sogal.wx.core.dao.domain.mine.MyLatestSharer">
+        SELECT ms.LATEST_SHARER_ID as target,COUNT(*) as nextNum
+        FROM
+        <include refid="tableName"/>
+        ms
+        WHERE ms.LATEST_SHARER_ID IS NOT NULL AND ms.LATEST_SHARER_ID IN
+        <foreach collection="userIds" separator="," item="item" index="index" open="(" close=")">
+            #{item}
+        </foreach>
+        GROUP BY ms.LATEST_SHARER_ID
+    </select>
+
+    <select id="findUserFirstSharers" resultType="com.sogal.wx.core.dao.domain.mine.MyLatestSharer">
+        SELECT ms.USER_ID as source,ms.FIRST_SHARER_ID as target
+        FROM
+        <include refid="tableName"/>
+        ms
+        WHERE ms.USER_ID IN
+        <foreach collection="userIds" separator="," item="item" index="index" open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+
+
+    <select id="findUserNextNumByUserIdAtFirst" resultType="com.sogal.wx.core.dao.domain.mine.MyLatestSharer">
+        SELECT ms.FIRST_SHARER_ID as target,COUNT(*) as nextNum
+        FROM
+        <include refid="tableName"/>
+        ms
+        WHERE ms.FIRST_SHARER_ID IS NOT NULL AND ms.FIRST_SHARER_ID IN
+        <foreach collection="userIds" separator="," item="item" index="index" open="(" close=")">
+            #{item}
+        </foreach>
+        GROUP BY ms.FIRST_SHARER_ID
+    </select>
+    <select id="findLastSharerId" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT ms.LATEST_SHARER_ID
+        FROM
+        <include refid="tableName"/>
+        ms
+        WHERE ms.USER_ID = #{userId}
+        ORDER BY ms.TIME_CREATED DESC
+        LIMIT 1
+    </select>
+
+    <select id="findMyUserIdsAsFirstReferrer" resultType="java.lang.String">
+        SELECT DISTINCT USER_ID FROM
+        <include refid="tableName"/>
+        WHERE FIRST_SHARER_ID = #{firstSharerId}
+    </select>
+    <select id="findMyVisitorTotalAsFirstReferrer" resultType="int"
+            parameterType="com.sogal.wx.core.dao.domain.mine.MyRecordDTO">
+        SELECT COUNT(*) FROM
+        <include refid="tableName"/>
+        WHERE FIRST_SHARER_ID =#{servent} AND TIME_CREATED &gt; #{startTime} AND TIME_CREATED &lt; #{endTime}
+    </select>
+
+    <select id="findMyVisitorsAsFirstReferrer" parameterType="com.sogal.wx.core.dao.domain.mine.MyRecordDTO"
+            resultType="com.sogal.wx.core.dao.domain.mine.MineCustomer">
+        SELECT
+        mp.ID,
+        mp.USER_NO,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS name,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+        (CASE WHEN urs.`MOBILE` IS NULL THEN mp.`MOBILE`
+        ELSE urs.`MOBILE` END)
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+        (CASE WHEN uro.`MOBILE` IS NULL THEN mp.`MOBILE`
+        ELSE uro.`MOBILE` END)
+        ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN mp.`MOBILE`
+        ELSE urc.`MOBILE` END) END AS mobile,
+        mp.NICKNAME,
+        mp.AVATAR_URL,
+        MC.TIME_CREATED,
+        CASE mp.GENDER
+        WHEN '1' THEN '男'
+        WHEN '2' THEN '女'
+        ELSE '未知' END AS gender
+        FROM
+        <include refid="tableName"/>
+        AS MC
+        LEFT JOIN MP_USER AS mp ON MC.USER_ID = mp.ID
+        LEFT JOIN USER_AUTH_BASE ui ON mp.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        WHERE MC.FIRST_SHARER_ID=#{servent} AND MC.TIME_CREATED &gt; #{startTime} AND MC.TIME_CREATED &lt; #{endTime}
+        ORDER BY MC.TIME_CREATED DESC LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="findAllReferUserInfo" resultType="java.lang.String">
+        SELECT T2.FIRST_SHARER_ID
+        FROM (
+        SELECT
+        @r AS _id,
+        (SELECT @r := FIRST_SHARER_ID FROM  <include refid="tableName"/> mur1 WHERE USER_ID = _id) AS first_sharer_id,
+        @l := @l + 1 AS lvl
+        FROM
+        (SELECT @r := #{userId}, @l := 0) vars,
+        mp_user_referrer mur2) T1
+        JOIN  <include refid="tableName"/> T2
+        ON T1._id = T2.USER_ID
+        WHERE T1.lvl &lt; 11
+    </select>
+
+    <select id="findFirstReferUserIdsByUserId" resultType="com.sogal.wx.core.dao.domain.user.UserFissonInfoDTO">
+        SELECT  s1.USER_ID
+        , s1.FIRST_SHARER_ID as  firstUserId
+        ,s2.FIRST_SHARER_ID as  secondUserId
+        ,s3.FIRST_SHARER_ID as  thirdUserId
+        ,s4.FIRST_SHARER_ID as  fourthUserId
+        ,s5.FIRST_SHARER_ID as  fifthUserId
+        ,s6.FIRST_SHARER_ID  as  sixthUserId
+        ,s7.FIRST_SHARER_ID  as  seventhUserId
+        ,s8.FIRST_SHARER_ID  as  eighthUserId
+        ,s9.FIRST_SHARER_ID  as  ninthUserId
+        ,s10.FIRST_SHARER_ID  as  tenthUserId
+        FROM      wxdb.MP_USER_REFERRER s1
+        LEFT JOIN wxdb.MP_USER_REFERRER s2 ON s2.USER_ID= s1.FIRST_SHARER_ID
+        LEFT JOIN wxdb.MP_USER_REFERRER s3 ON s3.USER_ID= s2.FIRST_SHARER_ID
+        LEFT JOIN wxdb.MP_USER_REFERRER s4 ON s4.USER_ID= s3.FIRST_SHARER_ID
+        LEFT JOIN wxdb.MP_USER_REFERRER s5 ON s5.USER_ID= s4.FIRST_SHARER_ID
+        LEFT JOIN wxdb.MP_USER_REFERRER s6 ON s6.USER_ID= s5.FIRST_SHARER_ID
+        LEFT JOIN wxdb.MP_USER_REFERRER s7 ON s7.USER_ID= s6.FIRST_SHARER_ID
+        LEFT JOIN wxdb.MP_USER_REFERRER s8 ON s8.USER_ID= s7.FIRST_SHARER_ID
+        LEFT JOIN wxdb.MP_USER_REFERRER s9 ON s9.USER_ID= s8.FIRST_SHARER_ID
+        LEFT JOIN wxdb.MP_USER_REFERRER s10 ON s10.USER_ID= s9.FIRST_SHARER_ID
+        WHERE  s1.USER_ID = #{userId}
+    </select>
+</mapper>

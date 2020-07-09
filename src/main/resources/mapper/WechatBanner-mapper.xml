@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatBannerMapper">
+    <sql id="tableName">`CMS_BANNER`</sql>
+    <sql id="cmsBannerTableName">`CMS_BANNER`</sql>
+    <sql id="cmsImageTableName">`CMS_IMAGE`</sql>
+    <sql id="wechatBannerAllColumn">
+         ID,
+         IMAGE_ID,
+         ONCLICK_URL,
+         DESCRIPTION,
+         CREATOR,
+         `GROUP`,
+         ONCLICK_PARAMS,
+         ADMINISTRATIVE_REGIONS,
+         CREATOR_ORG_ID,
+         CREATOR_ORG_NAME,
+         CREATOR_NAME,
+         `SORTED`,
+         `UPDATOR`
+    </sql>
+
+    <insert id="addBanner" parameterType="com.sogal.wx.core.dao.domain.banner.WechatBanner">
+        INSERT INTO <include refid="cmsBannerTableName"/> (
+          ID,
+          IMAGE_ID,
+          ONCLICK_URL,
+          DESCRIPTION,
+          CREATOR,
+          `GROUP`,
+          ONCLICK_PARAMS,
+          TARGET_APP,
+          ADMINISTRATIVE_REGIONS,
+          CREATOR_ORG_ID,
+          CREATOR_ORG_NAME,
+          CREATOR_NAME,
+          `SORTED`,
+          `UPDATOR`
+        ) VALUES (
+          #{id},
+          #{imageId},
+          #{onclickUrl},
+          #{description},
+          #{creator},
+          #{group},
+          #{onclickParams},
+          #{targetApp},
+          #{administrativeRegions},
+          #{creatorOrgId},
+          #{creatorOrgName},
+          #{creatorName},
+          #{sorted},
+          #{creator}
+        )
+    </insert>
+    <insert id="addBanners" parameterType="com.sogal.wx.core.dao.domain.banner.WechatBanner">
+        INSERT INTO <include refid="cmsBannerTableName"/> (
+          ID,
+          IMAGE_ID,
+          ONCLICK_URL,
+          DESCRIPTION,
+          CREATOR,
+          `GROUP`,
+          ONCLICK_PARAMS,
+          ADMINISTRATIVE_REGIONS,
+          CREATOR_ORG_ID,
+          CREATOR_ORG_NAME,
+          CREATOR_NAME,
+          `SORTED`,
+          `UPDATOR`
+        ) VALUES
+        <foreach collection="list" item="item" separator="," index="index">
+            (
+            #{item.id},
+            #{item.imageId},
+            #{item.onclickUrl},
+            #{item.description},
+            #{item.creator},
+            #{item.group},
+            #{item.onclickParams},
+            #{item.administrativeRegions},
+            #{item.creatorOrgId},
+            #{item.creatorOrgName},
+            #{item.creatorName},
+            #{item.sorted},
+            #{item.creator}
+            )
+        </foreach>
+    </insert>
+
+    <sql id="findBannersCondition">
+        <where>
+            B.VALID = 1
+            <if test="description!=null">
+             AND B.`DESCRIPTION` LIKE CONCAT('%', #{description}, '%')
+            </if>
+            <if test="city !=null and city != ''">
+                AND (B.`ADMINISTRATIVE_REGIONS` LIKE CONCAT('%', #{city}, '%')
+                      OR B.`ADMINISTRATIVE_REGIONS` IS NULL
+                      OR  B.`ADMINISTRATIVE_REGIONS` ='')
+            </if>
+            <if test="group!=null">
+              AND B.`GROUP` = #{group}
+            </if>
+        </where>
+    </sql>
+
+    <select id="findBanners" parameterType="com.sogal.wx.core.dao.domain.banner.BannerSearchCondition"
+        resultType="com.sogal.wx.core.dao.domain.banner.BannerSearchResult">
+      SELECT ${columns}
+      FROM <include refid="cmsBannerTableName"/> AS B
+      LEFT JOIN <include refid="cmsImageTableName"/> AS I ON B.IMAGE_ID = I.ID
+        <include refid="findBannersCondition"/>
+      ORDER BY B.`GROUP` ASC, B.`SORTED` DESC, B.`TIME_CREATED` DESC
+      <if test="needPage!=null">
+        LIMIT #{pageStart}, #{pageSize}
+      </if>
+    </select>
+    <select id="findBannersCount" parameterType="com.sogal.wx.core.dao.domain.banner.BannerSearchCondition" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM <include refid="cmsBannerTableName"/> AS B LEFT JOIN <include refid="cmsImageTableName"/> AS I ON B.IMAGE_ID = I.ID <include refid="findBannersCondition"/>
+    </select>
+
+    <select id="findBrannerInfoByGroup" parameterType="com.sogal.wx.core.dao.domain.banner.BannerSearchCondition"
+            resultType="com.sogal.wx.core.dao.domain.banner.BannerSearchResult">
+        SELECT B.`ID`,B.`ONCLICK_URL`,B.`ONCLICK_PARAMS`,B.`TARGET_APP`,B.`GROUP`,B.`SORTED`,B.`ADMINISTRATIVE_REGIONS`,
+                I.`IMAGE_URL`,I.`REDUCE_URL`,I.`NAME`,I.`EXT`,I.`IMAGE_MD5`,I.`SIZE`
+        FROM <include refid="cmsBannerTableName"/> AS B
+        LEFT JOIN <include refid="cmsImageTableName"/> AS I ON B.IMAGE_ID = I.ID
+        <include refid="findBannersCondition"/>
+        ORDER BY B.`GROUP` ASC, B.`SORTED` DESC, B.`TIME_CREATED` DESC
+    </select>
+
+    <update id="deleteBanner" parameterType="java.lang.String">
+        UPDATE <include refid="cmsBannerTableName"/> SET VALID = 0, `UPDATOR` = #{updator} WHERE ID = #{id}
+    </update>
+    <update id="updateBannerById" parameterType="com.sogal.wx.core.dao.domain.banner.UpdateBannerDTO">
+        UPDATE <include refid="cmsBannerTableName"/>
+        <set>
+            <if test="group != null">
+                `GROUP` = #{group},
+            </if>
+            <if test="sorted != null">
+                `SORTED` = #{sorted},
+            </if>
+                ONCLICK_URL = #{onclickUrl},
+                ONCLICK_PARAMS = #{onclickParams},
+                TARGET_APP = #{targetApp},
+                ADMINISTRATIVE_REGIONS = #{administrativeRegions},
+                UPDATOR = #{updater}
+        </set>
+        WHERE `ID` = #{id}
+    </update>
+    <select id="findBannerById" parameterType="java.lang.String" resultType="com.sogal.wx.core.dao.domain.banner.WechatBanner">
+      SELECT  <include refid="wechatBannerAllColumn"/>
+      FROM  <include refid="cmsBannerTableName"/>
+      WHERE ID = #{id}
+    </select>
+    <update id="adjustBannerOrder" parameterType="com.sogal.wx.core.dao.domain.banner.WechatBanner">
+        UPDATE <include refid="cmsBannerTableName"/>
+        SET
+            `SORTED` = #{sorted},
+             UPDATOR = #{updater}
+        WHERE `ID` = #{id}
+    </update>
+</mapper>

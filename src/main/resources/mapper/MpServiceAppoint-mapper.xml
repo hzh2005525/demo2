@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.MpServiceAppointMapper">
+    <sql id="tableName">`AS_SERVICE`</sql>
+    <sql id="mpServiceProviderStaffTableName">`AS_SERVICE_PROVIDER_STAFF`</sql>
+    <sql id="mpServiceProviderTableName">`AS_SERVICE_PROVIDER`</sql>
+    <sql id="mpServiceStaffTableName">`AS_SERVICE_STAFF`</sql>
+    <sql id="mpUserCouponTableName">`MP_USER_COUPON`</sql>
+
+    <sql id="mpServiceAllColumns">
+        ms.ID,
+        ms.SERVICE_APPOINT_NO,
+        ms.COUPON_ID,
+        ms.USER_ID,
+        ms.UNION_ID,
+        ms.SERVICE_TYPE,
+        ms.ORDER_NO,
+        ms.CONTACT_NAME,
+        ms.CONTACT_MOBILE,
+        ms.ADDRESS,
+        ms.STAGE,
+        ms.APPOINT_TIME,
+        ms.APPOINT_TIME_RANGE,
+        ms.REMARK,
+        ms.CANCEL_TIME,
+        ms.CANCEL_REASON,
+        ms.FINISH_TIME,
+        ms.EVALUATE_SCORE,
+        ms.EVALUATE_CONTENT,
+        ms.EVALUATE_TIME,
+        ms.ASSIGN_SERVICE_PROVIDER_TIME,
+        ms.SERVICE_PROVIDER_ID,
+        ms.ASSIGN_PROVIDER_REMARK,
+        ms.PLAN_SERVICE_TIME,
+        ms.ASSIGN_STAFF_TIME,
+        ms.STAFF_ID,
+        ms.ASSIGN_STAFF_REMARK,
+        ms.TIME_CREATED,
+        ms.CHANGE_SERVICE_TIME_REASON,
+        ms.UPDATOR,
+        ms.TIME_UPDATED
+    </sql>
+    <insert id="insertMpServiceAppoint" parameterType="com.sogal.wx.core.dao.domain.kitchen.MpServiceAppoint">
+        INSERT IGNORE INTO <include refid="tableName"/> (
+            ID,
+            SERVICE_APPOINT_NO,
+            COUPON_ID,
+            USER_ID,
+            UNION_ID,
+            SERVICE_TYPE,
+            ORDER_NO,
+            CONTACT_NAME,
+            CONTACT_MOBILE,
+            ADDRESS,
+            STAGE,
+            APPOINT_TIME,
+            APPOINT_TIME_RANGE,
+            SERVICE_PROVIDER_ID,
+            PLAN_SERVICE_TIME,
+            REMARK
+        ) VALUES (
+            #{id},
+            #{serviceAppointNo},
+            #{couponId},
+            #{userId},
+            #{unionId},
+            #{serviceType},
+            #{orderNo},
+            #{contactName},
+            #{contactMobile},
+            #{address},
+            #{stage},
+            #{appointTime},
+            #{appointTimeRange},
+            #{serviceProviderId},
+            #{planServiceTime},
+            #{remark}
+            )
+    </insert>
+    <resultMap id="serviceAppointPageAtAdmin" type="com.sogal.wx.core.dao.domain.kitchen.ServiceAppointPageDTOAtAdmin">
+        <result column="ID" property="id"></result>
+        <result column="SERVICE_APPOINT_NO" property="serviceAppointNo"></result>
+        <result column="COUPON_ID" property="couponId"></result>
+        <result column="USER_ID" property="userId"></result>
+        <result column="UNION_ID" property="unionId"></result>
+        <result column="SERVICE_TYPE" property="serviceType"></result>
+        <result column="ORDER_NO" property="orderNo"></result>
+        <result column="CONTACT_NAME" property="contactName"></result>
+        <result column="CONTACT_MOBILE" property="contactMobile"></result>
+
+        <result column="ADDRESS" property="address"></result>
+        <result column="STAGE" property="stage"></result>
+        <result column="APPOINT_TIME" property="appointTime"></result>
+        <result column="APPOINT_TIME_RANGE" property="appointTimeRange"></result>
+        <result column="REMARK" property="remark"></result>
+        <result column="CANCEL_TIME" property="cancelTime"></result>
+        <result column="CANCEL_REASON" property="cancelReason"></result>
+        <result column="FINISH_TIME" property="finishTime"></result>
+
+        <result column="EVALUATE_SCORE" property="evaluateScore"></result>
+        <result column="EVALUATE_TIME" property="evaluateTime"></result>
+        <result column="ASSIGN_SERVICE_PROVIDER_TIME" property="assignServiceProviderTime"></result>
+        <result column="SERVICE_PROVIDER_ID" property="serviceProviderId"></result>
+        <result column="serviceProviderName" property="serviceProviderName"></result>
+        <result column="ASSIGN_PROVIDER_REMARK" property="assignProviderRemark"></result>
+        <result column="PLAN_SERVICE_TIME" property="planServiceTime"></result>
+
+        <result column="ASSIGN_STAFF_TIME" property="assignStaffTime"></result>
+        <result column="STAFF_NAME" property="staffName"></result>
+
+        <result column="STAFF_MOBILE" property="staffMobile"></result>
+        <result column="ASSIGN_STAFF_REMARK" property="assignStaffRemark"></result>
+        <result column="TIME_CREATED" property="timeCreated"></result>
+        <result column="TIME_UPDATED" property="timeUpdated"></result>
+        <result column="UPDATOR" property="updater"></result>
+        <result column="CHANGE_SERVICE_TIME_REASON" property="changeServiceTimeReason"></result>
+        <result column="realmOfMpServiceFinished" property="realmOfMpServiceFinished"></result>
+        <result column="realmOfMpServiceEvaluated" property="realmOfMpServiceEvaluated"></result>
+
+        <collection property="finishImages" column="{realmId = id,realm = realmOfMpServiceFinished}"
+                    select="com.sogal.wx.core.dao.mapper.WechatImageMapper.findByRealmAndRealmId">
+        </collection>
+        <collection property="evaluateImages" column="{realmId = id,realm = realmOfMpServiceEvaluated}"
+                    select="com.sogal.wx.core.dao.mapper.WechatImageMapper.findByRealmAndRealmId">
+        </collection>
+    </resultMap>
+
+    <sql id="processDataPrivilege">
+        <if test='userASDataPrivilege != null and userASDataPrivilege.dataPrivilege != null and userASDataPrivilege.dataPrivilege == "I" '>
+            AND mss.MOBILE = #{userASDataPrivilege.mobile}
+        </if>
+        <if test='userASDataPrivilege != null and userASDataPrivilege.dataPrivilege == "DEPARTMENT" '>
+            AND ms.SERVICE_PROVIDER_ID = #{userASDataPrivilege.providerId}
+        </if>
+    </sql>
+
+    <select id="findMpServiceAppointPaged" resultMap="serviceAppointPageAtAdmin">
+        SELECT <include refid="mpServiceAllColumns"/> ,
+        mss.`NAME` AS STAFF_NAME,
+        mss.MOBILE AS STAFF_MOBILE,
+        msp.`NAME` AS serviceProviderName ,
+        'MP_SERVICE_FINISH' AS realmOfMpServiceFinished ,'MP_SERVICE_EVALUATE' AS realmOfMpServiceEvaluated
+        FROM <include refid="tableName"/> ms
+        LEFT JOIN <include refid="mpServiceProviderTableName"/> msp ON ms.SERVICE_PROVIDER_ID = msp.ID
+        LEFT JOIN <include refid="mpServiceStaffTableName"/> mss ON ms.STAFF_ID = mss.ID
+        <include refid="findMpServiceAppointPagedConditionAtAdmin"/>
+        <include refid="processDataPrivilege"/>
+        <choose>
+            <when test="queryCondition.stage != null and queryCondition.stage == 'NEW'">
+                ORDER BY  ms.APPOINT_TIME ASC
+            </when>
+            <when test="queryCondition.stage != null and queryCondition.stage == 'WAIT_STAFF'">
+                ORDER BY  ms.PLAN_SERVICE_TIME ASC
+            </when>
+            <when test="queryCondition.stage != null and queryCondition.stage == 'WAIT_SERVICE'">
+                ORDER BY  ms.PLAN_SERVICE_TIME ASC
+            </when>
+            <when test="queryCondition.stage != null and queryCondition.stage == 'WAIT_EVALUATE'">
+                ORDER BY  ms.FINISH_TIME DESC
+            </when>
+            <when test="queryCondition.stage != null and queryCondition.stage == 'EVALUATED'">
+                ORDER BY  ms.FINISH_TIME DESC
+            </when>
+            <when test="queryCondition.stage != null and queryCondition.stage == 'CANCELED'">
+                ORDER BY  ms.CANCEL_TIME DESC
+            </when>
+            <otherwise>
+                ORDER BY ms.TIME_CREATED DESC
+            </otherwise>
+        </choose>
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+    <select id="countTotalMpServiceAppointPaged" resultType="int">
+        SELECT COUNT(*)
+        FROM <include refid="tableName"/> ms
+        LEFT JOIN <include refid="mpServiceProviderTableName"/> msp ON ms.SERVICE_PROVIDER_ID = msp.ID
+        LEFT JOIN <include refid="mpServiceStaffTableName"/> mss ON ms.STAFF_ID = mss.ID
+        <include refid="findMpServiceAppointPagedConditionAtAdmin"/>
+        <include refid="processDataPrivilege"/>
+    </select>
+
+    <select id="findMpServicenNumByStage"
+            resultType="com.sogal.wx.core.dao.domain.kitchen.MpServicenNumByStage">
+        SELECT ms.STAGE,COUNT(*) AS NUM
+        FROM <include refid="tableName"/> ms
+        LEFT JOIN <include refid="mpServiceProviderTableName"/> msp ON ms.SERVICE_PROVIDER_ID = msp.ID
+        LEFT JOIN <include refid="mpServiceStaffTableName"/> mss ON ms.STAFF_ID = mss.ID
+        <where>
+            <include refid="processDataPrivilege"/>
+        </where>
+        GROUP BY ms.STAGE
+    </select>
+    <select id="findMpServiceAppointPagedAtAdmin" resultMap="serviceAppointPageAtAdmin">
+        SELECT <include refid="mpServiceAllColumns"/> ,
+        mss.`NAME` AS STAFF_NAME,
+        mss.MOBILE AS STAFF_MOBILE,
+        msp.`NAME` AS serviceProviderName ,
+        'MP_SERVICE_FINISH' AS realmOfMpServiceFinished ,'MP_SERVICE_EVALUATE' AS realmOfMpServiceEvaluated
+        FROM <include refid="tableName"/> ms
+        LEFT JOIN <include refid="mpServiceProviderTableName"/> msp ON ms.SERVICE_PROVIDER_ID = msp.ID
+        LEFT JOIN <include refid="mpServiceStaffTableName"/> mss ON ms.STAFF_ID = mss.ID
+        <include refid="findMpServiceAppointPagedConditionAtAdmin"/>
+        <choose>
+            <when test="queryCondition.stage != null and queryCondition.stage == 'NEW'">
+                ORDER BY  ms.APPOINT_TIME ASC
+            </when>
+            <when test="queryCondition.stage != null and queryCondition.stage == 'WAIT_STAFF'">
+                ORDER BY  ms.PLAN_SERVICE_TIME ASC
+            </when>
+            <when test="queryCondition.stage != null and queryCondition.stage == 'WAIT_SERVICE'">
+                ORDER BY  ms.PLAN_SERVICE_TIME ASC
+            </when>
+            <when test="queryCondition.stage != null and queryCondition.stage == 'WAIT_EVALUATE'">
+                ORDER BY  ms.FINISH_TIME DESC
+            </when>
+            <when test="queryCondition.stage != null and queryCondition.stage == 'EVALUATED'">
+                ORDER BY  ms.FINISH_TIME DESC
+            </when>
+            <when test="queryCondition.stage != null and queryCondition.stage == 'CANCELED'">
+                ORDER BY  ms.CANCEL_TIME DESC
+            </when>
+            <otherwise>
+                ORDER BY ms.TIME_CREATED DESC
+            </otherwise>
+        </choose>
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <select id="countTotalMpServiceAppointPagedAtAdmin" resultType="int">
+        SELECT COUNT(*)
+        FROM <include refid="tableName"/> ms
+        <include refid="findMpServiceAppointPagedConditionAtAdmin"/>
+    </select>
+
+    <sql id="findMpServiceAppointPagedConditionAtAdmin">
+        <where>
+            <if test="queryCondition.stage != null">
+                ms.STAGE = #{queryCondition.stage}
+            </if>
+            <if test="queryCondition.stages != null and queryCondition.stages.size()>0">
+                AND ms.STAGE IN
+                <foreach collection="queryCondition.stages" index="index" item="item"  separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="queryCondition.serviceAppointNo != null">
+                AND  ms.SERVICE_APPOINT_NO LIKE concat('%', #{queryCondition.serviceAppointNo},'%')
+            </if>
+            <if test="queryCondition.contactName != null">
+                AND  ms.CONTACT_NAME LIKE concat('%', #{queryCondition.contactName},'%')
+            </if>
+            <if test="queryCondition.contactMobile != null">
+                AND ms.CONTACT_MOBILE LIKE concat('%', #{queryCondition.contactMobile},'%')
+            </if>
+            <if test="queryCondition.address != null">
+                AND ms.ADDRESS LIKE concat('%', #{queryCondition.address},'%')
+            </if>
+            <if test="queryCondition.serviceProviderId != null">
+                AND ms.SERVICE_PROVIDER_ID = #{queryCondition.serviceProviderId}
+            </if>
+            <if test="queryCondition.staffId != null">
+                AND ms.STAFF_ID = #{queryCondition.staffId}
+            </if>
+            <if test="queryCondition.staffMobile != null">
+                AND mss.MOBILE = #{queryCondition.staffMobile}
+            </if>
+            <if test="queryCondition.evaluateScore != null">
+                AND ms.EVALUATE_SCORE = #{queryCondition.evaluateScore}
+            </if>
+            <if test="queryCondition.appointTimeBegin != null">
+                AND ms.APPOINT_TIME <![CDATA[>= ]]> #{queryCondition.appointTimeBegin}
+            </if>
+            <if test="queryCondition.appointTimeTimeEnd != null">
+                AND ms.APPOINT_TIME <![CDATA[<= ]]> #{queryCondition.appointTimeTimeEnd}
+            </if>
+            <if test="queryCondition.planServiceTimeBegin != null">
+                AND ms.PLAN_SERVICE_TIME <![CDATA[>= ]]> #{queryCondition.planServiceTimeBegin}
+            </if>
+            <if test="queryCondition.planServiceTimeEnd != null">
+                AND ms.PLAN_SERVICE_TIME <![CDATA[<= ]]> #{queryCondition.planServiceTimeEnd}
+            </if>
+            <if test="queryCondition.assignStaffTimeBegin != null">
+                AND ms.ASSIGN_STAFF_TIME <![CDATA[>= ]]> #{queryCondition.assignStaffTimeBegin}
+            </if>
+            <if test="queryCondition.assignStaffTimeEnd != null">
+                AND ms.ASSIGN_STAFF_TIME <![CDATA[<= ]]> #{queryCondition.assignStaffTimeEnd}
+            </if>
+            <if test="queryCondition.finishTimeBegin != null">
+                AND ms.FINISH_TIME <![CDATA[>= ]]> #{queryCondition.finishTimeBegin}
+            </if>
+            <if test="queryCondition.finishTimeEnd != null">
+                AND ms.FINISH_TIME <![CDATA[<= ]]> #{queryCondition.finishTimeEnd}
+            </if>
+            <if test="queryCondition.evaluateTimeBegin != null">
+                AND ms.EVALUATE_TIME <![CDATA[>= ]]> #{queryCondition.evaluateTimeBegin}
+            </if>
+            <if test="queryCondition.evaluateTimeEnd != null">
+                AND ms.EVALUATE_TIME <![CDATA[<= ]]> #{queryCondition.evaluateTimeEnd}
+            </if>
+            <if test="queryCondition.cancelTimeBegin != null">
+                AND ms.CANCEL_TIME <![CDATA[>= ]]> #{queryCondition.cancelTimeBegin}
+            </if>
+            <if test="queryCondition.cancelTimeEnd != null">
+                AND ms.CANCEL_TIME <![CDATA[<= ]]> #{queryCondition.cancelTimeEnd}
+            </if>
+        </where>
+    </sql>
+    <select id="findMpServiceAppointById"
+            resultType="com.sogal.wx.core.dao.domain.kitchen.MpServiceAppoint">
+        SELECT *
+        FROM <include refid="tableName"/>
+        WHERE ID = #{id}
+    </select>
+    <update id="updateServiceProviderById"
+            parameterType="com.sogal.wx.core.dao.domain.kitchen.MpServiceAppoint">
+        UPDATE <include refid="tableName"/>
+        SET SERVICE_PROVIDER_ID = #{serviceProviderId},
+            <if test="planServiceTime != null">
+                PLAN_SERVICE_TIME = #{planServiceTime},
+            </if>
+            ASSIGN_PROVIDER_REMARK = #{assignProviderRemark},
+            STAGE = #{stage},
+            ASSIGN_SERVICE_PROVIDER_TIME = NOW(),
+            UPDATOR = #{updater}
+        WHERE ID = #{id}
+    </update>
+    <update id="updateServiceStaffInfoById"
+            parameterType="com.sogal.wx.core.dao.domain.kitchen.MpServiceAppoint">
+        UPDATE <include refid="tableName"/>
+        SET  STAFF_ID = #{staffId},
+        <if test="planServiceTime != null">
+             PLAN_SERVICE_TIME = #{planServiceTime},
+        </if>
+             ASSIGN_STAFF_REMARK = #{assignStaffRemark},
+             STAGE = #{stage},
+             ASSIGN_STAFF_TIME = NOW(),
+             UPDATOR = #{updater}
+        WHERE ID = #{id}
+    </update>
+    <update id="updatePlanServiceTimeById"
+            parameterType="com.sogal.wx.core.dao.domain.kitchen.MpServiceAppoint">
+        UPDATE <include refid="tableName"/>
+        SET  PLAN_SERVICE_TIME = #{planServiceTime},
+              CHANGE_SERVICE_TIME_REASON = #{changeServiceTimeReason},
+              UPDATOR = #{updater}
+        WHERE ID = #{id}
+    </update>
+    <update id="cancelServiceAppointById">
+        UPDATE
+          <include refid="tableName"/>
+        SET CANCEL_REASON = #{cancelReason},CANCEL_TIME = NOW(),STAGE = 'CANCELED'
+        WHERE ID = #{id} AND STAGE NOT IN ('WAIT_EVALUATE','EVALUATED','CANCELED')
+    </update>
+    <select id="findServiceNumOfMonthAssigned"
+            resultType="com.sogal.wx.core.dao.domain.kitchen.ServiceNumOfDayAssigned">
+        SELECT DATE_FORMAT(APPOINT_TIME,"%Y-%m-%d") AS appointDate ,COUNT(DATE_FORMAT(APPOINT_TIME,"%Y-%m-%d") ) AS num
+        FROM <include refid="tableName"/>
+        WHERE  DATE_FORMAT(APPOINT_TIME,'%Y-%m') = DATE_FORMAT(#{appointDate},'%Y-%m')
+        GROUP BY appointDate
+    </select>
+    <update id="finishMpService" parameterType="com.sogal.wx.core.dao.domain.kitchen.MpServiceAppoint">
+        UPDATE
+        <include refid="tableName"/>
+        SET FINISH_TIME = NOW(),STAGE = 'WAIT_EVALUATE',UPDATOR = #{updater}
+        WHERE ID = #{id}
+    </update>
+    <update id="evaluateMpService" parameterType="com.sogal.wx.core.dao.domain.kitchen.MpServiceAppoint">
+        UPDATE
+        <include refid="tableName"/>
+        SET EVALUATE_TIME = NOW(),STAGE = 'EVALUATED',EVALUATE_SCORE = #{evaluateScore},
+        EVALUATE_CONTENT = #{evaluateContent}
+        WHERE ID = #{id}
+    </update>
+    <select id="findMpServiceByUserIdAtC" resultType="com.sogal.wx.core.dao.domain.kitchen.MpServiceAppoint">
+        SELECT ms.*
+        FROM <include refid="tableName"/> ms
+        INNER JOIN <include refid="mpUserCouponTableName"/> muc ON ms.COUPON_ID = muc.COUPON_ID
+        WHERE muc.USER_ID = #{userId}
+        ORDER BY ms.TIME_CREATED DESC
+    </select>
+    <resultMap id="serviceDetailAtC" type="com.sogal.wx.core.dao.domain.kitchen.ServiceAppointDetailDTOAtC">
+        <result column="ID" property="id"></result>
+        <result column="SERVICE_APPOINT_NO" property="serviceAppointNo"></result>
+        <result column="SERVICE_TYPE" property="serviceType"></result>
+        <result column="ORDER_NO" property="orderNo"></result>
+        <result column="CONTACT_NAME" property="contactName"></result>
+        <result column="CONTACT_MOBILE" property="contactMobile"></result>
+
+        <result column="ADDRESS" property="address"></result>
+        <result column="STAGE" property="stage"></result>
+        <result column="APPOINT_TIME" property="appointTime"></result>
+        <result column="APPOINT_TIME_RANGE" property="appointTimeRange"></result>
+        <result column="REMARK" property="remark"></result>
+        <result column="CANCEL_TIME" property="cancelTime"></result>
+        <result column="CANCEL_REASON" property="cancelReason"></result>
+        <result column="FINISH_TIME" property="finishTime"></result>
+
+        <result column="EVALUATE_SCORE" property="evaluateScore"></result>
+        <result column="EVALUATE_TIME" property="evaluateTime"></result>
+        <result column="ASSIGN_SERVICE_PROVIDER_TIME" property="assignServiceProviderTime"></result>
+        <result column="serviceProviderName" property="serviceProviderName"></result>
+        <result column="PLAN_SERVICE_TIME" property="planServiceTime"></result>
+
+        <result column="ASSIGN_STAFF_TIME" property="assignStaffTime"></result>
+        <result column="STAFF_NAME" property="staffName"></result>
+        <result column="STAFF_MOBILE" property="staffMobile"></result>
+        <result column="TIME_CREATED" property="timeCreated"></result>
+
+        <result column="realmOfMpServiceFinished" property="realmOfMpServiceFinished"></result>
+        <result column="realmOfMpServiceEvaluated" property="realmOfMpServiceEvaluated"></result>
+
+        <collection property="finishImages" column="{realmId = id,realm = realmOfMpServiceFinished}"
+                    select="com.sogal.wx.core.dao.mapper.WechatImageMapper.findByRealmAndRealmId">
+        </collection>
+        <collection property="evaluateImages" column="{realmId = id,realm = realmOfMpServiceEvaluated}"
+                    select="com.sogal.wx.core.dao.mapper.WechatImageMapper.findByRealmAndRealmId">
+        </collection>
+    </resultMap>
+    <select id="findMpServiceDetailById" resultMap="serviceDetailAtC">
+        SELECT <include refid="mpServiceAllColumns"/> ,
+        mss.`NAME` AS STAFF_NAME,
+        mss.MOBILE AS STAFF_MOBILE,
+        msp.`NAME` AS serviceProviderName ,
+        'MP_SERVICE_FINISH' AS realmOfMpServiceFinished ,'MP_SERVICE_EVALUATE' AS realmOfMpServiceEvaluated
+        FROM <include refid="tableName"/> ms
+        LEFT JOIN <include refid="mpServiceProviderTableName"/> msp ON ms.SERVICE_PROVIDER_ID = msp.ID
+        LEFT JOIN <include refid="mpServiceStaffTableName"/> mss ON ms.STAFF_ID = mss.ID
+        WHERE ms.ID = #{id}
+    </select>
+    <select id="findMpServiceDetailByIdAtH5" resultType="com.sogal.wx.core.dao.domain.kitchen.MpServiceAppoint">
+        SELECT <include refid="mpServiceAllColumns"/> ,
+        mss.`NAME` AS STAFF_NAME,
+        mss.MOBILE AS STAFF_MOBILE,
+        msp.`NAME` AS serviceProviderName
+        FROM <include refid="tableName"/> ms
+        LEFT JOIN <include refid="mpServiceProviderTableName"/> msp ON ms.SERVICE_PROVIDER_ID = msp.ID
+        LEFT JOIN <include refid="mpServiceStaffTableName"/> mss ON ms.STAFF_ID = mss.ID
+        WHERE ms.ID = #{id}
+    </select>
+    <select id="findMpServiceIdsRequiretoEvaluate" resultType="java.lang.String">
+        SELECT ms.ID
+        FROM <include refid="tableName"/> ms
+        WHERE ms.STAGE = 'WAIT_EVALUATE' AND TIMESTAMPDIFF(HOUR,ms.FINISH_TIME,NOW()) > 72
+    </select>
+    <update id="autoEvaluateMpServiceFinished">
+        UPDATE <include refid="tableName"/>
+        SET STAGE='EVALUATED',EVALUATE_SCORE = 5,EVALUATE_CONTENT = #{evaluateContent},EVALUATE_TIME = NOW()
+        WHERE ID IN (
+            <foreach collection="ids" item="item" index="index" separator=",">
+                #{item}
+            </foreach>
+        )
+    </update>
+</mapper>

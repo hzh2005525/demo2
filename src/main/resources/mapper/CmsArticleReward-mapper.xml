@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.CmsArticleRewardMapper">
+
+    <sql id="tableName">`CMS_ARTICLE_REWARD`</sql>
+
+    <delete id="deleteCmsArticleRewardById">
+        DELETE FROM
+        <include refid="tableName"/>
+        WHERE `ID` = #{id}
+    </delete>
+
+    <insert id="addCmsArticleRewardBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.design.CmsArticleReward">
+        INSERT INTO
+        <include refid="tableName"/>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                `ID`,
+            </if>
+            <if test="rewardType != null">
+                `REWARD_TYPE`,
+            </if>
+            <if test="randomMinReward != null">
+                `RANDOM_MIN_REWARD`,
+            </if>
+            <if test="randomMaxReward != null">
+                `RANDOM_MAX_REWARD`,
+            </if>
+            <if test="fixReward != null">
+                `FIX_REWARD`,
+            </if>
+            <if test="area != null and area != ''">
+                `AREA`,
+            </if>
+            <if test="beginTime != null">
+                `BEGIN_TIME`,
+            </if>
+            <if test="endTime != null">
+                `END_TIME`,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                #{id},
+            </if>
+            <if test="rewardType != null">
+                #{rewardType},
+            </if>
+            <if test="randomMinReward != null">
+                #{randomMinReward},
+            </if>
+            <if test="randomMaxReward != null">
+                #{randomMaxReward},
+            </if>
+            <if test="fixReward != null">
+                #{fixReward},
+            </if>
+            <if test="area != null and area != ''">
+                #{area},
+            </if>
+            <if test="beginTime != null">
+                #{beginTime},
+            </if>
+            <if test="endTime != null">
+                #{endTime},
+            </if>
+        </trim>
+    </insert>
+
+    <insert id="addOrUpdateCmsArticleRewardBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.design.CmsArticleReward">
+        INSERT INTO
+        <include refid="tableName"/>
+        (`ID`, `REWARD_TYPE`, `RANDOM_MIN_REWARD`, `RANDOM_MAX_REWARD`, `FIX_REWARD`, `AREA`, `BEGIN_TIME`, `END_TIME`)
+        VALUES (#{id}, #{rewardType}, #{randomMinReward}, #{randomMaxReward}, #{fixReward}, #{area}, #{beginTime},
+        #{endTime})
+        ON DUPLICATE KEY UPDATE
+        `REWARD_TYPE` = VALUES(`REWARD_TYPE`),
+        `RANDOM_MIN_REWARD` = VALUES(`RANDOM_MIN_REWARD`),
+        `RANDOM_MAX_REWARD` = VALUES(`RANDOM_MAX_REWARD`),
+        `FIX_REWARD` = VALUES(`FIX_REWARD`),
+        `AREA` = VALUES(`AREA`),
+        `BEGIN_TIME` = VALUES(`BEGIN_TIME`),
+        `END_TIME` = VALUES(`END_TIME`)
+    </insert>
+
+    <update id="updateCmsArticleRewardBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.design.CmsArticleReward">
+        UPDATE
+        <include refid="tableName"/>
+        <set>
+            <if test="rewardType != null">
+                `REWARD_TYPE` = #{rewardType},
+            </if>
+            <if test="randomMinReward != null">
+                `RANDOM_MIN_REWARD` = #{randomMinReward},
+            </if>
+            <if test="randomMaxReward != null">
+                `RANDOM_MAX_REWARD` = #{randomMaxReward},
+            </if>
+            <if test="fixReward != null">
+                `FIX_REWARD` = #{fixReward},
+            </if>
+            <if test="area != null and area != ''">
+                `AREA` = #{area},
+            </if>
+            <if test="beginTime != null">
+                `BEGIN_TIME` = #{beginTime},
+            </if>
+            <if test="endTime != null">
+                `END_TIME` = #{endTime},
+            </if>
+        </set>
+        WHERE `ID` = #{id}
+    </update>
+
+    <select id="selectCmsArticleRewardById" resultType="com.sogal.wx.core.dao.domain.design.CmsArticleReward">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE `ID` = #{id}
+    </select>
+
+</mapper>

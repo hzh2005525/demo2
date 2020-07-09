@@ -1,0 +1,1327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.UserMpMapper">
+
+    <sql id="tableName">`MP_USER`</sql>
+
+    <sql id="userAuthBaseTableName">`USER_AUTH_BASE`</sql>
+
+    <sql id="wechatDesignerTableName">`USER_AUTH_DESIGNER`</sql>
+
+    <sql id="cmsArticleTableName">`CMS_ARTICLE`</sql>
+
+    <sql id="mpUserRegisterTableName">`MP_USER_REGISTER`</sql>
+
+    <sql id="mpAccessRecordTableName">`MP_ACCESS_RECORD`</sql>
+
+    <sql id="mpAccessShareTableName">`MP_ACCESS_SHARE`</sql>
+
+    <sql id="mpUserViewTimeTableName">`MP_USER_VIEW_TIME`</sql>
+
+    <sql id="mpUserReferrerTableName">`MP_USER_REFERRER`</sql>
+
+    <sql id="gzhAccessTokenTableName">`GZH_ACCESS_TOKEN`</sql>
+
+    <sql id="userAuthPromotionTableName">`USER_AUTH_PROMOTION`</sql>
+
+    <sql id="userPromotionIdentityCodeTableName">`USER_PROMOTION_IDENTIFY_CARD`</sql>
+
+    <sql id="userPromotionContractTableName">`USER_PROMOTION_CONTRACT`</sql>
+
+    <sql id="mpUserSignupBrandTableName">`MP_USER_SIGNUP_BRAND`</sql>
+
+    <sql id="mpAccessTokenTableName">`MP_ACCESS_TOKEN`</sql>
+
+    <sql id="userMpAllColumn">
+        mp.`ID`,
+        mp.`USER_NO`,
+        mp.`OPEN_ID`,
+        mp.`UNION_ID`,
+        mp.`GENDER`,
+        mp.`NICKNAME`,
+        mp.`LEVEL`,
+        mp.`TIME_CREATED`,
+        mp.`CATEGORY`,
+        mp.`AVATAR_URL`,
+        mp.`USER_PROVINCE`,
+        mp.`USER_CITY`,
+        mp.`USER_AREA`,
+        mp.`REMARK`,
+        mp.`MP_COUNTRY`,
+        mp.`MP_PROVINCE`,
+        mp.`MP_CITY`
+    </sql>
+
+    <update id="updateMpUserInfoSelectiveById" parameterType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        UPDATE
+        <include refid="tableName"/>
+        <set>
+            <if test="gender != null">
+                `GENDER` = #{gender},
+            </if>
+            <if test="nickName != null and nickName != ''">
+                `NICKNAME` = #{nickName},
+            </if>
+            <if test="avatarUrl != null and avatarUrl != ''">
+                `AVATAR_URL` = #{avatarUrl},
+            </if>
+            <if test="mpCountry != null and mpCountry != ''">
+                `MP_COUNTRY` = #{mpCountry},
+            </if>
+            <if test="mpProvince != null and mpProvince != ''">
+                `MP_PROVINCE` = #{mpProvince},
+            </if>
+            <if test="mpCity != null and mpCity != ''">
+                `MP_CITY` = #{mpCity},
+            </if>
+        </set>
+        WHERE `ID` = #{id}
+    </update>
+    <update id="updateMpUserBasicInfoAtLoginById"
+            parameterType="com.sogal.wx.core.dao.domain.user.UserInfoExtendDTO">
+        UPDATE
+        <include refid="tableName"/>
+        <set>
+            <if test="gender != null">
+                `GENDER` = #{gender},
+            </if>
+            <if test="nickName != null and nickName != ''">
+                `NICKNAME` = #{nickName},
+            </if>
+            <if test="avatarUrl != null and avatarUrl != ''">
+                `AVATAR_URL` = #{avatarUrl},
+            </if>
+            <if test="mpCountry != null and mpCountry != ''">
+                `MP_COUNTRY` = #{mpCountry},
+            </if>
+            <if test="mpProvince != null and mpProvince != ''">
+                `MP_PROVINCE` = #{mpProvince},
+            </if>
+            <if test="mpCity != null and mpCity != ''">
+                `MP_CITY` = #{mpCity},
+            </if>
+        </set>
+        WHERE `ID` = #{id}
+    </update>
+
+
+    <update id="updateUserMpEssentialInfo" parameterType="com.sogal.wx.core.dao.domain.user.UserEssentialInfo">
+        UPDATE
+        <include refid="tableName"/>
+        SET
+        `USER_PROVINCE` = #{userProvince},
+        `USER_CITY` = #{userCity},
+        `USER_AREA` = #{userArea}
+        WHERE
+        `ID` = #{id}
+    </update>
+
+    <select id="findUserMpById" resultType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE ID = #{userId}
+    </select>
+
+    <select id="findUserBasicInfo" parameterType="com.sogal.wx.core.dao.domain.user.QueryUserNotLoginCondition"
+            resultType="com.sogal.wx.core.dao.domain.user.WechatSharerBasicInfo">
+        SELECT
+        um.USER_NO, um.AVATAR_URL, um.NICKNAME, ui.IS_EMISSARY, ui.EMISSARY_TYPE
+        FROM
+        <include refid="tableName"/>
+        um
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui
+        ON um.UNION_ID = ui.UNION_ID
+        WHERE um.USER_NO = #{userNo}
+        LIMIT 1
+    </select>
+
+    <update id="updateUserPersonalEssentialInfo" parameterType="com.sogal.wx.core.dao.domain.user.UserEssentialInfo">
+        UPDATE
+        <include refid="tableName"/>
+        SET
+        `MOBILE` = #{mobile},
+        `NICKNAME` = #{name},
+        `LEVEL` = 'USER'
+        WHERE
+        `ID` = #{id}
+    </update>
+
+    <select id="findUserByOpenId" resultType="com.sogal.wx.core.dao.domain.user.UserInfoExtendDTO">
+        SELECT<include refid="userMpAllColumn"/>,
+        mp.`MOBILE`,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS name,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE`
+        ELSE urc.`MOBILE` END AS authMobile,
+        ui.IS_EMISSARY AS isEmissary,
+        ui.EMISSARY_TYPE AS emissaryType,
+        ui.AGREEMENT AS agreement,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`AGENT`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`AGENT`
+        ELSE urc.`AGENT` END AS dealerCode
+        FROM
+        <include refid="tableName"/>
+        mp
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui
+        ON mp.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        WHERE mp.`OPEN_ID` = #{openId}
+        AND mp.`CATEGORY` = #{category}
+    </select>
+
+    <update id="syncUserUnionId" parameterType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        UPDATE
+        <include refid="tableName"/>
+        SET `UNION_ID` = #{unionId}
+        WHERE `ID` = #{id}
+        AND (`UNION_ID` IS NULL OR `UNION_ID` = '')
+    </update>
+
+    <insert id="addNewUserMpBySelective" parameterType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        INSERT INTO
+        <include refid="tableName"/>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                `ID`,
+            </if>
+            <if test="userNo != null and userNo != ''">
+                `USER_NO`,
+            </if>
+            <if test="vipCode != null and vipCode != ''">
+                `VIP_CODE`,
+            </if>
+            <if test="mobile != null and mobile != ''">
+                `MOBILE`,
+            </if>
+            <if test="openId != null and openId != ''">
+                `OPEN_ID`,
+            </if>
+            <if test="unionId != null and unionId != ''">
+                `UNION_ID`,
+            </if>
+            <if test="gender != null">
+                `GENDER`,
+            </if>
+            <if test="nickName != null and nickName != ''">
+                `NICKNAME`,
+            </if>
+            <if test="level != null">
+                `LEVEL`,
+            </if>
+            <if test="category != null">
+                `CATEGORY`,
+            </if>
+            <if test="avatarUrl != null and avatarUrl != ''">
+                `AVATAR_URL`,
+            </if>
+            <if test="mpCountry != null and mpCountry != ''">
+                `MP_COUNTRY`,
+            </if>
+            <if test="mpProvince != null and mpProvince != ''">
+                `MP_PROVINCE`,
+            </if>
+            <if test="mpCity != null and mpCity != ''">
+                `MP_CITY`,
+            </if>
+            <if test="sceneValue != null and sceneValue != ''">
+                `SCENE_VALUE`,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                #{id},
+            </if>
+            <if test="userNo != null and userNo != ''">
+                #{userNo},
+            </if>
+            <if test="vipCode != null and vipCode != ''">
+                #{vipCode},
+            </if>
+            <if test="mobile != null and mobile != ''">
+                #{mobile},
+            </if>
+            <if test="openId != null and openId != ''">
+                #{openId},
+            </if>
+            <if test="unionId != null and unionId != ''">
+                #{unionId},
+            </if>
+            <if test="gender != null">
+                #{gender},
+            </if>
+            <if test="nickName != null and nickName != ''">
+                #{nickName},
+            </if>
+            <if test="level != null">
+                #{level},
+            </if>
+            <if test="category != null">
+                #{category},
+            </if>
+            <if test="avatarUrl != null and avatarUrl != ''">
+                #{avatarUrl},
+            </if>
+            <if test="mpCountry != null and mpCountry != ''">
+                #{mpCountry},
+            </if>
+            <if test="mpProvince != null and mpProvince != ''">
+                #{mpProvince},
+            </if>
+            <if test="mpCity != null and mpCity != ''">
+                #{mpCity},
+            </if>
+            <if test="sceneValue != null and sceneValue != ''">
+                #{sceneValue},
+            </if>
+        </trim>
+    </insert>
+
+    <select id="findUserMpsAtAdmin" resultType="com.sogal.wx.core.dao.domain.user.WechatUserDTO">
+        SELECT<include refid="userMpAllColumn"/>,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+        (CASE WHEN urs.`MOBILE` IS NULL THEN mp.`MOBILE`
+        ELSE urs.`MOBILE` END)
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+        (CASE WHEN uro.`MOBILE` IS NULL THEN mp.`MOBILE`
+        ELSE uro.`MOBILE` END)
+        ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN mp.`MOBILE`
+        ELSE urc.`MOBILE` END) END AS mobile,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS name,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE`
+        ELSE urc.`MOBILE` END AS authMobile,
+        ui.IS_EMISSARY AS isEmissary, ui.EMISSARY_TYPE AS emissaryType, ui.AGREEMENT AS agreement,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`AGENT`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`AGENT`
+        ELSE urc.`AGENT` END AS dealerCode,
+        designer.STATUS AS designerStatus,
+        promotion.AUTH_STATUS AS promotionStatus
+        FROM
+        <include refid="tableName"/>
+        mp
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui ON ui.UNION_ID = mp.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        LEFT JOIN
+        <include refid="wechatDesignerTableName"/>
+        designer ON designer.UNION_ID = mp.UNION_ID
+        LEFT JOIN
+        <include refid="userAuthPromotionTableName"/>
+        promotion ON promotion.UNION_ID = mp.UNION_ID
+        <include refid="findWechatUsersAtAdminCondition"/>
+        ORDER BY mp.TIME_CREATED DESC
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <select id="countFindUserMpsAtAdmin" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM
+        <include refid="tableName"/>
+        mp
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui ON ui.UNION_ID = mp.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        <include refid="findWechatUsersAtAdminCondition"/>
+    </select>
+
+    <sql id="findWechatUsersAtAdminCondition">
+        <where>
+            <trim prefixOverrides="AND">
+                <if test="queryUserCondition.timeCreatedBegin != null">
+                    AND mp.TIME_CREATED <![CDATA[>=]]> #{queryUserCondition.timeCreatedBegin}
+                </if>
+                <if test="queryUserCondition.timeCreatedEnd != null">
+                    AND mp.TIME_CREATED  <![CDATA[<=]]>#{queryUserCondition.timeCreatedEnd}
+                </if>
+                <if test="queryUserCondition.userNo != null">
+                    AND mp.USER_NO = #{queryUserCondition.userNo}
+                </if>
+                <if test="queryUserCondition.mobile != null">
+                    AND (CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+                    (CASE WHEN urs.`MOBILE` IS NULL THEN mp.`MOBILE` = #{queryUserCondition.mobile}
+                    ELSE urs.`MOBILE` = #{queryUserCondition.mobile} END)
+                    WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+                    (CASE WHEN uro.`MOBILE` IS NULL THEN mp.`MOBILE` = #{queryUserCondition.mobile}
+                    ELSE uro.`MOBILE` = #{queryUserCondition.mobile} END)
+                    ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN mp.`MOBILE` = #{queryUserCondition.mobile}
+                    ELSE urc.`MOBILE` = #{queryUserCondition.mobile} END) END)
+                </if>
+                <if test="queryUserCondition.category != null">
+                    AND mp.CATEGORY = #{queryUserCondition.category}
+                </if>
+                <if test="queryUserCondition.userCity != null">
+                    AND mp.USER_CITY = #{queryUserCondition.userCity}
+                </if>
+                <if test="queryUserCondition.name != null">
+                    AND (CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME` LIKE
+                    concat('%',#{queryUserCondition.name},'%')
+                    WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME` LIKE concat('%',#{queryUserCondition.name},'%')
+                    ELSE urc.`NAME` LIKE concat('%',#{queryUserCondition.name},'%') END)
+                </if>
+                <if test="queryUserCondition.emissaryType != null">
+                    AND ui.EMISSARY_TYPE LIKE concat('%',#{queryUserCondition.emissaryType},'%')
+                </if>
+                <if test="queryUserCondition.nickName != null">
+                    AND ( mp.NICKNAME LIKE concat('%',#{queryUserCondition.nickName},'%')
+                    OR mp.REMARK LIKE concat('%',#{queryUserCondition.nickName},'%')
+                    OR (CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+                    (CASE WHEN urs.`MOBILE` IS NULL THEN mp.`MOBILE` = #{queryUserCondition.nickName}
+                    ELSE urs.`MOBILE` = #{queryUserCondition.nickName} END)
+                    WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+                    (CASE WHEN uro.`MOBILE` IS NULL THEN mp.`MOBILE` = #{queryUserCondition.nickName}
+                    ELSE uro.`MOBILE` = #{queryUserCondition.nickName} END)
+                    ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN mp.`MOBILE` = #{queryUserCondition.nickName}
+                    ELSE urc.`MOBILE` = #{queryUserCondition.nickName} END) END)
+                    OR (CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME` LIKE
+                    concat('%',#{queryUserCondition.nickName},'%')
+                    WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME` LIKE concat('%',#{queryUserCondition.nickName},'%')
+                    ELSE urc.`NAME` LIKE concat('%',#{queryUserCondition.nickName},'%') END))
+                </if>
+                <if test="queryUserCondition.levels != null">
+                    AND mp.LEVEL IN
+                    <foreach collection="queryUserCondition.levels" separator="," open="(" close=")" item="level">
+                        #{level}
+                    </foreach>
+                </if>
+                <if test="queryUserCondition.categories != null">
+                    AND mp.CATEGORY IN
+                    <foreach collection="queryUserCondition.categories" separator="," open="(" close=")"
+                             item="category">
+                        #{category}
+                    </foreach>
+                </if>
+                <if test="queryUserCondition.activityName != null">
+                    AND wa.TITLE LIKE concat('%',#{queryUserCondition.activityName},'%')
+                </if>
+            </trim>
+        </where>
+    </sql>
+
+    <update id="updateRemarkById">
+        UPDATE
+        <include refid="tableName"/>
+        SET REMARK = #{remark} WHERE ID = #{id}
+    </update>
+
+    <select id="findUserChartsByVisitTotalOfVisitor"
+            parameterType="com.sogal.wx.core.dao.domain.charts.UserChartsCondition"
+            resultType="com.sogal.wx.core.dao.domain.charts.UserChartsDTO">
+        SELECT mvr.SERVANT as userId, COUNT(*) as visitTotalOfVisitor, um.ID, um.`NICKNAME`, um.AVATAR_URL,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+        (CASE WHEN urs.`MOBILE` IS NULL THEN um.`MOBILE`
+        ELSE urs.`MOBILE` END)
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+        (CASE WHEN uro.`MOBILE` IS NULL THEN um.`MOBILE`
+        ELSE uro.`MOBILE` END)
+        ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN um.`MOBILE`
+        ELSE urc.`MOBILE` END) END AS mobile,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS name,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE`
+        ELSE urc.`MOBILE` END AS authMobile,
+        ui.IS_EMISSARY
+        FROM
+        <include refid="mpAccessRecordTableName"/>
+        mvr
+        LEFT JOIN
+        <include refid="tableName"/>
+        um ON mvr.SERVANT = um.ID
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui ON um.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        <include refid="findUserChartsCommonCondition"/>
+        GROUP BY mvr.SERVANT ORDER BY visitTotalOfVisitor DESC,um.TIME_CREATED
+        LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="countUserChartsByVisitTotalOfVisitor"
+            parameterType="com.sogal.wx.core.dao.domain.charts.UserChartsCondition"
+            resultType="int">
+        SELECT COUNT(DISTINCT mvr.SERVANT)
+        FROM
+        <include refid="mpAccessRecordTableName"/>
+        mvr
+        <include refid="findUserChartsCommonCondition"/>
+    </select>
+
+    <select id="findUserChartsByVisitorTotal" parameterType="com.sogal.wx.core.dao.domain.charts.UserChartsCondition"
+            resultType="com.sogal.wx.core.dao.domain.charts.UserChartsDTO">
+        SELECT
+        mvr.SERVANT as userId,
+        COUNT(DISTINCT mvr.VISITOR) as visitorTotal,
+        um.ID, um.`NICKNAME`, um.AVATAR_URL,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+        (CASE WHEN urs.`MOBILE` IS NULL THEN um.`MOBILE`
+        ELSE urs.`MOBILE` END)
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+        (CASE WHEN uro.`MOBILE` IS NULL THEN um.`MOBILE`
+        ELSE uro.`MOBILE` END)
+        ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN um.`MOBILE`
+        ELSE urc.`MOBILE` END) END AS mobile,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS name,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE`
+        ELSE urc.`MOBILE` END AS authMobile,
+        ui.IS_EMISSARY
+        FROM
+        <include refid="mpAccessRecordTableName"/>
+        mvr
+        LEFT JOIN
+        <include refid="tableName"/>
+        um ON mvr.SERVANT = um.ID
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui ON um.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        <include refid="findUserChartsCommonCondition"/>
+        GROUP BY mvr.SERVANT ORDER BY visitorTotal DESC,um.TIME_CREATED
+        LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="countUserChartsByVisitorTotal" parameterType="com.sogal.wx.core.dao.domain.charts.UserChartsCondition"
+            resultType="int">
+        SELECT COUNT(DISTINCT mvr.SERVANT)
+        FROM
+        <include refid="mpAccessRecordTableName"/>
+        mvr
+        <include refid="findUserChartsCommonCondition"/>
+    </select>
+
+    <sql id="findUserChartsCommonCondition">
+        <where>
+            mvr.SERVANT IS NOT NULL AND mvr.CATEGORY = 'DESIGN'
+            <choose>
+                <when test="queryTime != null and queryTime == 'THIS_WEEK'">
+                    AND YEARWEEK(date_format(mvr.TIME_CREATED,'%Y-%m-%d')) = YEARWEEK(now())
+                </when>
+                <when test="queryTime != null and queryTime == 'THIS_MONTH'">
+                    AND date_format(mvr.TIME_CREATED,'%Y-%m')=date_format(now(),'%Y-%m')
+                </when>
+                <when test="queryTime != null and queryTime == 'ALL'">
+
+                </when>
+                <otherwise>
+                    AND YEARWEEK(date_format(mvr.TIME_CREATED,'%Y-%m-%d')) = YEARWEEK(now())
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findUserChartsBySignUpTotal" parameterType="com.sogal.wx.core.dao.domain.charts.UserChartsCondition"
+            resultType="com.sogal.wx.core.dao.domain.charts.UserChartsDTO">
+        SELECT um.ID as userId, COUNT(DISTINCT wur.USER_ID) AS signUpTotal,
+        um.ID, um.`NICKNAME`, um.AVATAR_URL,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+        (CASE WHEN urs.`MOBILE` IS NULL THEN um.`MOBILE`
+        ELSE urs.`MOBILE` END)
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+        (CASE WHEN uro.`MOBILE` IS NULL THEN um.`MOBILE`
+        ELSE uro.`MOBILE` END)
+        ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN um.`MOBILE`
+        ELSE urc.`MOBILE` END) END AS mobile,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS name,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE`
+        ELSE urc.`MOBILE` END AS authMobile,
+        ui.IS_EMISSARY
+        FROM
+        <include refid="mpUserRegisterTableName"/>
+        wur
+        LEFT JOIN
+        <include refid="tableName"/>
+        um ON wur.SHARER_NO = um.USER_NO
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui ON um.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        <include refid="findUserChartsBySignUpTotalQueryCondition"/>
+        GROUP BY wur.SHARER_NO ORDER BY signUpTotal DESC,um.TIME_CREATED
+        LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="countUserChartsBySignUpTotal" parameterType="com.sogal.wx.core.dao.domain.charts.UserChartsCondition"
+            resultType="int">
+        SELECT COUNT(DISTINCT wur.SHARER_NO)
+        FROM
+        <include refid="mpUserRegisterTableName"/>
+        wur
+        <include refid="findUserChartsBySignUpTotalQueryCondition"/>
+    </select>
+
+    <sql id="findUserChartsBySignUpTotalQueryCondition">
+        <where>
+            wur.SHARER_NO IS NOT NULL AND wur.CATEGORY = 'DESIGN'
+            <choose>
+                <when test="queryTime != null and queryTime == 'THIS_WEEK'">
+                    AND YEARWEEK(date_format(wur.TIME_CREATED,'%Y-%m-%d')) = YEARWEEK(now())
+                </when>
+                <when test="queryTime != null and queryTime == 'THIS_MONTH'">
+                    AND date_format(wur.TIME_CREATED,'%Y-%m')=date_format(now(),'%Y-%m')
+                </when>
+                <when test="queryTime != null and queryTime == 'ALL'">
+
+                </when>
+                <otherwise>
+                    AND YEARWEEK(date_format(wur.TIME_CREATED,'%Y-%m-%d')) = YEARWEEK(now())
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="findUserFissionInfoAtFirst" resultType="com.sogal.wx.core.dao.domain.user.UserFissonInfoDTO">
+        SELECT c15.`1st` as firstUserId,c15.`2nd` as secondUserId,c15.`3rd` as thirdUserId,c15.`4th` as
+        fourthUserId,c15.`5th` as fifthUserId,
+        c15.`6th` as sixthUserId,c15.`7th` as seventhUserId,c15.`8th` as eighthUserId,c15.`9th` as ninthUserId,
+        c16.USER_ID as tenthUserId
+        FROM wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c16
+        RIGHT JOIN
+        (SELECT c13.`1st`,c13.`2nd`,c13.`3rd`,c13.`4th`,c13.`5th`,c13.`6th`,c13.`7th`,c13.`8th`,c14.USER_ID as '9th'
+        from wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c14
+        RIGHT JOIN
+        (SELECT c11.`1st`,c11.`2nd`,c11.`3rd`,c11.`4th`,c11.`5th`,c11.`6th`,c11.`7th`,c12.USER_ID as '8th' from wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c12
+        RIGHT JOIN
+        (SELECT c9.`1st`,c9.`2nd`,c9.`3rd`,c9.`4th`,c9.`5th`,c9.`6th`,c10.USER_ID as '7th' from wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c10
+        RIGHT JOIN
+        (SELECT c7.`1st`,c7.`2nd`,c7.`3rd`,c7.`4th`,c7.`5th`,c8.USER_ID as '6th' from wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c8
+        RIGHT JOIN
+        (SELECT c5.`1st`,c5.`2nd`,c5.`3rd`,c5.`4th`,c6.USER_ID as '5th' from wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c6
+        RIGHT JOIN
+        (SELECT c3.`1st`,c3.`2nd`,c3.`3rd`,c4.USER_ID as '4th' FROM wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c4
+        RIGHT JOIN
+        (SELECT c1.FIRST_SHARER_ID as '1st',c1.USER_ID as '2nd',c2.USER_ID as '3rd' FROM wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c2
+        RIGHT JOIN
+        (SELECT FIRST_SHARER_ID,USER_ID FROM wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        WHERE FIRST_SHARER_ID = #{userId} ) c1 ON c2.FIRST_SHARER_ID=c1.USER_ID
+        )c3 on c4.FIRST_SHARER_ID=c3.`3rd`
+        )c5 on c6.FIRST_SHARER_ID=c5.`4th`
+        )c7 on c8.FIRST_SHARER_ID=c7.`5th`
+        )c9 on c10.FIRST_SHARER_ID=c9.`6th`
+        )c11 on c12.FIRST_SHARER_ID=c11.`7th`
+        )c13 on c14.FIRST_SHARER_ID=c13.`8th`
+        )c15 on c16.FIRST_SHARER_ID=c15.`9th`
+        ORDER BY c15.`1st`,c15.`2nd`,c15.`3rd`,c15.`4th`,c15.`5th`,c15.`6th`,c15.`7th`,c15.`8th`,c15.`9th`,c16.USER_ID
+    </select>
+
+    <select id="findUserFissionInfo" resultType="com.sogal.wx.core.dao.domain.user.UserFissonInfoDTO">
+        SELECT c15.`1st` as firstUserId,c15.`2nd` as secondUserId,c15.`3rd` as thirdUserId,c15.`4th` as
+        fourthUserId,c15.`5th` as fifthUserId,
+        c15.`6th` as sixthUserId,c15.`7th` as seventhUserId,c15.`8th` as eighthUserId,c15.`9th` as ninthUserId,
+        c16.USER_ID as tenthUserId
+        from wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c16
+        RIGHT JOIN
+        (SELECT c13.`1st`,c13.`2nd`,c13.`3rd`,c13.`4th`,c13.`5th`,c13.`6th`,c13.`7th`,c13.`8th`,c14.USER_ID as '9th'
+        from wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c14
+        RIGHT JOIN
+        (SELECT c11.`1st`,c11.`2nd`,c11.`3rd`,c11.`4th`,c11.`5th`,c11.`6th`,c11.`7th`,c12.USER_ID as '8th' from wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c12
+        RIGHT JOIN
+        (SELECT c9.`1st`,c9.`2nd`,c9.`3rd`,c9.`4th`,c9.`5th`,c9.`6th`,c10.USER_ID as '7th' from wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c10
+        RIGHT JOIN
+        (SELECT c7.`1st`,c7.`2nd`,c7.`3rd`,c7.`4th`,c7.`5th`,c8.USER_ID as '6th' from wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c8
+        RIGHT JOIN
+        (SELECT c5.`1st`,c5.`2nd`,c5.`3rd`,c5.`4th`,c6.USER_ID as '5th' from wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c6
+        RIGHT JOIN
+        (SELECT c3.`1st`,c3.`2nd`,c3.`3rd`,c4.USER_ID as '4th' FROM wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c4
+        RIGHT JOIN
+        (SELECT c1.LATEST_SHARER_ID as '1st',c1.USER_ID as '2nd',c2.USER_ID as '3rd' FROM wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        c2
+        RIGHT JOIN
+        (SELECT LATEST_SHARER_ID,USER_ID FROM wxdb.
+        <include refid="mpUserReferrerTableName"/>
+        WHERE LATEST_SHARER_ID is NOT NULL AND LATEST_SHARER_ID = #{userId}) c1 ON c2.LATEST_SHARER_ID=c1.USER_ID AND
+        c2.USER_ID NOT IN (c1.LATEST_SHARER_ID,c1.USER_ID)
+        )c3 on c4.LATEST_SHARER_ID=c3.`3rd` AND c4.USER_ID NOT IN (c3.`1st`,c3.`2nd`,c3.`3rd`)
+        )c5 on c6.LATEST_SHARER_ID=c5.`4th` AND c6.USER_ID NOT IN (c5.`1st`,c5.`2nd`,c5.`3rd`,c5.`4th`)
+        )c7 on c8.LATEST_SHARER_ID=c7.`5th` AND c8.USER_ID NOT IN (c7.`1st`,c7.`2nd`,c7.`3rd`,c7.`4th`,c7.`5th`)
+        )c9 on c10.LATEST_SHARER_ID=c9.`6th` AND c10.USER_ID NOT IN
+        (c9.`1st`,c9.`2nd`,c9.`3rd`,c9.`4th`,c9.`5th`,c9.`6th`)
+        )c11 on c12.LATEST_SHARER_ID=c11.`7th` AND c12.USER_ID NOT IN
+        (c11.`1st`,c11.`2nd`,c11.`3rd`,c11.`4th`,c11.`5th`,c11.`6th`,c11.`7th`)
+        )c13 on c14.LATEST_SHARER_ID=c13.`8th` AND c14.USER_ID NOT IN
+        (c13.`1st`,c13.`2nd`,c13.`3rd`,c13.`4th`,c13.`5th`,c13.`6th`,c13.`7th`,c13.`8th`)
+        )c15 on c16.LATEST_SHARER_ID=c15.`9th` AND c16.USER_ID NOT IN (c15.`1st`,c15.`2nd`,c15.`3rd`,c15.`4th`
+        ,c15.`5th`,c15.`6th`,c15.`7th`,c15.`8th`,c15.`9th`)
+        ORDER BY c15.`1st`,c15.`2nd`,c15.`3rd`,c15.`4th`,c15.`5th`,c15.`6th`,c15.`7th`,c15.`8th`,c15.`9th`,c16.USER_ID
+    </select>
+
+    <select id="findUserMpsByUserId" resultType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        SELECT<include refid="userMpAllColumn"/>,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+        (CASE WHEN urs.`MOBILE` IS NULL THEN mp.`MOBILE`
+        ELSE urs.`MOBILE` END)
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+        (CASE WHEN uro.`MOBILE` IS NULL THEN mp.`MOBILE`
+        ELSE uro.`MOBILE` END)
+        ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN mp.`MOBILE`
+        ELSE urc.`MOBILE` END) END AS mobile,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS name,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE`
+        ELSE urc.`MOBILE` END AS authMobile,
+        ui.IS_EMISSARY AS isEmissary,
+        ui.EMISSARY_TYPE AS emissaryType, ui.AGREEMENT AS agreement,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`AGENT`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`AGENT`
+        ELSE urc.`AGENT` END AS dealerCode
+        FROM
+        <include refid="tableName"/>
+        mp
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui ON mp.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        WHERE mp.ID IN
+        <foreach collection="sets" separator="," item="item" index="index" open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+    <!-- 后台客户报名数据查询字段 -->
+    <sql id="userSignUpQueryColumn">
+        wur.ID,
+        wur.`USER_NO`,
+        wur.`USER_ID`,
+        wur.`NAME`,
+        wur.MOBILE,
+        wur.USER_PROVINCE,
+        wur.USER_CITY,
+        wur.USER_AREA,
+        wur.USER_ADDR,
+        wur.CATEGORY,
+        wur.TIME_CREATED,
+        wur.`STAGE`,
+        wd.`TITLE` as activityName,
+        wur.SHARER_NO,
+        shareuser.ID as sharerId,
+        shareuser.NICKNAME as sharerNickName,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS sharerName,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE`
+        ELSE urc.`MOBILE` END AS authMobile,
+        ui.IS_EMISSARY,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+        (CASE WHEN urs.`MOBILE` IS NULL THEN shareuser.`MOBILE`
+        ELSE urs.`MOBILE` END)
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+        (CASE WHEN uro.`MOBILE` IS NULL THEN shareuser.`MOBILE`
+        ELSE uro.`MOBILE` END)
+        ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN shareuser.`MOBILE`
+        ELSE urc.`MOBILE` END) END AS sharerMobile,
+        GROUP_CONCAT(   (CASE musb.BRAND
+        WHEN 'SCHMIDT' THEN '司米'
+        WHEN 'SOGAL' THEN '索菲亚'
+        WHEN 'MILANA' THEN '米兰纳'
+        END) SEPARATOR ',') AS BRANDS
+    </sql>
+
+    <sql id="commonSelectUserRegisterInfoAtAdmin">
+        SELECT <include refid="userSignUpQueryColumn"/>
+        FROM
+        <include refid="mpUserRegisterTableName"/>
+        wur
+        INNER JOIN
+        <include refid="tableName"/>
+        um ON wur.USER_NO = um.USER_NO
+        LEFT JOIN
+        <include refid="mpAccessShareTableName"/>
+        wcs ON wcs.CHECKER_NO = wur.USER_NO AND wcs.NEWBEE = 1
+        LEFT JOIN MP_USER shareuser ON wcs.SHARER_NO = shareuser.USER_NO
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui ON shareuser.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        LEFT JOIN
+        <include refid="cmsArticleTableName"/>
+        wd ON wur.ENTITY_ID = wd.ID
+        LEFT JOIN <include refid="mpUserSignupBrandTableName"/> musb ON musb.REGISTER_ID = wur.ID
+        <include refid="selectWechatUserRegisterInfoByPageAtAdminCondition"/>
+        GROUP BY wur.ID
+        ORDER BY wur.TIME_CREATED DESC
+    </sql>
+
+    <sql id="selectWechatUserRegisterInfoByPageAtAdminCondition">
+        <where>
+            <trim prefixOverrides="AND">
+                <if test="queryUserCondition.timeCreatedBegin != null">
+                    AND wur.TIME_CREATED <![CDATA[>=]]> #{queryUserCondition.timeCreatedBegin}
+                </if>
+                <if test="queryUserCondition.timeCreatedEnd != null">
+                    AND wur.TIME_CREATED  <![CDATA[<=]]>#{queryUserCondition.timeCreatedEnd}
+                </if>
+                <if test="queryUserCondition.userNo != null">
+                    AND wur.USER_NO = #{queryUserCondition.userNo}
+                </if>
+                <if test="queryUserCondition.userCity != null">
+                    AND wur.USER_CITY = #{queryUserCondition.userCity}
+                </if>
+                <if test="queryUserCondition.mobile != null">
+                    AND wur.MOBILE = #{queryUserCondition.mobile}
+                </if>
+                <if test="queryUserCondition.name != null">
+                    AND wur.NAME LIKE concat('%',#{queryUserCondition.name},'%')
+                </if>
+                <if test="queryUserCondition.categories != null">
+                    AND wur.CATEGORY IN
+                    <foreach collection="queryUserCondition.categories" separator="," open="(" close=")"
+                             item="category">
+                        #{category}
+                    </foreach>
+                </if>
+                <if test="queryUserCondition.category != null">
+                    AND wur.CATEGORY = #{queryUserCondition.category}
+                </if>
+
+                <if test="queryUserCondition.sharerNo != null">
+                    AND shareuser.USER_NO = #{queryUserCondition.sharerNo}
+                </if>
+                <if test="queryUserCondition.sharerName != null">
+                    AND (CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME` LIKE
+                    concat('%',#{queryUserCondition.sharerName},'%')
+                    WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME` LIKE concat('%',#{queryUserCondition.sharerName},'%')
+                    ELSE urc.`NAME` LIKE concat('%',#{queryUserCondition.sharerName},'%') END)
+                </if>
+                <if test="queryUserCondition.sharerNickName != null">
+                    AND shareuser.NICKNAME LIKE concat('%',#{queryUserCondition.sharerNickName},'%')
+                </if>
+                <if test="queryUserCondition.sharerMobile != null">
+                    AND (CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+                    (CASE WHEN urs.`MOBILE` IS NULL THEN shareuser.`MOBILE` = #{queryUserCondition.sharerMobile}
+                    ELSE urs.`MOBILE` = #{queryUserCondition.sharerMobile} END)
+                    WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+                    (CASE WHEN uro.`MOBILE` IS NULL THEN shareuser.`MOBILE` = #{queryUserCondition.sharerMobile}
+                    ELSE uro.`MOBILE` = #{queryUserCondition.sharerMobile} END)
+                    ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN shareuser.`MOBILE` = #{queryUserCondition.sharerMobile}
+                    ELSE urc.`MOBILE` = #{queryUserCondition.sharerMobile} END) END)
+                </if>
+                <if test="queryUserCondition.stage != null">
+                    AND wur.STAGE = #{queryUserCondition.stage}
+                </if>
+            </trim>
+        </where>
+    </sql>
+
+    <select id="selectWechatUserRegisterInfoByPageAtAdmin"
+            resultType="com.sogal.wx.core.dao.domain.user.WechatUserRegisterDTO">
+        <include refid="commonSelectUserRegisterInfoAtAdmin"/>
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <select id="countWechatUserRegisterInfoTotalByPageAtAdmin" resultType="int">
+        SELECT count(*)
+        FROM
+        <include refid="mpUserRegisterTableName"/>
+        wur
+        INNER JOIN
+        <include refid="tableName"/>
+        um ON wur.USER_NO = um.USER_NO
+        LEFT JOIN
+        <include refid="mpAccessShareTableName"/>
+        wcs ON wcs.CHECKER_NO = wur.USER_NO AND wcs.NEWBEE = 1
+        LEFT JOIN MP_USER shareuser ON wcs.SHARER_NO = shareuser.USER_NO
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui ON shareuser.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        LEFT JOIN
+        <include refid="cmsArticleTableName"/>
+        wd ON wur.ENTITY_ID = wd.ID
+        <include refid="selectWechatUserRegisterInfoByPageAtAdminCondition"/>
+    </select>
+
+    <select id="selectWechatUserRegisterInfoByPageAtAdminLast"
+            resultType="com.sogal.wx.core.dao.domain.user.WechatUserRegisterDTO">
+        SELECT <include refid="userSignUpQueryColumn"/>
+        FROM
+        <include refid="mpUserRegisterTableName"/> wur
+        INNER JOIN <include refid="tableName"/> um ON wur.USER_NO = um.USER_NO
+        LEFT JOIN MP_USER shareuser ON wur.SHARER_NO = shareuser.USER_NO
+        LEFT JOIN <include refid="userAuthBaseTableName"/> ui ON shareuser.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        LEFT JOIN <include refid="cmsArticleTableName"/> wd ON wur.ENTITY_ID = wd.ID
+        LEFT JOIN <include refid="mpUserSignupBrandTableName"/> musb ON musb.REGISTER_ID = wur.ID
+        <include refid="selectWechatUserRegisterInfoByPageAtAdminCondition"/>
+        GROUP BY wur.ID
+        ORDER BY wur.TIME_CREATED DESC
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <select id="countWechatUserRegisterInfoTotalByPageAtAdminLast" resultType="int">
+        SELECT count(*)
+        FROM
+        <include refid="mpUserRegisterTableName"/>
+        wur
+        INNER JOIN
+        <include refid="tableName"/>
+        wu ON wur.USER_NO = wu.USER_NO
+        LEFT JOIN MP_USER shareuser ON wur.SHARER_NO = shareuser.USER_NO
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui ON shareuser.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        LEFT JOIN
+        <include refid="cmsArticleTableName"/>
+        wd ON wur.ENTITY_ID = wd.ID
+        <include refid="selectWechatUserRegisterInfoByPageAtAdminCondition"/>
+    </select>
+
+    <select id="selectUserRegisterInfoAtAdminLastNoPage"
+            resultType="com.sogal.wx.core.dao.domain.user.WechatUserRegisterDTO">
+        SELECT <include refid="userSignUpQueryColumn"/>
+        FROM
+        <include refid="mpUserRegisterTableName"/> wur
+        INNER JOIN <include refid="tableName"/> um ON wur.USER_NO = um.USER_NO
+        LEFT JOIN MP_USER shareuser ON wur.SHARER_NO = shareuser.USER_NO
+        LEFT JOIN <include refid="userAuthBaseTableName"/> ui ON shareuser.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        LEFT JOIN <include refid="cmsArticleTableName"/> wd ON wur.ENTITY_ID = wd.ID
+        LEFT JOIN <include refid="mpUserSignupBrandTableName"/> musb ON musb.REGISTER_ID = wur.ID
+        <include refid="selectWechatUserRegisterInfoByPageAtAdminCondition"/>
+        GROUP BY wur.ID
+        ORDER BY wur.TIME_CREATED DESC
+    </select>
+
+    <select id="selectUserRegisterInfoAtAdminNoPage"
+            resultType="com.sogal.wx.core.dao.domain.user.WechatUserRegisterDTO">
+        <include refid="commonSelectUserRegisterInfoAtAdmin"/>
+    </select>
+
+    <sql id="exportUserMpAllColumn">
+        mp.`ID`,
+        mp.`USER_NO`,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+            (CASE WHEN urs.`MOBILE` IS NULL THEN mp.`MOBILE`
+                  ELSE urs.`MOBILE` END)
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+            (CASE WHEN uro.`MOBILE` IS NULL THEN mp.`MOBILE`
+                  ELSE uro.`MOBILE` END)
+        ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN mp.`MOBILE`
+                   ELSE urc.`MOBILE` END) END AS mobile,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS name,
+        mp.`NICKNAME`,
+         CASE mp.`GENDER`
+             WHEN '1' THEN '男'
+             WHEN '2' THEN '女'
+             ELSE '未知' END  as sex,
+        mp.`LEVEL`,
+        mp.`TIME_CREATED`
+    </sql>
+
+    <select id="findUserMps" resultType="com.sogal.wx.core.dao.domain.user.WechatUserDTO">
+        SELECT
+        <include refid="exportUserMpAllColumn"/>
+        FROM
+        <include refid="tableName"/>
+        mp
+        LEFT JOIN USER_AUTH_BASE ui ON mp.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        <include refid="findWechatUsersAtAdminCondition"/>
+        ORDER BY mp.TIME_CREATED DESC
+    </select>
+
+    <select id="findUserMpDetailInfo" resultType="com.sogal.wx.core.dao.domain.user.WechatUserDetailDTO">
+        SELECT<include refid="userMpAllColumn"/>,mp.`SCENE_VALUE`,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+        (CASE WHEN urs.`MOBILE` IS NULL THEN mp.`MOBILE`
+        ELSE urs.`MOBILE` END)
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+        (CASE WHEN uro.`MOBILE` IS NULL THEN mp.`MOBILE`
+        ELSE uro.`MOBILE` END)
+        ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN mp.`MOBILE`
+        ELSE urc.`MOBILE` END) END AS mobile,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS name,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE`
+        ELSE urc.`MOBILE` END AS authMobile,
+        ui.IS_EMISSARY AS isEmissary, ui.EMISSARY_TYPE AS emissaryType, ui.AGREEMENT AS agreement,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`AGENT`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`AGENT`
+        ELSE urc.`AGENT` END AS dealerCode,
+        firstSharer.ID AS firstSharerId, firstSharer.USER_NO AS firstSharerNo,
+        firstSharer.NICKNAME AS firstSharerNickName,
+        (SELECT
+        CASE WHEN fmu.`EMISSARY_TYPE` ='员工' THEN ursf.`NAME`
+        WHEN fmu.`EMISSARY_TYPE` ='其他' THEN urof.`NAME`
+        ELSE urcf.`NAME` END FROM USER_AUTH_BASE fmu
+        LEFT JOIN USER_REPO_STAFF ursf ON ursf.ID = fmu.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urcf ON urcf.ID = fmu.REPO_ID
+        LEFT JOIN USER_REPO_OTHER urof ON urof.ID = fmu.REPO_ID
+        WHERE fmu.UNION_ID = firstSharer.UNION_ID) AS firstSharerName,
+        latestSharer.ID AS latestSharerId, latestSharer.USER_NO AS latestSharerNo,
+        latestSharer.NICKNAME AS latestSharerNickName,
+        (SELECT
+        CASE WHEN lmu.`EMISSARY_TYPE` ='员工' THEN ursl.`NAME`
+        WHEN lmu.`EMISSARY_TYPE` ='其他' THEN urol.`NAME`
+        ELSE urcl.`NAME` END FROM USER_AUTH_BASE lmu
+        LEFT JOIN USER_REPO_STAFF ursl ON ursl.ID = lmu.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urcl ON urcl.ID = lmu.REPO_ID
+        LEFT JOIN USER_REPO_OTHER urol ON urol.ID = lmu.REPO_ID
+        WHERE lmu.UNION_ID = latestSharer.UNION_ID) AS latestSharerName,
+        designer.ID AS designerId, designer.NAME AS designerName, designer.ADDR AS designerAddr, designer.COMPANY AS
+        designerCompany,
+        designer.IDENTITY AS distinguish, designer.BRIEF_INTRODUCTION AS designerBriefIntroduction,
+        designer.MY_STYLE AS designerStyle, designer.LEVEL AS designerLevel, designer.STATUS AS designerStatus,
+        promotion.AUTH_STATUS AS promotionStatus, promotion.POSITION AS promotionPosition, promotion.POSITION_URL AS
+        positionUrl,
+        promotion.RECOMMEND_NO AS promotionRecommendNo, promotion.SOURCE AS promotionSource,
+        promotion.AUTH_TIME AS promotionTimeCreated, promotion.LEVEL AS promotionLevel, upic.NAME AS promotionRealName,
+        upic.IDENTITY_CODE AS promotionIdentityCode, upic.ACCOUNT_NO AS promotionAccountNo, upic.ACCOUNT_BANK AS
+        promotionAccountBank,
+        upc.SIGN_DT AS promotionSignDt, upc.INVALID_DT AS promotionInvalidDt,
+        (SELECT COUNT(*) AS totalClickNum FROM
+        <include refid="mpAccessRecordTableName"/>
+        mvr WHERE mvr.VISITOR = mp.ID) AS totalClickNum,
+        (SELECT SUM(wbt.TIME) AS totalBrowseTime FROM
+        <include refid="mpUserViewTimeTableName"/>
+        wbt WHERE wbt.CHECKER_ID = mp.ID) AS
+        totalBrowseTime,
+        (SELECT MAX(mvr.TIME_CREATED) FROM
+        <include refid="mpAccessRecordTableName"/>
+        mvr WHERE mvr.VISITOR = mp.ID) AS lastVisitTime,
+        (SELECT wbt2.TIME FROM
+        <include refid="mpUserViewTimeTableName"/>
+        wbt2 WHERE wbt2.CHECKER_ID = mp.ID ORDER BY wbt2.TIME_CREATED DESC
+        LIMIT 1) AS lastBrowseTime,
+        (SELECT wbt3.DESIGN_ID FROM
+        <include refid="mpUserViewTimeTableName"/>
+        wbt3 WHERE wbt3.CHECKER_ID = mp.ID ORDER BY wbt3.TIME DESC LIMIT
+        1) AS designIdLoving
+        FROM
+        <include refid="tableName"/>
+        mp
+        LEFT JOIN
+        <include refid="mpUserReferrerTableName"/>
+        ms ON mp.ID = ms.USER_ID
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui ON mp.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        LEFT JOIN MP_USER firstSharer ON ms.FIRST_SHARER_ID = firstSharer.ID
+        LEFT JOIN MP_USER latestSharer ON ms.LATEST_SHARER_ID = latestSharer.ID
+        LEFT JOIN
+        <include refid="wechatDesignerTableName"/>
+        designer ON mp.UNION_ID = designer.UNION_ID
+        LEFT JOIN
+        <include refid="userAuthPromotionTableName"/>
+        promotion ON mp.UNION_ID = promotion.UNION_ID
+        LEFT JOIN
+        <include refid="userPromotionIdentityCodeTableName"/>
+        upic ON mp.UNION_ID = upic.UNION_ID
+        LEFT JOIN
+        <include refid="userPromotionContractTableName"/>
+        upc ON upic.AES_ID = upc.AES_ID
+        WHERE mp.ID = #{userId}
+    </select>
+
+    <select id="getUserMpByMobile" resultType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        SELECT
+        mp.`ID`,
+        mp.`UNION_ID`,
+        mp.`NICKNAME`,
+        mp.CATEGORY,
+        mp.`AVATAR_URL`
+        FROM
+        <include refid="tableName"/>
+        mp
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui
+        ON mp.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        WHERE
+        (CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE` = #{mobile}
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE` = #{mobile}
+        ELSE urc.`MOBILE` = #{mobile} END)
+        AND ui.`IS_EMISSARY` = 1
+        GROUP BY mp.`UNION_ID`
+    </select>
+
+
+    <select id="findUserMpByUserNo" resultType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        SELECT<include refid="userMpAllColumn"/>,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE`
+        ELSE urc.`MOBILE` END AS authMobile,
+        ui.IS_EMISSARY, ui.EMISSARY_TYPE, ui.REPO_ID
+        FROM
+        <include refid="tableName"/>
+        mp
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui
+        ON mp.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        WHERE mp.USER_NO = #{userNo} AND mp.`CATEGORY` = #{category}
+    </select>
+    <select id="findMpUserByUserNo" resultType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        SELECT<include refid="userMpAllColumn"/>,mp.`MOBILE`
+        FROM
+        <include refid="tableName"/>
+        mp
+        WHERE mp.USER_NO = #{userNo}
+    </select>
+    <select id="findUserMpByUserId" resultType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        SELECT<include refid="userMpAllColumn"/>,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE`
+        ELSE urc.`MOBILE` END AS authMobile,
+        ui.IS_EMISSARY, ui.EMISSARY_TYPE, ui.REPO_ID
+        FROM
+        <include refid="tableName"/>
+        mp
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui
+        ON mp.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        WHERE mp.ID = #{userId}
+    </select>
+
+    <select id="countExportUserMps" resultType="int">
+        SELECT COUNT(*)
+        FROM
+        <include refid="tableName"/>
+        mp
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui ON mp.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        <include refid="findWechatUsersAtAdminCondition"/>
+    </select>
+
+    <select id="getMpCategoryByUnionId" resultType="hashmap">
+        SELECT mp.`ID` AS id, mp.`CATEGORY` AS category, mat.`NAME` AS name, 'mp' AS type
+        FROM
+        <include refid="tableName"/>
+        mp
+        LEFT JOIN
+        <include refid="mpAccessTokenTableName"/>
+        mat ON mp.`CATEGORY` = mat.`UNIQUE_CODE`
+        WHERE mp.`CATEGORY` IN ('REFORM', 'DESIGN', 'MEIJIA') AND mp.`UNION_ID` = #{unionId}
+        UNION ALL
+        SELECT gu.`ID` AS id, gat.TOKEN AS category, gat.`NAME` AS name, 'gzh' AS type
+        FROM
+        <include refid="tableName"/>
+        gu
+        LEFT JOIN
+        <include refid="gzhAccessTokenTableName"/>
+        gat ON gu.`GZH_ID` = gat.`APPID`
+        WHERE gu.`CATEGORY` IN ('GONGZH') AND gu.`UNION_ID` = #{unionId}
+    </select>
+
+    <select id="findUserInfoByUserNo" resultType="com.sogal.wx.core.dao.domain.promotion.UserBasicInfo">
+        SELECT `ID`, `USER_NO`, `UNION_ID`, `NICKNAME`, `AVATAR_URL`, `GENDER`, `CATEGORY` FROM
+        <include refid="tableName"/>
+        WHERE `USER_NO` = #{userNo}
+    </select>
+
+    <select id="findUserInfoByUnionId" resultType="com.sogal.wx.core.dao.domain.promotion.UserBasicInfo">
+        SELECT `ID`, `USER_NO`, `UNION_ID`, `NICKNAME`, `AVATAR_URL`, `GENDER`, `CATEGORY` FROM
+        <include refid="tableName"/>
+        WHERE `UNION_ID` = #{unionId}
+        AND `CATEGORY` = #{category}
+        LIMIT 1
+    </select>
+
+    <select id="findUserInfoByUserId" resultType="com.sogal.wx.core.dao.domain.promotion.UserBasicInfo">
+        SELECT `ID`, `USER_NO`, `UNION_ID`, `NICKNAME`, `AVATAR_URL`, `GENDER`, `CATEGORY` FROM
+        <include refid="tableName"/>
+        WHERE `ID` = #{userId}
+    </select>
+
+    <select id="countFindMpUserRegister" resultType="int">
+        SELECT COUNT(*) FROM
+        <include refid="mpUserRegisterTableName"/>
+        WHERE `SHARER_NO` = #{userNo}
+    </select>
+
+    <select id="findWatchGzhStatus" resultType="java.lang.Integer">
+        SELECT `SUBSCRIBE` FROM
+        <include refid="tableName"/>
+        WHERE `UNION_ID` = #{unionId} AND `GZH_ID` = #{appId}
+    </select>
+
+    <select id="findGzhNameById" resultType="java.lang.String">
+        SELECT `NAME` FROM
+        <include refid="gzhAccessTokenTableName"/>
+        WHERE `APPID` = #{id}
+    </select>
+
+    <select id="getDesignerUserMpByUnionId" resultType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        SELECT
+        mp.`ID`,
+        mp.`UNION_ID`,
+        mp.`NICKNAME`,
+        mp.CATEGORY,
+        mp.`AVATAR_URL`
+        FROM
+        <include refid="tableName"/>
+        mp
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui
+        ON mp.UNION_ID = ui.UNION_ID
+        WHERE ui.`UNION_ID` = #{unionId}
+        AND ui.`IS_EMISSARY` = 1
+        GROUP BY mp.`UNION_ID`
+    </select>
+
+    <select id="findUserMpByUnionIdAndCategory" resultType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE UNION_ID = #{unionId} AND CATEGORY = #{category}
+    </select>
+    <update id="updateMpUserLevel" parameterType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        UPDATE
+        <include refid="tableName"/>
+        SET
+        `LEVEL` = #{level}
+        WHERE
+        `ID` = #{id}
+    </update>
+
+    <select id="findUserMpByMobileAndCode" resultType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        SELECT *
+        FROM
+        <include refid="tableName"/>
+        WHERE MOBILE = #{mobile} AND binary VIP_CODE = #{vipCode}
+    </select>
+
+    <select id="findMpUserInfosByUserIds" resultType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        SELECT<include refid="userMpAllColumn"/>,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`MOBILE`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`MOBILE`
+        ELSE urc.`MOBILE` END AS authMobile,
+        ui.IS_EMISSARY, ui.EMISSARY_TYPE, ui.REPO_ID
+        FROM
+        <include refid="tableName"/>
+        mp
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui
+        ON mp.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        WHERE mp.ID IN
+        <foreach collection="ids" separator="," open="(" close=")" item="id">
+            #{id}
+        </foreach>
+        ORDER BY FIELD (mp.ID,
+        <foreach collection="ids" separator=","  item="id">
+            #{id}
+        </foreach>
+        )
+    </select>
+
+    <select id="findUserNoListByUnionIdAndCategories" resultType="java.lang.String">
+        SELECT USER_NO FROM
+        <include refid="tableName"/>
+        WHERE UNION_ID = #{unionId}
+        AND CATEGORY IN
+        <foreach collection="categories" separator="," open="(" close=")" item="category">
+            #{category}
+        </foreach>
+    </select>
+
+    <select id="findGzhUserInfoByGzhIdAndDspStaffMobile"
+            resultType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        SELECT *
+        FROM <include refid="tableName"/>
+        WHERE DSP_USER_MOBILE = #{mobile} AND GZH_ID = #{gzhId}
+    </select>
+
+</mapper>

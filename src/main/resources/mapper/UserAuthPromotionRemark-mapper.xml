@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.UserAuthPromotionRemarkMapper">
+
+    <sql id="tableName">`USER_AUTH_PROMOTION_REMARK`</sql>
+
+    <insert id="addUserAuthPromotionRemarkBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserAuthPromotionRemark">
+        INSERT INTO
+        <include refid="tableName"/>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                `ID`,
+            </if>
+            <if test="promotionId != null and promotionId != ''">
+                `PROMOTION_ID`,
+            </if>
+            <if test="remark != null and remark != ''">
+                `REMARK`,
+            </if>
+            <if test="creator != null and creator != ''">
+                `CREATOR`,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                #{id},
+            </if>
+            <if test="promotionId != null and promotionId != ''">
+                #{promotionId},
+            </if>
+            <if test="remark != null and remark != ''">
+                #{remark},
+            </if>
+            <if test="creator != null and creator != ''">
+                #{creator},
+            </if>
+        </trim>
+    </insert>
+
+    <select id="selectByPromotionId" resultType="com.sogal.wx.core.dao.domain.promotion.UserAuthPromotionRemark">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE `PROMOTION_ID` = #{promotionId}
+        ORDER BY `TIME_CREATED` DESC
+        LIMIT 1
+    </select>
+
+</mapper>

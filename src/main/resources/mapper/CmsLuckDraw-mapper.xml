@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sogal.wx.core.dao.mapper.CmsLuckDrawMapper">
+
+    <resultMap type="com.sogal.wx.core.dao.domain.luckDraw.CmsLuckDraw" id="luckDrawsMap">
+        <id column="id" property="id"/>
+        <result column="subject" property="subject"/>
+        <result column="startTime" property="startTime"/>
+        <result column="endTime" property="endTime"/>
+        <result column="startTime" property="startTime"/>
+        <result column="backgroundImage" property="backgroundImage"/>
+        <result column="requirement" property="requirement"/>
+        <result column="requirementNumber" property="requirementNumber"/>
+        <result column="notice" property="notice"/>
+        <result column="rule" property="rule"/>
+        <result column="status" property="status"/>
+        <result column="image1" property="image1"/>
+        <result column="image2" property="image2"/>
+        <result column="image3" property="image3"/>
+        <result column="image4" property="image4"/>
+        <result column="image5" property="image5"/>
+        <result column="image6" property="image6"/>
+        <result column="image7" property="image7"/>
+        <result column="image8" property="image8"/>
+
+        <collection property="prizes" select="getLuckDrawPrizes" column="{parentid = id}"/>
+    </resultMap>
+
+    <select id="getLuckDraw" resultMap="luckDrawsMap">
+      /*#mycat:db_type=master*/
+      SELECT
+          a.ID AS "id",
+          a.SUBJECT AS "subject",
+          a.START_TIME AS "startTime",
+          a.END_TIME AS "endTime",
+          a.BACKGROUND_IMAGE AS "backgroundImage",
+          a.REQUIREMENT AS "requirement",
+          a.REQUIREMENT_NUMBER AS "requirementNumber",
+          a.NOTICE AS "notice",
+          a.RULE AS "rule",
+          a.STATUS AS "status",
+          a.IMAGE_1 AS "image1",
+          a.IMAGE_2 AS "image2",
+          a.IMAGE_3 AS "image3",
+          a.IMAGE_4 AS "image4",
+          a.IMAGE_5 AS "image5",
+          a.IMAGE_6 AS "image6",
+          a.IMAGE_7 AS "image7",
+          a.IMAGE_8 AS "image8"
+        FROM
+          CMS_LUCK_DRAW a
+        WHERE
+        a.id = #{id}
+    </select>
+
+    <select id="quertLuckDrawsPage" resultMap="luckDrawsMap">
+        SELECT
+        a.ID AS "id",
+        a.SUBJECT AS "subject",
+        a.START_TIME AS "startTime",
+        a.END_TIME AS "endTime",
+        a.BACKGROUND_IMAGE AS "backgroundImage",
+        a.REQUIREMENT AS "requirement",
+        a.REQUIREMENT_NUMBER AS "requirementNumber",
+        a.NOTICE AS "notice",
+        a.RULE AS "rule",
+        (
+        CASE
+        WHEN ( DATE( a.START_TIME ) > DATE( NOW( ) ) AND a.`STATUS` = "进行中" ) THEN
+        "已发布"
+        WHEN ( DATE( a.END_TIME ) <![CDATA[<]]> DATE( NOW( ) ) AND a.`STATUS` = "进行中" ) THEN
+        "已过期" ELSE a.`STATUS`
+        END
+        ) AS "status",
+        a.IMAGE_1 AS "image1",
+        a.IMAGE_2 AS "image2",
+        a.IMAGE_3 AS "image3",
+        a.IMAGE_4 AS "image4",
+        a.IMAGE_5 AS "image5",
+        a.IMAGE_6 AS "image6",
+        a.IMAGE_7 AS "image7",
+        a.IMAGE_8 AS "image8"
+        FROM
+        CMS_LUCK_DRAW a
+        WHERE
+        1 = 1
+        <if test="subject != null and subject !=''">
+            AND a.SUBJECT LIKE CONCAT("%",#{subject},"%")
+        </if>
+        <if test="startTime != null and startTime !=''">
+            AND DATE(a.START_TIME) >= DATE(#{startTime})
+        </if>
+        <if test="endTime != null and endTime !=''">
+            AND DATE(a.START_TIME)  <![CDATA[ <= ]]> DATE(#{endTime})
+        </if>
+        limit #{page},#{size}
+    </select>
+
+    <select id="getLuckDrawPrizes" resultType="com.sogal.wx.core.dao.domain.luckDraw.CmsLuckDrawPrize">
+        SELECT * FROM CMS_LUCK_DRAW_PRIZE WHERE PARENT_ID = #{parentid}
+    </select>
+
+    <select id="countLuckDraws" resultType="int">
+        SELECT
+        COUNT(1)
+        FROM
+        CMS_LUCK_DRAW
+        WHERE
+        1 = 1
+        <if test="subject != null and subject !=''">
+            AND SUBJECT LIKE CONCAT("%",#{subject},"%")
+        </if>
+        <if test="startTime != null and startTime !=''">
+            AND DATE(START_TIME) >= DATE(#{startTime})
+        </if>
+        <if test="endTime != null and endTime !=''">
+            AND DATE(START_TIME)  <![CDATA[ <= ]]> DATE(#{endTime})
+        </if>
+    </select>
+
+    <insert id="insertLuckDraw">
+        INSERT INTO CMS_LUCK_DRAW(ID,SUBJECT,START_TIME,END_TIME,BACKGROUND_IMAGE,REQUIREMENT,REQUIREMENT_NUMBER,NOTICE,
+                                   RULE,STATUS,IMAGE_1,IMAGE_2,IMAGE_3,IMAGE_4,IMAGE_5,IMAGE_6,IMAGE_7,IMAGE_8)
+        VALUES (#{id},#{subject},#{startTime},#{endTime},#{backgroundImage},#{requirement},#{requirementNumber},#{notice},
+                #{rule},#{status},#{image1},#{image2},#{image3},#{image4},#{image5},#{image6},#{image7},#{image8})
+    </insert>
+
+    <insert id="insertLuckDrawPrizes">
+        INSERT INTO CMS_LUCK_DRAW_PRIZE(`ID`,`PARENT_ID`,`TYPE`,`NAME`,`NUM`,`WINNING_RATE`,`IMAGE`,`SORT`,`AMOUNT`)
+        VALUES
+        <foreach collection="prizes" item="prize" index="index"
+                 separator=",">
+            (UUID(),#{parentId},#{prize.type},#{prize.name},#{prize.num},#{prize.winningRate},#{prize.image},#{prize.sort},#{prize.amount})
+        </foreach>
+    </insert>
+
+    <delete id="deleteLuckDrawById">
+        DELETE FROM CMS_LUCK_DRAW WHERE ID = #{id}
+    </delete>
+
+    <delete id="deleteLuckDrawPrizeByParentId">
+        DELETE FROM CMS_LUCK_DRAW_PRIZE WHERE PARENT_ID = #{parentId}
+    </delete>
+
+    <update id="updateLuckDraw">
+        UPDATE
+          CMS_LUCK_DRAW a
+        SET
+          a.`SUBJECT` = #{subject},
+          a.`START_TIME` = #{startTime},
+          a.`END_TIME` = #{endTime},
+          a.`BACKGROUND_IMAGE` = #{backgroundImage},
+          a.`REQUIREMENT` = #{requirement},
+          a.`REQUIREMENT_NUMBER` = #{requirementNumber},
+          a.`NOTICE` = #{notice},
+          a.`RULE` = #{rule},
+          a.`STATUS` = #{status},
+          a.`IMAGE_1` = #{image1},
+          a.`IMAGE_2`= #{image2},
+          a.`IMAGE_3` = #{image3},
+          a.`IMAGE_4` = #{image4},
+          a.`IMAGE_5` = #{image5},
+          a.`IMAGE_6` = #{image6},
+          a.`IMAGE_7` = #{image7},
+          a.`IMAGE_8` = #{image8}
+        WHERE
+        a.ID = #{id}
+    </update>
+
+    <select id="checkingLuckDrawUser" resultType="int">
+        /*#mycat:db_type=master*/
+        SELECT
+            COUNT( 1 )
+        FROM
+            CMS_LUCK_DRAW_USER
+        WHERE
+          USER_ID = #{userId}
+        AND LUCK_ID = #{luckId}
+    </select>
+
+    <select id="getLuckDrawPrizeById" resultType="com.sogal.wx.core.dao.domain.luckDraw.CmsLuckDrawPrize">
+        /*#mycat:db_type=master*/
+        SELECT * FROM CMS_LUCK_DRAW_PRIZE WHERE ID = #{id}
+    </select>
+
+    <select id="getTotalLuckDrawPrize" resultType="int">
+        /*#mycat:db_type=master*/
+        SELECT SUM(NUM) FROM CMS_LUCK_DRAW_PRIZE WHERE PARENT_ID = #{luckId}
+    </select>
+
+    <update id="updateLuckDrawPrize">
+        UPDATE
+            CMS_LUCK_DRAW_PRIZE
+        SET
+            `TYPE` = #{type},
+            `NAME` = #{name},
+            `NUM` = #{num},
+            `USE_NUM` = #{useNum},
+            `AMOUNT`= #{amount},
+            `WINNING_RATE` = #{winningRate},
+            `IMAGE` = #{image},
+            `SORT` = #{sort},
+            `DSP_COUPON_ID` = #{dspCouponId}
+        WHERE
+           ID = #{id}
+
+    </update>
+
+    <select id="getLuckDrawPrizeMax" resultType="com.sogal.wx.core.dao.domain.luckDraw.CmsLuckDrawPrize">
+        /*#mycat:db_type=master*/
+        SELECT
+            *
+        FROM
+            CMS_LUCK_DRAW_PRIZE
+        WHERE
+            PARENT_ID = #{parentId}
+        ORDER BY
+            WINNING_RATE DESC
+        LIMIT 1
+    </select>
+
+    <insert id="insertCmsLuckDrawUser">
+        INSERT INTO CMS_LUCK_DRAW_USER(`ID`,`NAME`,`USER_ID`,`MOBILE`,`VALIDITY_DATE`,`DRAW_DATE`,`USE_STATUS`,`PRIZE_ID`,`LUCK_ID`,`DRAW_STATUS`,`REMARK`,`CITY`,`DSP_STATUS`,`IP`)
+        VALUES
+        (#{id},#{name},#{userId},#{mobile},#{validityDate},#{drawDate},#{useStatus},#{prizeId},#{luckId},#{drawStatus},#{remark},#{city},#{dspStatus},#{ip})
+    </insert>
+
+    <select id="quertLuckDrawsUserPage" resultType="com.sogal.wx.core.dao.domain.luckDraw.CmsLuckDrawUser">
+        SELECT
+        a.ID,
+        a.USER_ID,
+        a.NAME,
+        a.MOBILE,
+        a.VALIDITY_DATE,
+        c.AVATAR_URL,
+        a.DRAW_DATE,
+        (
+        CASE
+        WHEN ( DATE( a.VALIDITY_DATE ) <![CDATA[ < ]]> DATE( NOW( ) ) AND a.`USE_STATUS` = "RECEIVED" ) THEN
+        "EXPIRED" ELSE a.`USE_STATUS`
+        END
+        ) AS "USE_STATUS",
+        a.PRIZE_ID,
+        a.LUCK_ID,
+        a.DRAW_STATUS,
+        b.TYPE,
+        b.NAME AS "prizeName",
+        b.IMAGE,
+        a.REMARK,
+        b.DSP_COUPON_ID,
+        a.CITY,
+        a.DSP_STATUS,
+        a.IP
+        FROM
+        CMS_LUCK_DRAW_USER a
+        LEFT JOIN CMS_LUCK_DRAW_PRIZE b ON a.PRIZE_ID = b.ID
+        LEFT JOIN MP_USER c ON a.USER_ID = c.ID
+        WHERE
+        1 = 1
+        AND a.LUCK_ID = #{luckId}
+        <if test="mobile != null and mobile !=''">
+            AND a.MOBILE = #{mobile}
+        </if>
+        <if test="name != null and name != ''">
+            AND b.NAME = #{name}
+        </if>
+        <if test="city != null and city != ''">
+            AND a.CITY = #{city}
+        </if>
+        limit #{page},#{size}
+    </select>
+
+    <select id="exportLuckDrawsUsers" resultType="com.sogal.wx.core.dao.domain.luckDraw.CmsLuckDrawUser">
+        SELECT
+        a.ID,
+        a.USER_ID,
+        a.NAME,
+        a.MOBILE,
+        a.VALIDITY_DATE,
+        c.AVATAR_URL,
+        a.DRAW_DATE,
+        (
+        CASE
+        WHEN ( DATE( a.VALIDITY_DATE ) <![CDATA[ < ]]> DATE( NOW( ) ) AND a.`USE_STATUS` = "RECEIVED" ) THEN
+        "EXPIRED" ELSE a.`USE_STATUS`
+        END
+        ) AS "USE_STATUS",
+        a.PRIZE_ID,
+        a.LUCK_ID,
+        a.DRAW_STATUS,
+        b.TYPE,
+        b.NAME AS "prizeName",
+        b.IMAGE,
+        a.REMARK,
+        b.DSP_COUPON_ID,
+        a.CITY,
+        a.DSP_STATUS,
+        a.IP
+        FROM
+        CMS_LUCK_DRAW_USER a
+        LEFT JOIN CMS_LUCK_DRAW_PRIZE b ON a.PRIZE_ID = b.ID
+        LEFT JOIN MP_USER c ON a.USER_ID = c.ID
+        WHERE
+        1 = 1
+        AND a.LUCK_ID = #{luckId}
+        <if test="mobile != null and mobile !=''">
+            AND a.MOBILE = #{mobile}
+        </if>
+        <if test="name != null and name != ''">
+            AND b.NAME = #{name}
+        </if>
+        <if test="city != null and city != ''">
+            AND a.CITY = #{city}
+        </if>
+
+    </select>
+
+    <select id="countexportLuckDrawsUsers" resultType="int">
+        SELECT
+          COUNT(1)
+        FROM
+        CMS_LUCK_DRAW_USER a
+        LEFT JOIN CMS_LUCK_DRAW_PRIZE b ON a.PRIZE_ID = b.ID
+        LEFT JOIN MP_USER c ON a.USER_ID = c.ID
+        WHERE
+        1 = 1
+        AND a.LUCK_ID = #{luckId}
+        <if test="mobile != null and mobile !=''">
+            AND a.MOBILE = #{mobile}
+        </if>
+        <if test="name != null and name != ''">
+            AND b.NAME = #{name}
+        </if>
+        <if test="city != null and city != ''">
+            AND a.CITY = #{city}
+        </if>
+    </select>
+
+    <select id="countLuckDrawUser" resultType="int">
+        SELECT
+        COUNT(1)
+        FROM
+        CMS_LUCK_DRAW_USER a
+        LEFT JOIN CMS_LUCK_DRAW_PRIZE b ON a.PRIZE_ID = b.ID
+        LEFT JOIN MP_USER c ON a.USER_ID = c.ID
+        WHERE
+        1 = 1
+        AND a.LUCK_ID = #{luckId}
+        <if test="mobile != null and mobile !=''">
+            AND a.MOBILE = #{mobile}
+        </if>
+        <if test="name != null and name != ''">
+            AND b.NAME = #{name}
+        </if>
+        <if test="city != null and city != ''">
+            AND a.CITY = #{city}
+        </if>
+    </select>
+
+    <select id="getUserNum" resultType="int">
+        SELECT
+          COUNT(1)
+        FROM
+        CMS_LUCK_DRAW_USER
+        WHERE
+           LUCK_ID = #{luckId}
+        AND USER_ID = #{userId}
+    </select>
+
+    <update id="updateLuckDrawUser">
+        UPDATE
+          CMS_LUCK_DRAW_USER
+        SET
+          USE_STATUS = #{useStatus},
+          REMARK = #{remark}
+        WHERE
+          ID = #{id}
+    </update>
+
+    <select id="getMyLuckDrawPrize" resultType="com.sogal.wx.core.dao.domain.coupon.MyCoupon">
+        SELECT
+        A.ID AS id,
+        B.TYPE AS "couponType",
+        B.AMOUNT AS "discount",
+        B.`NAME` AS "discountcon",
+        "GET" AS "validType",
+        "1" AS "validDate",
+        "Y" AS "validDateUnit",
+        A.DRAW_DATE AS "timeCreated",
+        A.VALIDITY_DATE AS "expiredDate",
+        (
+        CASE
+        WHEN ( DATE( A.VALIDITY_DATE ) <![CDATA[ < ]]> DATE( NOW( ) ) AND A.`USE_STATUS` = "RECEIVED" ) THEN
+        "EXPIRED" ELSE A.`USE_STATUS`
+        END
+        ) AS "status"
+        FROM
+        CMS_LUCK_DRAW_USER A
+        LEFT JOIN CMS_LUCK_DRAW_PRIZE B ON A.PRIZE_ID = B.ID
+        WHERE
+                B.TYPE = "GOODS"
+            AND A.USER_ID = #{userId}
+
+        UNION ALL
+
+        SELECT
+            A.ID AS id,
+            B.TYPE AS "couponType",
+            B.AMOUNT AS "discount",
+            B.`NAME` AS "discountcon",
+            "GET" AS "validType",
+            "1" AS "validDate",
+            "Y" AS "validDateUnit",
+            A.DRAW_DATE AS "timeCreated",
+            A.VALIDITY_DATE AS "expiredDate",
+            "RECEIVED" AS "status"
+        FROM
+            CMS_LUCK_DRAW_USER A
+            LEFT JOIN CMS_LUCK_DRAW_PRIZE B ON A.PRIZE_ID = B.ID
+        WHERE
+            A.DSP_STATUS = "失败"
+            AND B.TYPE = "CASH"
+            AND A.USER_ID = #{userId}
+    </select>
+
+    <select id="getLuckDrawUserByLuckId" resultType="com.sogal.wx.core.dao.domain.luckDraw.CmsLuckDrawUser">
+        SELECT
+         *
+        FROM
+        CMS_LUCK_DRAW_USER
+        WHERE LUCK_ID = #{luckId}
+        AND DSP_STATUS = "失败"
+    </select>
+
+
+</mapper>

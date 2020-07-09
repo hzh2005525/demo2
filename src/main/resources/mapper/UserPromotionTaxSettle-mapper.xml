@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.UserPromotionTaxSettleMapper">
+
+    <sql id="tableName">`USER_PROMOTION_TAX_SETTLE`</sql>
+
+    <insert id="addUserPromotionTaxSettleBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserPromotionTaxSettle">
+        INSERT INTO
+        <include refid="tableName"/>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                `ID`,
+            </if>
+            <if test="name != null and name != ''">
+                `NAME`,
+            </if>
+            <if test="identityCode != null and identityCode != ''">
+                `IDENTITY_CODE`,
+            </if>
+            <if test="mobile != null and mobile != ''">
+                `MOBILE`,
+            </if>
+            <if test="labourFee != null">
+                `LABOUR_FEE`,
+            </if>
+            <if test="grantFee != null">
+                `GRANT_FEE`,
+            </if>
+            <if test="taxPayBase != null">
+                `TAX_PAY_BASE`,
+            </if>
+            <if test="vatFee != null">
+                `VAT_FEE`,
+            </if>
+            <if test="surtaxFee != null">
+                `SURTAX_FEE`,
+            </if>
+            <if test="pertaxFee != null">
+                `PERTAX_FEE`,
+            </if>
+            <if test="payTime != null and payTime != ''">
+                `PAY_TIME`,
+            </if>
+            <if test="status != null">
+                `STATUS`,
+            </if>
+            <if test="taxPeriod != null and taxPeriod != ''">
+                `TAX_PERIOD`,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                #{id},
+            </if>
+            <if test="name != null and name != ''">
+                #{name},
+            </if>
+            <if test="identityCode != null and identityCode != ''">
+                #{identityCode},
+            </if>
+            <if test="mobile != null and mobile != ''">
+                #{mobile},
+            </if>
+            <if test="labourFee != null">
+                #{labourFee},
+            </if>
+            <if test="grantFee != null">
+                #{grantFee},
+            </if>
+            <if test="taxPayBase != null">
+                #{taxPayBase},
+            </if>
+            <if test="vatFee != null">
+                #{vatFee},
+            </if>
+            <if test="surtaxFee != null">
+                #{surtaxFee},
+            </if>
+            <if test="pertaxFee != null">
+                #{pertaxFee},
+            </if>
+            <if test="payTime != null and payTime != ''">
+                #{payTime},
+            </if>
+            <if test="status != null">
+                #{status},
+            </if>
+            <if test="taxPeriod != null and taxPeriod != ''">
+                #{taxPeriod},
+            </if>
+        </trim>
+    </insert>
+
+</mapper>

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.MpServiceStaffMapper">
+    <sql id="mpServiceStaffTableName">`AS_SERVICE_STAFF`</sql>
+    <sql id="mpServiceProviderStaffTableName">`AS_SERVICE_PROVIDER_STAFF`</sql>
+    <sql id="mpServiceProviderTableName">`AS_SERVICE_PROVIDER`</sql>
+
+    <insert id="insertMpServiceStaff" parameterType="com.sogal.wx.core.dao.domain.service.MpServiceStaff">
+        INSERT IGNORE INTO <include refid="mpServiceStaffTableName"/> (
+            `ID`,
+            `NAME`,
+            `MOBILE`,
+            `CREATOR`,
+            `UPDATER`
+        ) VALUES (
+            #{id},
+            #{name},
+            #{mobile},
+            #{creator},
+            #{updater}
+        )
+    </insert>
+
+    <select id="findNumServiceStaffMobile" resultType="int">
+        SELECT COUNT(*) FROM <include refid="mpServiceStaffTableName"/>
+        WHERE `MOBILE` = #{mobile}
+        <if test="id != null">
+            AND ID <![CDATA[ <> ]]>  #{id}
+        </if>
+    </select>
+    <update id="updateServiceStaff"
+            parameterType="com.sogal.wx.core.dao.domain.service.MpServiceStaff">
+        UPDATE  <include refid="mpServiceStaffTableName"/>
+        SET
+        <if test="name != null">
+            `NAME` = #{name},
+        </if>
+        <if test="mobile != null">
+            `MOBILE` = #{mobile},
+        </if>
+        `UPDATER`= #{updater}
+        WHERE ID = #{id}
+    </update>
+    <sql id="queryServiceStaffsCondition">
+        <where>
+            <if test="queryCondition.status != null">
+                mss.STATUS = #{queryCondition.status}
+            </if>
+            <if test="queryCondition.name != null">
+                AND mss.NAME LIKE CONCAT('%',#{queryCondition.name}, '%')
+            </if>
+            <if test="queryCondition.mobile != null">
+                AND  mss.MOBILE LIKE CONCAT('%',#{queryCondition.mobile}, '%')
+            </if>
+            <if test="queryCondition.providerIdExcluding != null">
+                AND mss.ID NOT IN (
+                SELECT SERVICE_STAFF_ID FROM <include refid="mpServiceProviderStaffTableName"/>
+                WHERE SERVICE_PROVIDER_ID = #{queryCondition.providerIdExcluding}
+                )
+            </if>
+            <if test="queryCondition.providerIdInclude != null">
+                AND mss.ID  IN (
+                SELECT SERVICE_STAFF_ID FROM <include refid="mpServiceProviderStaffTableName"/>
+                WHERE SERVICE_PROVIDER_ID = #{queryCondition.providerIdInclude}
+                )
+            </if>
+        </where>
+    </sql>
+    <select id="findServiceStaffsByCondition" resultType="com.sogal.wx.core.dao.domain.service.MpServiceStaffDTO">
+        SELECT mss.*,msp.LEADER_ID
+        FROM <include refid="mpServiceStaffTableName"/> mss
+        LEFT JOIN <include refid="mpServiceProviderTableName"/>  msp ON msp.LEADER_ID = mss.ID
+        <include refid="queryServiceStaffsCondition"/>
+        ORDER BY mss.TIME_CREATED ASC
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+    <select id="findNumServiceStaffsByCondition" resultType="int">
+        SELECT  COUNT(*) FROM <include refid="mpServiceStaffTableName"/> mss
+        <include refid="queryServiceStaffsCondition"/>
+    </select>
+    <update id="updateMpServiceStaffStatus">
+        UPDATE <include refid="mpServiceStaffTableName"/>
+        SET `UPDATER`= #{updater}
+        <choose>
+            <when test="status != null and status == 'FORMAL'">
+                ,STATUS = 'FORMAL'
+            </when>
+            <otherwise>
+                ,STATUS = 'DIMISSION'
+            </otherwise>
+        </choose>
+        WHERE ID = #{id}
+    </update>
+    <select id="findMpServiceStaffDetail"
+            resultType="com.sogal.wx.core.dao.domain.service.MpServiceStaff">
+        SELECT *
+        FROM <include refid="mpServiceStaffTableName"/>
+        WHERE ID = #{id}
+    </select>
+    <select id="findServiceStaffByMobile"
+            resultType="com.sogal.wx.core.dao.domain.service.MpServiceStaff">
+        SELECT *
+        FROM <include refid="mpServiceStaffTableName"/>
+        WHERE MOBILE = #{mobile}
+    </select>
+    <insert id="bindingServiceStaff"
+            parameterType="com.sogal.wx.core.dao.domain.service.MpServiceProviderStaff">
+        INSERT IGNORE INTO <include refid="mpServiceProviderStaffTableName"/> (
+            `ID`,
+            `SERVICE_PROVIDER_ID`,
+            `SERVICE_STAFF_ID`,
+            `CREATOR`
+        ) VALUES (
+            #{id},
+            #{serviceProviderId},
+            #{serviceStaffId},
+            #{creator}
+        )
+    </insert>
+    <delete id="deleteServiceStaffBinding">
+        DELETE FROM <include refid="mpServiceProviderStaffTableName"/>
+        WHERE ID = #{bindingId}
+    </delete>
+    <delete id="deleteServiceProviderStaffBinding"
+            parameterType="com.sogal.wx.core.dao.domain.service.MpServiceProviderStaff">
+        DELETE FROM <include refid="mpServiceProviderStaffTableName"/>
+        WHERE `SERVICE_PROVIDER_ID` = #{serviceProviderId} AND `SERVICE_STAFF_ID` = #{serviceStaffId}
+    </delete>
+    <select id="findProviderStaffByStaffId"
+            resultType="com.sogal.wx.core.dao.domain.service.MpServiceProviderStaff">
+        SELECT `ID`,`SERVICE_PROVIDER_ID`,`SERVICE_STAFF_ID`
+        FROM
+        <include refid="mpServiceProviderStaffTableName"/>
+        WHERE `SERVICE_STAFF_ID` = #{serviceStaffId}
+    </select>
+    <select id="findASStaffInfoByMobile" resultType="com.sogal.wx.core.dao.domain.service.MpServiceStaffDTO">
+        SELECT mss.*,msp.LEADER_ID,msp.ID AS providerId
+        FROM <include refid="mpServiceStaffTableName"/> mss
+        LEFT JOIN <include refid="mpServiceProviderTableName"/>  msp ON msp.LEADER_ID = mss.ID
+        WHERE mss.MOBILE = #{mobile}
+    </select>
+</mapper>

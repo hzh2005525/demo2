@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.MpDynamicMapper">
+    <sql id="mpServiceDynamicTableName">`AS_SERVICE_DYNAMIC`</sql>
+
+    <insert id="insertMpDynamic" parameterType="com.sogal.wx.core.dao.domain.dynamic.MpDynamic">
+        INSERT  INTO <include refid="mpServiceDynamicTableName"/> (
+            ID,
+            USER_ID,
+            REALM,
+            REALM_ID,
+            `ACTION`,
+            CONTENT,
+            OPERATOR_ROLE,
+            OPERATOR_ID,
+            OPERATOR_NAME
+        ) VALUES
+            (
+            #{id},
+            #{userId},
+            #{realm},
+            #{realmId},
+            #{action},
+            #{content},
+            #{operatorRole},
+            #{operatorId},
+            #{operatorName}
+            )
+    </insert>
+
+    <select id="findAsServiceDynamicsByRealmId" resultType="com.sogal.wx.core.dao.domain.dynamic.MpDynamic">
+        SELECT
+            CONTENT,
+            OPERATOR_ID,
+            OPERATOR_NAME,
+            TIME_CREATED
+        FROM <include refid="mpServiceDynamicTableName"/>
+        WHERE REALM_ID = #{realmId}
+        ORDER BY TIME_CREATED DESC
+    </select>
+
+</mapper>

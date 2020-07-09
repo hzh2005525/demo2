@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatShareMapper">
+    <sql id="mpUserShareRecordTableName">`MP_USER_SHARE_RECORD`</sql>
+    <sql id="cmsArticleTableName">`CMS_ARTICLE`</sql>
+    <sql id="cmsHuaBaoTableName">CMS_HUA_BAO</sql>
+
+    <insert id="addUserShare" parameterType="com.sogal.wx.core.dao.domain.share.WechatShare">
+        INSERT IGNORE INTO
+            <include refid="mpUserShareRecordTableName"/>
+        (ID, METHOD, REALM_TYPE, REALM_SHARE_NO, REALM_SHARER_NO,SHARE_RECORD_ID,SCENE_PARAM_CONTENT)
+         VALUES
+        (#{id}, #{method}, #{realmType}, #{realmShareNo}, #{realmSharerNo}, #{shareRecordId}, #{sceneParamContent});
+    </insert>
+
+    <select id="findUserShare" parameterType="com.sogal.wx.core.dao.domain.share.WechatShare" resultType="java.lang.String">
+        SELECT ID FROM <include refid="mpUserShareRecordTableName"/> WHERE METHOD = #{method} AND REALM_TYPE = #{realmType}
+        AND REALM_SHARE_NO = #{realmShareNo} AND REALM_SHARER_NO = #{realmSharerNo} LIMIT 1
+    </select>
+    <select id="findQRCodeContentByShareRecordId"  resultType="java.lang.String">
+        SELECT SCENE_PARAM_CONTENT FROM <include refid="mpUserShareRecordTableName"/>
+        WHERE  SHARE_RECORD_ID = #{shareRecordId} LIMIT 1
+    </select>
+    <select id="findUserShareByShareRecordId"  resultType="com.sogal.wx.core.dao.domain.share.WechatShare">
+        SELECT * FROM <include refid="mpUserShareRecordTableName"/>
+        WHERE  SHARE_RECORD_ID = #{shareRecordId} LIMIT 1
+    </select>
+    <select id="findMpUserShareRecordAtmin"
+            parameterType="com.sogal.wx.core.dao.domain.user.QueryUserShareRecordCondition"
+            resultType="com.sogal.wx.core.dao.domain.user.UserShareRecordDTO">
+        SELECT musr.TIME_CREATED,musr.METHOD,musr.REALM_SHARE_NO, musr.SHARE_RECORD_ID,wd.TITLE, wd.ID AS articleId,
+        hb.TITLE AS hbTitle,hb.PREVIEW_IMAGE_URL AS hbPreviewImageUrl,
+        (SELECT COUNT(*) FROM MP_ACCESS_RECORD mar WHERE musr.SHARE_RECORD_ID = mar.SHARE_RECORD_ID) AS visitNum
+        FROM <include refid="mpUserShareRecordTableName"/> musr
+        INNER JOIN MP_USER um ON musr.REALM_SHARER_NO = um.USER_NO
+        LEFT JOIN <include refid="cmsArticleTableName"/> wd ON musr.REALM_SHARE_NO = wd.DESIGN_NO
+        LEFT JOIN <include refid="cmsHuaBaoTableName"/> hb ON musr.REALM_SHARE_NO = hb.HB_NO
+        WHERE um.ID = #{userId}
+        <include refid="findMpUserShareRecordConditionAtmin"/>
+        ORDER BY musr.TIME_CREATED DESC
+        LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <sql id="findMpUserShareRecordConditionAtmin">
+        <if test="queryTimeBegin != null">
+            AND musr.TIME_CREATED <![CDATA[>= ]]> #{queryTimeBegin}
+        </if>
+        <if test="queryTimeEnd != null">
+            AND musr.TIME_CREATED <![CDATA[<= ]]> #{queryTimeEnd}
+        </if>
+        <if test="methods != null">
+            AND musr.METHOD IN (
+            <foreach collection="methods" separator="," index="index" item="item" >
+                #{item}
+            </foreach>
+            )
+        </if>
+    </sql>
+
+    <select id="countMpUserShareRecordTotalSizeAtmin"
+            parameterType="com.sogal.wx.core.dao.domain.user.QueryUserShareRecordCondition"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM <include refid="mpUserShareRecordTableName"/> musr
+        INNER JOIN MP_USER um ON musr.REALM_SHARER_NO = um.USER_NO
+        WHERE um.ID = #{userId}
+        <include refid="findMpUserShareRecordConditionAtmin"/>
+    </select>
+
+</mapper>

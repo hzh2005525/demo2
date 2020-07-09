@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.CMSHuaBaoMapper">
+    <sql id="cmsHuaBaoTableName">CMS_HUA_BAO</sql>
+
+    <insert id="insertCMSHuaBao" parameterType="com.sogal.wx.core.dao.domain.huabao.CMSHuaBao">
+        INSERT  INTO <include refid="cmsHuaBaoTableName"/> (
+        ID,
+        HB_NO,
+        `TYPE`,
+        CONTENT,
+        BACKGROUND_IMAGE,
+        BG_IMAGE_WIDTH,
+        BG_IMAGE_HIGH,
+        FOREGROUND1,
+        FOREGROUND1_WIDTH,
+        FOREGROUND1_HIGH,
+        FOREGROUND1_X,
+        FOREGROUND1_Y,
+        FOREGROUND1_VALID,
+        FOREGROUND2,
+        FOREGROUND2_WIDTH,
+        FOREGROUND2_HIGH,
+        FOREGROUND2_X,
+        FOREGROUND2_Y,
+        FOREGROUND2_VALID,
+        SHARE_CODE_TYPE,
+        APP_ID,
+        SHARE_CODE_WIDTH,
+        SHARE_CODE_X,
+        SHARE_CODE_Y,
+        TITLE,
+        TITLE_SIZE,
+        TITLE_HIGH,
+        TITLE_WIDTH,
+        TITLE_X,
+        TITLE_Y,
+        AVATAR_URL,
+        AVATAR_URL_WIDTH,
+        AVATAR_URL_X,
+        AVATAR_URL_Y,
+        AVATAR_URL_VALID,
+        NICK_NAME,
+        NICK_NAME_LENGTH,
+        NICK_NAME_SIZE,
+        NICK_NAME_HIGH,
+        NICK_NAME_WIDTH,
+        NICK_NAME_X,
+        NICK_NAME_Y,
+        NICK_NAME_VALID,
+        SHARER_NAME,
+        SHARER_NAME_LENGTH,
+        SHARER_NAME_SIZE,
+        SHARER_NAME_HIGH,
+        SHARER_NAME_WIDTH,
+        SHARER_NAME_X,
+        SHARER_NAME_Y,
+        SHARER_NAME_VALID,
+        SHARER_MOBILE,
+        SHARER_MOBILE_LENGTH,
+        SHARER_MOBILE_SIZE,
+        SHARER_MOBILE_HIGH,
+        SHARER_MOBILE_WIDTH,
+        SHARER_MOBILE_X,
+        SHARER_MOBILE_Y,
+        SHARER_MOBILE_VALID,
+        SORTED,
+        SHOW_LEVEL,
+        STATUS,
+        CREATOR,
+        UPDATER
+        ) VALUES (
+          #{id},
+          #{hbNo},
+          #{type},
+          #{content},
+          #{backgroundImage},
+         #{bgImageWidth},
+         #{bgImageHigh},
+          #{foreground1},
+          #{foreground1Width},
+          #{foreground1High},
+          #{foreground1X},
+          #{foreground1Y},
+          #{foreground1Valid},
+          #{foreground2},
+          #{foreground2Width},
+          #{foreground2High},
+          #{foreground2X},
+          #{foreground2Y},
+          #{foreground2Valid},
+          #{shareCodeType},
+          #{appId},
+          #{shareCodeWidth},
+          #{shareCodeX},
+          #{shareCodeY},
+          #{title},
+          #{titleSize},
+          #{titleHigh},
+          #{titleWidth},
+          #{titleX},
+          #{titleY},
+          #{avatarUrl},
+          #{avatarUrlWidth},
+          #{avatarUrlX},
+          #{avatarUrlY},
+          #{avatarUrlValid},
+          #{nickName},
+          #{nickNameLength},
+          #{nickNameSize},
+          #{nickNameHigh},
+          #{nickNameWidth},
+          #{nickNameX},
+          #{nickNameY},
+          #{nickNameValid},
+          #{sharerName},
+          #{sharerNameLength},
+          #{sharerNameSize},
+          #{sharerNameHigh},
+          #{sharerNameWidth},
+          #{sharerNameX},
+          #{sharerNameY},
+          #{sharerNameValid},
+          #{sharerMobile},
+          #{sharerMobileLength},
+          #{sharerMobileSize},
+          #{sharerMobileHigh},
+          #{sharerMobileWidth},
+          #{sharerMobileX},
+          #{sharerMobileY},
+          #{sharerMobileValid},
+        (SELECT (IFNULL(MAX(t.SORTED),0)+1) as SORTED FROM <include refid="cmsHuaBaoTableName"/> t),
+          #{showLevel},
+          #{status},
+          #{creator},
+          #{updater}
+        )
+    </insert>
+
+    <select id="findCMSHuaBaoById" resultType="com.sogal.wx.core.dao.domain.huabao.CMSHuaBao">
+        SELECT *
+        FROM <include refid="cmsHuaBaoTableName"/> hb
+        WHERE hb.ID = #{id}
+    </select>
+
+    <update id="updateCMSHuaBaoPreviewImageById" parameterType="java.lang.String">
+        UPDATE <include refid="cmsHuaBaoTableName"/>  SET  PREVIEW_IMAGE_URL = #{path} WHERE ID = #{id}
+    </update>
+
+    <sql id="findCMSHuaBaoPagedCondition">
+        <where>
+            <if test="queryCondition.templateType != null">
+                hb.TYPE = #{queryCondition.templateType}
+            </if>
+        </where>
+    </sql>
+
+    <select id="findCMSHuaBaoPagedByCondition" resultType="com.sogal.wx.core.dao.domain.huabao.CMSHuaBao">
+        SELECT hb.*
+        FROM <include refid="cmsHuaBaoTableName"/> hb
+        <include refid="findCMSHuaBaoPagedCondition"/>
+        ORDER BY hb.STATUS DESC ,hb.SORTED DESC ,hb.TIME_CREATED DESC
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+    <select id="countCMSHuaBaoPagedByCondition" resultType="int">
+        SELECT COUNT(*)
+        FROM <include refid="cmsHuaBaoTableName"/> hb
+        <include refid="findCMSHuaBaoPagedCondition"/>
+    </select>
+    <select id="findCMSHuaBaoDetailById" resultType="com.sogal.wx.core.dao.domain.huabao.CMSHuaBao">
+        SELECT *
+        FROM <include refid="cmsHuaBaoTableName"/> hb
+        WHERE hb.ID = #{id}
+    </select>
+
+    <update id="updateCMSHuaBao" parameterType="com.sogal.wx.core.dao.domain.huabao.CMSHuaBao">
+        UPDATE <include refid="cmsHuaBaoTableName"/> hb
+        <set>
+
+            <if test="backgroundImage != null">
+                `BACKGROUND_IMAGE` = #{backgroundImage},
+            </if>
+            <if test="bgImageWidth != null">
+                `BG_IMAGE_WIDTH` = #{bgImageWidth},
+            </if>
+            <if test="bgImageHigh != null">
+                `BG_IMAGE_HIGH` = #{bgImageHigh},
+            </if>
+            <if test="foreground1 != null">
+                `FOREGROUND1` = #{foreground1},
+            </if>
+            <if test="foreground1X != null">
+                `FOREGROUND1_X` = #{foreground1X},
+            </if>
+            <if test="foreground1Width != null">
+                `FOREGROUND1_WIDTH` = #{foreground1Width},
+            </if>
+            <if test="foreground1High != null">
+                `FOREGROUND1_HIGH` = #{foreground1High},
+            </if>
+            <if test="foreground1Y != null">
+                `FOREGROUND1_Y` = #{foreground1Y},
+            </if>
+            <if test="foreground1Valid != null">
+                `FOREGROUND1_VALID` = #{foreground1Valid},
+            </if>
+
+            <if test="foreground2 != null">
+                `FOREGROUND2` = #{foreground2},
+            </if>
+            <if test="foreground2Width != null">
+                `FOREGROUND2_WIDTH` = #{foreground2Width},
+            </if>
+            <if test="foreground2High != null">
+                `FOREGROUND2_HIGH` = #{foreground2High},
+            </if>
+            <if test="foreground2X != null">
+                `FOREGROUND2_X` = #{foreground2X},
+            </if>
+            <if test="foreground2Y != null">
+                `FOREGROUND2_Y` = #{foreground2Y},
+            </if>
+            <if test="foreground2Valid != null">
+                `FOREGROUND2_VALID` = #{foreground2Valid},
+            </if>
+
+            <if test="shareCodeType != null">
+                `SHARE_CODE_TYPE` = #{shareCodeType},
+            </if>
+            `APP_ID` = #{appId},
+            <if test="shareCodeWidth != null">
+                `SHARE_CODE_WIDTH` = #{shareCodeWidth},
+            </if>
+            <if test="shareCodeX != null">
+                `SHARE_CODE_X` = #{shareCodeX},
+            </if>
+            <if test="shareCodeY != null">
+                `SHARE_CODE_Y` = #{shareCodeY},
+            </if>
+            <if test="title != null">
+                `TITLE` = #{title},
+            </if>
+            <if test="titleSize != null">
+                `TITLE_SIZE` = #{titleSize},
+            </if>
+            <if test="titleWidth != null">
+                `TITLE_WIDTH` = #{titleWidth},
+            </if>
+            <if test="titleHigh != null">
+                `TITLE_HIGH` = #{titleHigh},
+            </if>
+            <if test="titleX != null">
+                `TITLE_X` = #{titleX},
+            </if>
+            <if test="titleY != null">
+                `TITLE_Y` = #{titleY},
+            </if>
+
+            <if test="avatarUrl != null">
+                `AVATAR_URL` = #{avatarUrl},
+            </if>
+            <if test="avatarUrlWidth != null">
+                `AVATAR_URL_WIDTH` = #{avatarUrlWidth},
+            </if>
+            <if test="avatarUrlX != null">
+                `AVATAR_URL_X` = #{avatarUrlX},
+            </if>
+            <if test="avatarUrlY != null">
+                `AVATAR_URL_Y` = #{avatarUrlY},
+            </if>
+            <if test="avatarUrlValid != null">
+                `AVATAR_URL_VALID` = #{avatarUrlValid},
+            </if>
+
+            <if test="nickName != null">
+                `NICK_NAME` = #{nickName},
+            </if>
+            <if test="nickNameLength != null">
+                `NICK_NAME_LENGTH` = #{nickNameLength},
+            </if>
+            <if test="nickNameSize != null">
+                `NICK_NAME_SIZE` = #{nickNameSize},
+            </if>
+            <if test="nickNameWidth != null">
+                `NICK_NAME_WIDTH` = #{nickNameWidth},
+            </if>
+            <if test="nickNameHigh != null">
+                `NICK_NAME_HIGH` = #{nickNameHigh},
+            </if>
+            <if test="nickNameX != null">
+                `NICK_NAME_X` = #{nickNameX},
+            </if>
+            <if test="nickNameY != null">
+                `NICK_NAME_Y` = #{nickNameY},
+            </if>
+            <if test="nickNameValid != null">
+                `NICK_NAME_VALID` = #{nickNameValid},
+            </if>
+
+            <if test="sharerName != null">
+                `SHARER_NAME` = #{sharerName},
+            </if>
+            <if test="sharerNameLength != null">
+                `SHARER_NAME_LENGTH` = #{sharerNameLength},
+            </if>
+            <if test="sharerNameSize != null">
+                `SHARER_NAME_SIZE` = #{sharerNameSize},
+            </if>
+            <if test="sharerNameWidth != null">
+                `SHARER_NAME_WIDTH` = #{sharerNameWidth},
+            </if>
+            <if test="sharerNameHigh != null">
+                `SHARER_NAME_HIGH` = #{sharerNameHigh},
+            </if>
+            <if test="sharerNameX != null">
+                `SHARER_NAME_X` = #{sharerNameX},
+            </if>
+            <if test="sharerNameY != null">
+                `SHARER_NAME_Y` = #{sharerNameY},
+            </if>
+            <if test="sharerNameValid != null">
+                `SHARER_NAME_VALID` = #{sharerNameValid},
+            </if>
+
+            <if test="sharerMobile != null">
+                `SHARER_MOBILE` = #{sharerMobile},
+            </if>
+            <if test="sharerMobileLength != null">
+                `SHARER_MOBILE_LENGTH` = #{sharerMobileLength},
+            </if>
+            <if test="sharerMobileSize != null">
+                `SHARER_MOBILE_SIZE` = #{sharerMobileSize},
+            </if>
+            <if test="sharerMobileWidth != null">
+                `SHARER_MOBILE_WIDTH` = #{sharerMobileWidth},
+            </if>
+            <if test="sharerMobileHigh != null">
+                `SHARER_MOBILE_HIGH` = #{sharerMobileHigh},
+            </if>
+            <if test="sharerMobileX != null">
+                `SHARER_MOBILE_X` = #{sharerMobileX},
+            </if>
+            <if test="sharerMobileY != null">
+                `SHARER_MOBILE_Y` = #{sharerMobileY},
+            </if>
+            <if test="sharerMobileValid != null">
+                `SHARER_MOBILE_VALID` = #{sharerMobileValid},
+            </if>
+            CONTENT = #{content},
+            VALID = #{valid},
+            `UPDATER` = #{updater}
+        </set>
+        WHERE hb.ID = #{id}
+    </update>
+
+    <delete id="deleteCMSHuaBaoById" >
+        DELETE FROM <include refid="cmsHuaBaoTableName"/>   WHERE ID = #{id}
+    </delete>
+    <update id="updateCMSHuaBaoStatus" parameterType="com.sogal.wx.core.dao.domain.huabao.CMSHuaBao">
+        UPDATE <include refid="cmsHuaBaoTableName"/>
+        SET STATUS = #{status},`UPDATER` = #{updater}
+        WHERE ID = #{id}
+    </update>
+    <update id="updateCmsHuaBaoSortToMax">
+        UPDATE <include refid="cmsHuaBaoTableName"/>
+        SET `SORTED` =  (SELECT t1.SORTED FROM (SELECT (IFNULL(MAX(t.SORTED),0)+1) as SORTED FROM <include refid="cmsHuaBaoTableName"/> t)t1),
+        UPDATER=#{updater}
+        WHERE ID = #{id}
+    </update>
+    <select id="findMTTargetSortedCmsHuaBaoIds" resultType="java.lang.String">
+        SELECT
+        `ID`
+        FROM <include refid="cmsHuaBaoTableName"/>
+        WHERE `SORTED` <![CDATA[> ]]> #{sorted}
+    </select>
+    <update id="addCmsHuaBaoSortedMTTargetSorted">
+        UPDATE <include refid="cmsHuaBaoTableName"/>
+        SET `SORTED` =  (SORTED + 1)
+        WHERE `ID` IN (
+        <foreach collection="ids" item="item" separator="," index="index">
+            #{item}
+        </foreach>
+        )
+    </update>
+    <update id="updateCmsHuaBaoSorted">
+        UPDATE <include refid="cmsHuaBaoTableName"/> SET `SORTED` =  #{sorted} WHERE ID = #{id}
+    </update>
+    <select id="findLTTargetSortedCmsHuaBaoIds" resultType="java.lang.String">
+        SELECT
+        `ID`
+        FROM <include refid="cmsHuaBaoTableName"/>
+        WHERE `SORTED`  <![CDATA[< ]]> #{sorted}
+    </select>
+    <update id="subCmsHuaBaoSortedLTTargetSorted">
+        UPDATE <include refid="cmsHuaBaoTableName"/> SET `SORTED` =  (SORTED-1)
+        WHERE `ID` IN (
+        <foreach collection="ids" item="item" separator="," index="index">
+            #{item}
+        </foreach>
+        )
+    </update>
+
+    <select id="getPictorialListByCondition" resultType="com.sogal.wx.core.dao.domain.huabao.CMSHuaBao">
+        SELECT hb.*
+        FROM <include refid="cmsHuaBaoTableName"/> hb
+        <include refid="getPictorialListCondition"/>
+        ORDER BY hb.STATUS DESC ,hb.SORTED DESC ,hb.TIME_CREATED DESC
+    </select>
+
+    <sql id="getPictorialListCondition">
+        <where>
+            hb.STATUS = 'ON'
+            <if test="queryCondition.templateType != null">
+                and hb.TYPE = #{queryCondition.templateType}
+            </if>
+
+        </where>
+    </sql>
+</mapper>

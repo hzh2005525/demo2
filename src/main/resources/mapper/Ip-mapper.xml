@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.IpMapper">
+
+    <sql id="ipAreaTableName">IP_AREA</sql>
+
+    <sql id="mpAccessRecordTableName">`MP_ACCESS_RECORD`</sql>
+
+    <insert id="insertIpArea" parameterType="com.sogal.wx.core.dao.domain.ip.IpArea">
+        INSERT IGNORE INTO <include refid="ipAreaTableName"/> (
+            INT_IP,
+            IP,
+            CITY
+        ) VALUES (
+            #{intIp},
+            #{ip},
+            #{city}
+        )
+    </insert>
+
+    <select id="findIpDataNotInIpArea" resultType="com.sogal.wx.core.dao.domain.ip.IpArea">
+        SELECT DISTINCT mar.IP AS intIp, inet_ntoa(mar.IP) AS IP
+        FROM <include refid="mpAccessRecordTableName"/> mar
+        WHERE mar.IP IS NOT NULL AND mar.IP <![CDATA[ <> ]]>  ''
+        AND mar.IP NOT IN (SELECT ipa.INT_IP FROM <include refid="ipAreaTableName"/> ipa)
+        LIMIT 150
+    </select>
+    <select id="findNumByIpAtIpArea" resultType="int">
+        SELECT COUNT(*)
+        FROM <include refid="ipAreaTableName"/>
+        WHERE INT_IP = #{intIp} OR IP = #{ip}
+    </select>
+</mapper>

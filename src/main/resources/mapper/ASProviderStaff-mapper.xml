@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.ASProviderStaffMapper">
+    <sql id="ASProviderStaffTableName">`AS_SERVICE_PROVIDER_STAFF`</sql>
+
+
+    <select id="findNumByStaffId" resultType="int">
+        SELECT COUNT(*) FROM <include refid="ASProviderStaffTableName"/>
+        WHERE `SERVICE_STAFF_ID` = #{staffId}
+    </select>
+
+</mapper>

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.UserExposeRewardMapper">
+
+    <sql id="tableName">`USER_EXPOSE_REWARD`</sql>
+
+    <sql id="userExposeRewardCashTableName">`USER_EXPOSE_REWARD_CASH`</sql>
+
+    <sql id="mpUserTableName">`MP_USER`</sql>
+
+    <sql id="cmsArticleTableName">`CMS_ARTICLE`</sql>
+
+    <insert id="addUserExposeRewardBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.expose.UserExposeReward">
+        INSERT INTO
+        <include refid="tableName"/>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                `ID`,
+            </if>
+            <if test="designId != null and designId != ''">
+                `DESIGN_ID`,
+            </if>
+            <if test="visitorId != null and visitorId != ''">
+                `VISITOR_ID`,
+            </if>
+            <if test="referId != null and referId != ''">
+                `REFER_ID`,
+            </if>
+            <if test="locationCity != null and locationCity != ''">
+                `LOCATION_CITY`,
+            </if>
+            <if test="rewardAmount != null">
+                `REWARD_AMOUNT`,
+            </if>
+            <if test="cashStatus != null">
+                `CASH_STATUS`,
+            </if>
+            <if test="cashId != null and cashId != ''">
+                `CASH_ID`,
+            </if>
+            <if test="viewTime != null">
+                `VIEW_TIME`,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                #{id},
+            </if>
+            <if test="designId != null and designId != ''">
+                #{designId},
+            </if>
+            <if test="visitorId != null and visitorId != ''">
+                #{visitorId},
+            </if>
+            <if test="referId != null and referId != ''">
+                #{referId},
+            </if>
+            <if test="locationCity != null and locationCity != ''">
+                #{locationCity},
+            </if>
+            <if test="rewardAmount != null">
+                #{rewardAmount},
+            </if>
+            <if test="cashStatus != null">
+                #{cashStatus},
+            </if>
+            <if test="cashId != null and cashId != ''">
+                #{cashId},
+            </if>
+            <if test="viewTime != null">
+                #{viewTime},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateUserExposeRewardBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.expose.UserExposeReward">
+        UPDATE
+        <include refid="tableName"/>
+        <set>
+            <if test="designId != null and designId != ''">
+                `DESIGN_ID` = #{designId},
+            </if>
+            <if test="visitorId != null and visitorId != ''">
+                `VISITOR_ID` = #{visitorId},
+            </if>
+            <if test="referId != null and referId != ''">
+                `REFER_ID` = #{referId},
+            </if>
+            <if test="locationCity != null and locationCity != ''">
+                `LOCATION_CITY` = #{locationCity},
+            </if>
+            <if test="rewardAmount != null">
+                `REWARD_AMOUNT` = #{rewardAmount},
+            </if>
+            <if test="cashStatus != null">
+                `CASH_STATUS` = #{cashStatus},
+            </if>
+            <if test="cashId != null and cashId != ''">
+                `CASH_ID` = #{cashId},
+            </if>
+            <if test="viewTime != null">
+                `VIEW_TIME` = #{viewTime},
+            </if>
+        </set>
+        WHERE `ID` = #{id}
+    </update>
+
+    <select id="findUserExposeRewardCountByDesignIdAndVisitorId" resultType="int">
+        SELECT COUNT(*)
+        FROM
+        <include refid="tableName"/>
+        WHERE DESIGN_ID = #{designId} AND VISITOR_ID = #{visitorId}
+    </select>
+
+    <select id="findUserExposeRewardListByDesignIdAndReferId"
+            resultType="com.sogal.wx.core.dao.domain.expose.UserExposeReward">
+        /*#mycat:db_type=master*/
+        SELECT * FROM <include refid="tableName"/> WHERE DESIGN_ID = #{designId} AND REFER_ID = #{referId} ORDER BY `VIEW_TIME` DESC
+    </select>
+
+    <select id="findUserExposeRewardListByDesignIdAndVisitorIds"
+            resultType="com.sogal.wx.core.dao.domain.expose.UserExposeReward">
+        SELECT *
+        FROM
+        <include refid="tableName"/>
+        WHERE DESIGN_ID = #{designId}
+        AND VISITOR_ID IN
+        <foreach collection="visitorIds" index="index" item="visitorId" open="(" separator="," close=")">
+            #{visitorId}
+        </foreach>
+    </select>
+
+    <select id="selectUserExposeRewardList"
+            resultType="com.sogal.wx.core.dao.domain.expose.UserExposeRewardDTO">
+        SELECT uer.ID AS id, ca.TITLE AS designTitle, uer.VISITOR_ID AS visitorId, uer.REFER_ID AS referId,
+        up.NICKNAME AS referNickName, up.AVATAR_URL AS referAvatarUrl, uer.LOCATION_CITY AS locationCity,
+        uer.REWARD_AMOUNT AS rewardAmount, uer.VIEW_TIME AS viewTime, uerc.STATUS AS status,
+        uerc.PARTNER_TRADE_NO AS partnerTradeNo
+        FROM
+        <include refid="tableName"/>
+        uer
+        LEFT JOIN
+        <include refid="cmsArticleTableName"/>
+        ca
+        ON uer.DESIGN_ID = ca.ID
+        LEFT JOIN
+        <include refid="mpUserTableName"/>
+        up
+        ON uer.REFER_ID = up.ID
+        LEFT JOIN
+        <include refid="userExposeRewardCashTableName"/>
+        uerc
+        ON uer.CASH_ID = uerc.ID
+        ORDER BY uer.`VIEW_TIME` DESC
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <select id="selectUserExposeRewardListCount" resultType="int">
+        SELECT COUNT(*) FROM
+        <include refid="tableName"/>
+    </select>
+
+</mapper>

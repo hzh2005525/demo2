@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.CMSArticlePlainTextMapper">
+    <sql id="cmsArticlePlainTextTableName">`CMS_ARTICLE_PLAIN_TEXT`</sql>
+
+    <insert id="batchInsertIgnoreCMSArticlePlainText"  parameterType="java.util.List">
+        INSERT IGNORE INTO <include refid="cmsArticlePlainTextTableName"/>
+        (ID,ELEMENT_TYPE,QJT_URL,SORTED,CONTENT,REALM, REALM_ID ,VALID,CREATOR,PARAM_CONTENT)
+        VALUES
+        <foreach collection="list" separator="," index="index" item="item">
+            (#{item.id},
+             #{item.elementType},
+             #{item.qjtUrl},
+             #{item.sorted},
+             #{item.content},
+             #{item.realm},
+             #{item.realmId},
+             #{item.valid},
+             #{item.creator},
+            #{item.paramContent, typeHandler=com.sogal.wx.core.config.MybatisJsonTypeHandler})
+        </foreach>
+    </insert>
+    <select id="findParagraphsDeletingByArticleIdAndParagraphs" resultType="java.lang.String">
+        SELECT capt.ID
+        FROM <include refid="cmsArticlePlainTextTableName"/> capt
+        WHERE capt.REALM_ID = #{articleId}
+        AND capt.ID NOT  IN (
+            <foreach collection="paragraphs" separator="," item="item" index="index">
+                #{item.id}
+            </foreach>
+        )
+    </select>
+    <delete id="deleteParagraphsNotUsedByIds">
+        DELETE FROM <include refid="cmsArticlePlainTextTableName"/>
+        WHERE ID IN (
+            <foreach collection="ids" item="item" index="index" separator=",">
+                #{item}
+            </foreach>
+        )
+    </delete>
+
+    <update id="updateCMSArticlePlainTextById"
+            parameterType="com.sogal.wx.core.dao.domain.article.CMSArticlePlainText">
+        UPDATE  <include refid="cmsArticlePlainTextTableName"/> capt
+        SET
+        capt.ELEMENT_TYPE = #{elementType},
+        capt.QJT_URL = #{qjtUrl},
+        capt.SORTED = #{sorted},
+        capt.CONTENT = #{content},
+        capt.PARAM_CONTENT = #{paramContent, typeHandler=com.sogal.wx.core.config.MybatisJsonTypeHandler},
+        capt.VALID = #{valid}
+        WHERE capt.ID = #{id}
+    </update>
+    <resultMap id="selectCMSArticlePlainTextResultMapAtAdmin" type="com.sogal.wx.core.dao.domain.article.CMSArticlePlainText">
+        <result column="ID" property="id"></result>
+        <result column="ELEMENT_TYPE" property="elementType"></result>
+        <result column="QJT_URL" property="qjtUrl"></result>
+        <result column="SORTED" property="sorted"></result>
+        <result column="CONTENT" property="content"></result>
+        <result column="REALM" property="realm"></result>
+        <result column="REALM_ID" property="realmId"></result>
+        <result column="VALID" property="valid"></result>
+        <result column="CREATOR" property="creator"></result>
+        <result column="PARAM_CONTENT" property="paramContent" typeHandler="com.sogal.wx.core.config.MybatisJsonTypeHandler"></result>
+    </resultMap>
+    <select id="selectCMSArticlePlainTextByRealmIdAtAdmin"
+     resultMap="selectCMSArticlePlainTextResultMapAtAdmin">
+        SELECT ID,ELEMENT_TYPE,QJT_URL,SORTED,CONTENT,REALM, REALM_ID ,VALID,CREATOR,PARAM_CONTENT
+        FROM <include refid="cmsArticlePlainTextTableName"/>
+        WHERE REALM_ID = #{realmId}
+        ORDER BY SORTED
+    </select>
+
+    <resultMap id="selectCMSArticlePlainTextResultMapAtC" type="com.sogal.wx.core.dao.domain.article.CMSArticlePlainText">
+        <result column="ID" property="id"></result>
+        <result column="ELEMENT_TYPE" property="elementType"></result>
+        <result column="QJT_URL" property="qjtUrl"></result>
+        <result column="SORTED" property="sorted"></result>
+        <result column="CONTENT" property="content"></result>
+        <result column="PARAM_CONTENT" property="paramContent" typeHandler="com.sogal.wx.core.config.MybatisJsonTypeHandler"></result>
+    </resultMap>
+    <select id="selectCMSArticlePlainTextByRealmIdAtC"
+            resultMap="selectCMSArticlePlainTextResultMapAtC">
+        SELECT ID,ELEMENT_TYPE,QJT_URL,SORTED,CONTENT,PARAM_CONTENT
+        FROM <include refid="cmsArticlePlainTextTableName"/>
+        WHERE REALM_ID = #{realmId}
+        ORDER BY SORTED
+    </select>
+
+    <select id="findPlainTextIdsByRealmAndRealmId" resultType="java.lang.String">
+        SELECT ID
+        FROM <include refid="cmsArticlePlainTextTableName"/>
+        WHERE  REALM = #{realm} AND REALM_ID IN (
+        <foreach collection="realmIds" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+        )
+    </select>
+    <update id="markArticlePlainTextInvalidByIds">
+        UPDATE
+        <include refid="cmsArticlePlainTextTableName"/> capt
+        SET capt.VALID = 0
+        WHERE capt.ID IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+    <update id="markArticlePlainTextInvalidByRealmId">
+        UPDATE
+        <include refid="cmsArticlePlainTextTableName"/> capt
+        SET capt.VALID = 0
+        WHERE capt.REALM_ID = #{realmId}
+    </update>
+
+    <update id="markArticlePlainTextValidByRealmId">
+        UPDATE
+        <include refid="cmsArticlePlainTextTableName"/> capt
+        SET capt.VALID = 1
+        WHERE capt.REALM_ID IN (
+        <foreach collection="realmIds" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+        )
+    </update>
+
+
+</mapper>

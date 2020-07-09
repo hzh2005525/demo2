@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatDesignScoreMapper">
+    <sql id="tableName">`CMS_ARTICLE_SCORE`</sql>
+    <sql id="cmsArticleScoreTableName">`CMS_ARTICLE_SCORE`</sql>
+
+    <delete id="deleteAll">
+        DELETE FROM <include refid="cmsArticleScoreTableName"/>
+    </delete>
+
+    <insert id="insertWechatDesignScores" parameterType="java.util.List">
+        INSERT IGNORE INTO <include refid="cmsArticleScoreTableName"/> (DESIGN_ID, SCORE)
+        VALUES
+        <foreach collection="list" item="item" separator="," index="index">
+            (#{item.designId}, #{item.score})
+        </foreach>
+    </insert>
+</mapper>

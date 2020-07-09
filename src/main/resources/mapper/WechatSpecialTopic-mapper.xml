@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatSpecialTopicMapper">
+    <sql id="tableName">`CMS_TOPIC`</sql>
+    <sql id="cmsArticleRighTextTableName">`CMS_ARTICLE_RICH_TEXT`</sql>
+    <sql id="cmsArticleTableName">`CMS_ARTICLE`</sql>
+    <sql id="cmsTopicArticleTableName">`CMS_TOPIC_ARTICLE`</sql>
+    <sql id="cmsImageTableName">`CMS_IMAGE`</sql>
+    <sql id="WechatSpecialTopicAllColumn">
+          `ID`,
+          `NAME`,
+          `IMAGE_URL`,
+          `DETAIL_URL`,
+          `KIND`,
+          `DESIGN_COUNT`,
+          `VALID`,
+          `PUBLISH_STATUS`,
+          `CREATOR`,
+          `TIME_CREATED`,
+          `UPDATER`,
+          `TIME_UPDATED`
+    </sql>
+
+    <insert id="insert" parameterType="com.sogal.wx.core.dao.domain.special.WechatSpecialTopic">
+        INSERT INTO
+        <include refid="tableName"/>
+        (
+        `ID`,
+        `NAME`,
+        `IMAGE_URL`,
+        `DETAIL_URL`,
+        `KIND`,
+        `VALID`,
+        `PUBLISH_STATUS`,
+        `CREATOR`
+        )VALUES(
+        #{id},
+        #{name},
+        #{imageUrl},
+        #{detailUrl},
+        #{kind},
+        #{valid},
+        #{publishStatus},
+        #{creator}
+        )
+    </insert>
+
+    <update id="updateById" parameterType="com.sogal.wx.core.dao.domain.special.WechatSpecialTopic">
+        UPDATE
+        <include refid="tableName"/>
+        SET
+        `NAME` = #{name},
+        `IMAGE_URL` = #{imageUrl},
+        `DETAIL_URL` = #{detailUrl},
+        `UPDATER` = #{updater}
+        WHERE `ID` = #{id}
+    </update>
+
+    <update id="deleteById" parameterType="com.sogal.wx.core.dao.domain.special.WechatSpecialTopic">
+        UPDATE
+        <include refid="tableName"/>
+        SET
+        `VALID` = #{valid},
+        `UPDATER` = #{updater}
+        WHERE `ID` = #{id}
+    </update>
+
+    <update id="publishORCancelById" parameterType="com.sogal.wx.core.dao.domain.special.WechatSpecialTopic">
+        UPDATE
+        <include refid="tableName"/>
+        SET
+        `PUBLISH_STATUS` = #{publishStatus},
+        `UPDATER` = #{updater}
+        WHERE `ID` = #{id}
+    </update>
+
+    <select id="list" resultType="com.sogal.wx.core.dao.domain.special.WechatSpecialTopic">
+        SELECT
+        <include refid="WechatSpecialTopicAllColumn"/>
+        FROM
+        <include refid="tableName"/>
+        WHERE `VALID` = 1
+        <if test="specialTopicQueryCondition.name != null and specialTopicQueryCondition.name != ''">
+            AND `NAME` LIKE concat('%',#{specialTopicQueryCondition.name},'%')
+        </if>
+        <if test="specialTopicQueryCondition.kind != null">
+            AND `KIND` = #{specialTopicQueryCondition.kind}
+        </if>
+        ORDER BY `TIME_CREATED` DESC
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT count(*)
+        FROM
+        <include refid="tableName"/>
+        WHERE `VALID` = 1
+        <if test="specialTopicQueryCondition.name != null and specialTopicQueryCondition.name != ''">
+            AND `NAME` LIKE concat('%',#{specialTopicQueryCondition.name},'%')
+        </if>
+        <if test="specialTopicQueryCondition.kind != null">
+            AND `KIND` = #{specialTopicQueryCondition.kind}
+        </if>
+    </select>
+
+    <select id="getSpecialTopicListByKind" resultType="hashmap">
+        SELECT `ID` AS id, `NAME` AS name
+        FROM
+        <include refid="tableName"/>
+        WHERE `VALID` = 1 AND `KIND` = #{kind}
+        ORDER BY `TIME_CREATED` DESC
+    </select>
+
+    <select id="selectById" resultType="com.sogal.wx.core.dao.domain.special.WechatSpecialTopic">
+        SELECT
+        <include refid="WechatSpecialTopicAllColumn"/>
+        FROM
+        <include refid="tableName"/>
+        WHERE `ID` = #{id}
+    </select>
+
+    <update id="updateDesignCountPlusById" parameterType="string">
+        UPDATE
+        <include refid="tableName"/>
+        SET DESIGN_COUNT = DESIGN_COUNT + 1 WHERE ID = #{id}
+    </update>
+
+    <update id="updateDesignCountReduceById" parameterType="string">
+        UPDATE
+        <include refid="tableName"/>
+        SET DESIGN_COUNT = DESIGN_COUNT - 1 WHERE ID = #{id}
+    </update>
+
+    <select id="articleList" resultType="hashmap">
+        SELECT wst.ID AS specialId, wd.ID AS designId, wa.TITLE AS title, wa.CONTENT_SYLLABUS AS contentSyllabus,
+        wi.REDUCE_URL AS reduceUrl, wd.PANORAMA AS panorama
+        FROM
+        <include refid="tableName"/>
+        wst
+        LEFT JOIN <include refid="cmsTopicArticleTableName"/> wsd ON wst.ID = wsd.SPECIAL_ID
+        LEFT JOIN <include refid="cmsArticleTableName"/> wd ON wd.ID = wsd.DESIGN_ID
+        LEFT JOIN <include refid="cmsArticleRighTextTableName"/> wa ON wd.DESCRIBE_ARTICLE = wa.ID
+        LEFT JOIN <include refid="cmsImageTableName"/> wi ON wd.COVER = wi.ID
+        WHERE wst.ID = #{specialDesignQueryCondition.specialId} AND wst.VALID = 1 AND wd.VALID = 1 AND wa.VALID = 1
+        <if test="specialDesignQueryCondition.title != null and specialDesignQueryCondition.title != ''">
+            AND wa.TITLE LIKE concat('%',#{specialDesignQueryCondition.title},'%')
+        </if>
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <select id="articleListCount" resultType="int">
+        SELECT count(*)
+        FROM
+        <include refid="tableName"/> wst
+        LEFT JOIN <include refid="cmsTopicArticleTableName"/> wsd ON wst.ID = wsd.SPECIAL_ID
+        LEFT JOIN <include refid="cmsArticleTableName"/> wd ON wd.ID = wsd.DESIGN_ID
+        LEFT JOIN <include refid="cmsArticleRighTextTableName"/> wa ON wd.DESCRIBE_ARTICLE = wa.ID
+        LEFT JOIN <include refid="cmsImageTableName"/> wi ON wd.COVER = wi.ID
+        WHERE wst.ID = #{specialDesignQueryCondition.specialId} AND wst.VALID = 1 AND wd.VALID = 1 AND wa.VALID = 1
+        <if test="specialDesignQueryCondition.title != null and specialDesignQueryCondition.title != ''">
+            AND wa.TITLE LIKE concat('%',#{specialDesignQueryCondition.title},'%')
+        </if>
+    </select>
+
+    <select id="appletTopicList" resultType="com.sogal.wx.core.dao.domain.special.WechatSpecialTopic">
+        SELECT
+        <include refid="WechatSpecialTopicAllColumn"/>
+        FROM
+        <include refid="tableName"/>
+        WHERE `VALID` = 1 AND `PUBLISH_STATUS` = 1 AND `KIND` = #{specialTopicQueryCondition.kind}
+        ORDER BY `DESIGN_COUNT` DESC
+        LIMIT 5
+    </select>
+
+</mapper>

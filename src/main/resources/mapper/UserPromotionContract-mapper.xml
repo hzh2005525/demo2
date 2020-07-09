@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.UserPromotionContractMapper">
+
+    <sql id="tableName">`USER_PROMOTION_CONTRACT`</sql>
+
+    <insert id="addUserPromotionContractBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserPromotionContract">
+        INSERT INTO
+        <include refid="tableName"/>
+        (`ID`, `UNION_ID`, `AES_ID`, `STATUS`)
+        VALUES
+        (#{id}, #{unionId}, #{aesId}, #{status})
+        ON DUPLICATE KEY UPDATE
+        `UNION_ID` = VALUES(`UNION_ID`),
+        `STATUS` = VALUES(`STATUS`)
+    </insert>
+
+    <update id="updateUserPromotionContractCardByAesId"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserPromotionContract">
+        UPDATE
+        <include refid="tableName"/>
+        <set>
+            <if test="status != null">
+                `STATUS` = #{status},
+            </if>
+            <if test="contractNo != null and contractNo != ''">
+                `CONTRACT_NO` = #{contractNo},
+            </if>
+            <if test="firstPartyName != null and firstPartyName != ''">
+                `FIRST_PARTY_NAME` = #{firstPartyName},
+            </if>
+            <if test="secondPartyName != null and secondPartyName != ''">
+                `SECOND_PARTY_NAME` = #{secondPartyName},
+            </if>
+            <if test="signDt != null and signDt != ''">
+                `SIGN_DT` = #{signDt},
+            </if>
+            <if test="invalidDt != null and invalidDt != ''">
+                `INVALID_DT` = #{invalidDt},
+            </if>
+            <if test="remark != null and remark != ''">
+                `REMARK` = #{remark},
+            </if>
+            <if test="fileId != null and fileId != ''">
+                `FILE_ID` = #{fileId},
+            </if>
+            <if test="fileUrl != null and fileUrl != ''">
+                `FILE_URL` = #{fileUrl},
+            </if>
+            <if test="createName != null and createName != ''">
+                `CREATE_NAME` = #{createName},
+            </if>
+            <if test="createDt != null and createDt != ''">
+                `CREATE_DT` = #{createDt},
+            </if>
+        </set>
+        WHERE `AES_ID` = #{aesId}
+    </update>
+
+</mapper>

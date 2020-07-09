@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.UserCouponMapper">
+    <sql id="tableName">`USER_COUPON`</sql>
+    <sql id="mpCouponTableName">`JF_COUPON`</sql>
+    <sql id="mpCouponHouseTableName">`JF_COUPON_HOUSE`</sql>
+    <sql id="mpUserCouponTableName">`MP_USER_COUPON`</sql>
+    <insert id="addUserCoupon" parameterType="com.sogal.wx.core.dao.domain.coupon.UserCoupon">
+        INSERT IGNORE INTO <include refid="tableName"/> (
+            ID,
+            USER_ID,
+            UNION_ID,
+            MOBILE,
+            CUST_ID,
+            COUPON_ID,
+            MATCH_ID,
+            QR_ID,
+            STATUS,
+            COUPON_TYPE,
+            SOURCE_TYPE
+        ) VALUES (
+            #{id},
+            #{userId},
+            #{unionId},
+            #{mobile},
+            #{custId},
+            #{couponId},
+            #{matchId},
+            #{qrId},
+            #{status},
+            #{couponType},
+            #{sourceType}
+            )
+    </insert>
+    <select id="findCountUserCouponByCouponId" resultType="int">
+        SELECT COUNT(*) FROM <include refid="tableName"/> WHERE COUPON_ID = #{couponId}
+    </select>
+
+    <insert id="insertMpCoupon" parameterType="com.sogal.wx.core.dao.domain.coupon.MpCoupon">
+        INSERT IGNORE INTO <include refid="mpCouponTableName"/> (
+        ID,
+        `NAME`,
+        `TYPE`,
+        PUBLISH_STATUS,
+        STATUS,
+        ISSUE_REASON,
+        AVAILABLE_BEGIN_TIME,
+        AVAILABLE_END_TIME,
+        ADDR_LOCKED,
+        INSTRUCTION,
+        DISTRIBUTION_CHANNEL,
+        CUST_ID,
+        CUST_NAME,
+        CUST_MOBILE
+        ) VALUES (
+        #{id},
+        #{name},
+        #{type},
+        #{publishStatus},
+        #{status},
+        #{issueReason},
+        #{availableBeginTime},
+        #{availableEndTime},
+        #{addrLocked},
+        #{instruction},
+        #{distributionChannel},
+        #{custId},
+        #{custName},
+        #{custMobile}
+        )
+    </insert>
+
+    <insert id="insertMpCouponHouse" parameterType="com.sogal.wx.core.dao.domain.coupon.MpCouponHouse">
+        INSERT IGNORE INTO <include refid="mpCouponHouseTableName"/> (
+        ID,
+        `COUPON_ID`,
+        `CUST_NAME`,
+        CUST_MOBILE,
+        HOUSE_ADDR,
+        HOUSE_ID,
+        ORDER_NO
+        ) VALUES (
+        #{id},
+        #{couponId},
+        #{custName},
+        #{custMobile},
+        #{houseAddr},
+        #{houseId},
+        #{orderNo}
+        )
+    </insert>
+
+    <select id="findUserKitchenNurseAddr"
+            resultType="com.sogal.wx.core.dao.domain.kitchen.UserKitchenNurseInfo">
+        SELECT  MIN(mc.ID) AS ID,mc.ADDR_LOCKED,mc.CUST_NAME,mc.CUST_MOBILE,mch.HOUSE_ADDR
+        FROM
+        <include refid="mpCouponTableName"/>  mc
+        INNER JOIN <include refid="mpUserCouponTableName"/> muc ON  muc.COUPON_ID = mc.ID
+        INNER JOIN <include refid="mpCouponHouseTableName"/> mch ON mc.ID = mch.COUPON_ID
+        WHERE muc.USER_ID = #{userId} AND mc.CUST_MOBILE = #{mobile} AND mc.STATUS = 'NEW' AND mc.VALID = 1
+        AND YEAR(mc.TIME_CREATED) = DATE_FORMAT(NOW(), '%Y')
+        AND <include refid="mpServiceCouponAvailableTimeCheck"/>
+        GROUP BY mch.HOUSE_ID
+    </select>
+    <sql id="mpServiceCouponAvailableTimeCheck">
+             mc.AVAILABLE_BEGIN_TIME <![CDATA[<= ]]> NOW()
+            AND mc.AVAILABLE_END_TIME <![CDATA[> ]]>NOW()
+    </sql>
+
+    <select id="findMSCouponAvailableInfoAtAdminByMobile"
+            resultType="com.sogal.wx.core.dao.domain.kitchen.UserKitchenNurseInfo">
+                SELECT  MIN(mc.ID) AS ID,mc.ADDR_LOCKED,mc.CUST_NAME,mc.CUST_MOBILE,mch.HOUSE_ADDR,
+                COUNT(DISTINCT mc.ID) AS restNum , mch.ORDER_NO
+                FROM
+                <include refid="mpCouponTableName"/>  mc
+                INNER JOIN <include refid="mpCouponHouseTableName"/> mch ON mc.ID = mch.COUPON_ID
+                WHERE  mc.CUST_MOBILE = #{mobile} AND mc.STATUS = 'NEW' AND mc.VALID = 1
+                AND YEAR(mc.TIME_CREATED) = DATE_FORMAT(NOW(), '%Y')
+                AND <include refid="mpServiceCouponAvailableTimeCheck"/>
+                GROUP BY mch.HOUSE_ID
+    </select>
+
+    <select id="findMSCouponNumOfSchmidtOrderByMobile"
+            resultType="int">
+        SELECT  COUNT(*)
+        FROM
+        <include refid="mpCouponTableName"/>  mc
+        WHERE  mc.CUST_MOBILE = #{mobile} AND YEAR(mc.TIME_CREATED) = DATE_FORMAT(NOW(), '%Y')
+        AND <include refid="mpServiceCouponAvailableTimeCheck"/>
+    </select>
+
+    <select id="findMSCouponUsedInfodByMobile"
+            resultType="com.sogal.wx.core.dao.domain.kitchen.UserKitchenNurseInfo">
+        SELECT  MIN(mc.ID) AS ID,mc.ADDR_LOCKED,mc.CUST_NAME,mc.CUST_MOBILE,mch.HOUSE_ADDR,
+        COUNT(DISTINCT mc.ID) AS restNum, mch.ORDER_NO
+        FROM
+        <include refid="mpCouponTableName"/>  mc
+        INNER JOIN <include refid="mpCouponHouseTableName"/> mch ON mc.ID = mch.COUPON_ID
+        WHERE  mc.CUST_MOBILE = #{mobile} AND mc.STATUS = 'USED' AND mc.VALID = 0
+        AND YEAR(mc.TIME_CREATED) = DATE_FORMAT(NOW(), '%Y')
+        AND <include refid="mpServiceCouponAvailableTimeCheck"/>
+        GROUP BY mch.HOUSE_ID
+    </select>
+
+    <select id="findMpCouponIdsAllowedToReceiveByMobile" resultType="java.lang.String">
+        SELECT mc.ID
+        FROM
+            <include refid="mpCouponTableName"/> mc
+        WHERE mc.CUST_MOBILE = #{mobile}
+        AND NOT EXISTS
+                (SELECT  1 FROM <include refid="mpUserCouponTableName"/>  muc WHERE muc.COUPON_ID = mc.ID)
+    </select>
+
+    <insert id="batchInsertMpUserCoupon" parameterType="java.util.List">
+        INSERT IGNORE INTO <include refid="mpUserCouponTableName"/> (
+        ID,
+        USER_ID,
+        MOBILE,
+        CUST_ID,
+        COUPON_ID
+        ) VALUES
+        <foreach collection="list" index="index" separator="," item="item">
+            (
+            #{item.id},
+            #{item.userId},
+            #{item.mobile},
+            #{item.custId},
+            #{item.couponId}
+            )
+        </foreach>
+    </insert>
+    <select id="findMpCouponById" resultType="com.sogal.wx.core.dao.domain.coupon.MpCoupon">
+        SELECT * FROM <include refid="mpCouponTableName"/>
+        WHERE ID = #{id}
+    </select>
+    <select id="findMpCouponByCustId" resultType="com.sogal.wx.core.dao.domain.coupon.MpCoupon">
+        SELECT * FROM <include refid="mpCouponTableName"/> mc
+        WHERE mc.CUST_ID = #{custId}
+        AND YEAR(mc.TIME_CREATED) = DATE_FORMAT(NOW(), '%Y')
+    </select>
+    <select id="findCouponByMobile" resultType="com.sogal.wx.core.dao.domain.coupon.MpCoupon">
+        SELECT * FROM <include refid="mpCouponTableName"/> mc
+        WHERE mc.CUST_MOBILE = #{mobile} AND YEAR(mc.TIME_CREATED) = DATE_FORMAT(NOW(), '%Y')
+        AND   mc.USER_ID IS NULL
+        AND   mc.ID NOT IN (
+            SELECT COUPON_ID FROM <include refid="mpUserCouponTableName"/>
+        )
+    </select>
+    <select id="findNumServiceCouponReceivedOfCurrentMobile" resultType="int">
+        SELECT COUNT(*)
+        FROM <include refid="mpUserCouponTableName"/> muc
+        WHERE muc.MOBILE = #{mobile} AND YEAR(muc.TIME_CREATED) = DATE_FORMAT(NOW(), '%Y')
+    </select>
+    <select id="findMpUserCouponInfoPermissibleReceiving" resultType="com.sogal.wx.core.dao.domain.coupon.MpUserCoupon">
+        SELECT mc.CUST_ID, mc.ID AS couponId,mu.MOBILE,mu.ID AS userId
+        FROM <include refid="mpCouponTableName"/> mc
+        INNER JOIN MP_USER mu ON mc.CUST_MOBILE = mu.MOBILE
+        WHERE  YEAR(mc.TIME_CREATED) = DATE_FORMAT(NOW(), '%Y') AND mc.ID NOT IN (
+              SELECT COUPON_ID FROM <include refid="mpUserCouponTableName"/>
+        )
+    </select>
+    <update id="makeMpCouponUsed">
+        UPDATE <include refid="mpCouponTableName"/>
+        SET STATUS = 'USED',VALID = 0,TIME_USED = NOW(),MODE_USED = #{modeUsed}
+        WHERE ID = #{id} AND STATUS = 'NEW' AND VALID = 1
+    </update>
+    <update id="makeMpCouponUsable">
+        UPDATE <include refid="mpCouponTableName"/>
+        SET STATUS = 'NEW',VALID = 1,TIME_USED = NULL ,MODE_USED = NULL
+        WHERE ID = #{id} AND STATUS = 'USED' AND VALID = 0
+    </update>
+    <select id="findMSCouponNumOfExpire" resultType="int">
+        SELECT COUNT(*)
+        FROM <include refid="mpCouponTableName"/>
+        WHERE AVAILABLE_END_TIME <![CDATA[ <= ]]>  NOW()
+        AND STATUS = 'NEW' AND VALID = 1
+    </select>
+    <update id="updateServiceCouponExpired">
+        UPDATE <include refid="mpCouponTableName"/>
+        SET STATUS = 'EXPIRED',VALID = 0
+        WHERE AVAILABLE_END_TIME <![CDATA[ <= ]]>  NOW()
+        AND STATUS = 'NEW' AND VALID = 1
+    </update>
+
+    <select id="findCountUserCouponByQrId" resultType="int">
+        SELECT COUNT(*) FROM <include refid="tableName"/> WHERE QR_ID = #{qrId}
+    </select>
+    <select id="findCountUserCouponByUserIdAndSourceType" resultType="int">
+        SELECT COUNT(*) FROM <include refid="tableName"/> WHERE USER_ID = #{userId} AND SOURCE_TYPE = #{sourceType}
+    </select>
+</mapper>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.MpMessageLogMapper">
+
+    <sql id="tableName">`MP_MESSAGE_LOG`</sql>
+
+    <sql id="mpUserTableName">`MP_USER`</sql>
+
+    <sql id="mpAccessTokenTableName">`MP_ACCESS_TOKEN`</sql>
+
+    <insert id="addMpMessageLogBySelective" parameterType="com.sogal.wx.core.dao.domain.message.MpMessageLog">
+        INSERT INTO
+        <include refid="tableName"/>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                `ID`,
+            </if>
+            <if test="openId != null and openId != ''">
+                `OPEN_ID`,
+            </if>
+            <if test="appId != null and appId != ''">
+                `APP_ID`,
+            </if>
+            <if test="templateId != null and templateId != ''">
+                `TEMPLATE_ID`,
+            </if>
+            <if test="sendPerson != null and sendPerson != ''">
+                `SEND_PERSON`,
+            </if>
+            <if test="keywordOne != null and keywordOne != ''">
+                `KEYWORD_ONE`,
+            </if>
+            <if test="keywordTwo != null and keywordTwo != ''">
+                `KEYWORD_TWO`,
+            </if>
+            <if test="keywordThree != null and keywordThree != ''">
+                `KEYWORD_THREE`,
+            </if>
+            <if test="keywordFour != null and keywordFour != ''">
+                `KEYWORD_FOUR`,
+            </if>
+            <if test="content != null and content != ''">
+                `CONTENT`,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                #{id},
+            </if>
+            <if test="openId != null and openId != ''">
+                #{openId},
+            </if>
+            <if test="appId != null and appId != ''">
+                #{appId},
+            </if>
+            <if test="templateId != null and templateId != ''">
+                #{templateId},
+            </if>
+            <if test="sendPerson != null and sendPerson != ''">
+                #{sendPerson},
+            </if>
+            <if test="keywordOne != null and keywordOne != ''">
+                #{keywordOne},
+            </if>
+            <if test="keywordTwo != null and keywordTwo != ''">
+                #{keywordTwo},
+            </if>
+            <if test="keywordThree != null and keywordThree != ''">
+                #{keywordThree},
+            </if>
+            <if test="keywordFour != null and keywordFour != ''">
+                #{keywordFour},
+            </if>
+            <if test="content != null and content != ''">
+                #{content},
+            </if>
+        </trim>
+    </insert>
+
+    <select id="list" resultType="com.sogal.wx.core.dao.domain.message.MpMessageLogDTO">
+        SELECT mml.*, mp.ID AS userId, mp.NICKNAME AS nickName, mp.AVATAR_URL AS avatarUrl, mat.NAME AS mpName
+        FROM
+        <include refid="tableName"/>
+        mml
+        LEFT JOIN
+        <include refid="mpUserTableName"/>
+        mp
+        ON mml.`OPEN_ID` = mp.`OPEN_ID`
+        LEFT JOIN
+        <include refid="mpAccessTokenTableName"/>
+        mat
+        ON mml.`APP_ID` = mat.`APP_ID`
+        <include refid="queryMpMessageLogQueryCondition"/>
+        ORDER BY `TIME_CREATED` DESC
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM
+        <include refid="tableName"/>
+        mml
+        LEFT JOIN
+        <include refid="mpUserTableName"/>
+        mp
+        ON mml.`OPEN_ID` = mp.`OPEN_ID`
+        <include refid="queryMpMessageLogQueryCondition"/>
+    </select>
+
+    <sql id="queryMpMessageLogQueryCondition">
+        <where>
+            <trim prefixOverrides="AND">
+                <if test="messageLogQueryCondition.startDate != null and messageLogQueryCondition.startDate != ''">
+                    AND DATE(mml.TIME_CREATED) <![CDATA[>=]]> #{messageLogQueryCondition.startDate}
+                </if>
+                <if test="messageLogQueryCondition.endDate != null and messageLogQueryCondition.endDate != ''">
+                    AND DATE(mml.TIME_CREATED) <![CDATA[<=]]> #{messageLogQueryCondition.endDate}
+                </if>
+                <if test="messageLogQueryCondition.nickName != null and messageLogQueryCondition.nickName != ''">
+                    AND mp.NICKNAME LIKE concat('%',#{messageLogQueryCondition.nickName},'%')
+                </if>
+            </trim>
+        </where>
+    </sql>
+
+</mapper>

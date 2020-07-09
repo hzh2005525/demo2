@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.UserRequireMapper">
+    <sql id="userRequireTableName">`USER_REQUIRE`</sql>
+    <insert id="insertUserRequireInfo" parameterType="com.sogal.wx.core.dao.domain.user.UserRequire">
+        REPLACE INTO <include refid="userRequireTableName"/> (
+            ID,
+            USER_ID,
+            REGISTER_ID,
+            UNION_ID,
+            DECORATION_TYPE,
+            DECORATION_STYLES,
+            PRODUCT_CATEGORIES,
+            MIN_BUDGET,
+            MAX_BUDGET,
+            BUDGET_RANGE,
+            HOUSE_TYPE,
+            HOUSE_TYPE_URL,
+            OLD_PEOPLE,
+            CHILD
+        ) VALUES (
+            #{id},
+            #{userId},
+            #{registerId},
+            #{unionId},
+            #{decorationType},
+            #{decorationStyles},
+            #{productCategories},
+            #{minBudget},
+            #{maxBudget},
+            #{budgetRange},
+            #{houseType},
+            #{houseTypeUrl},
+            #{oldPeople},
+            #{child}
+        )
+    </insert>
+    <select id="selectUserRequireInfoByRegisterId" resultType="com.sogal.wx.core.dao.domain.user.UserRequire">
+        SELECT *  FROM <include refid="userRequireTableName"/> WHERE REGISTER_ID = #{registerId}
+        ORDER BY TIME_CREATED LIMIT 1
+    </select>
+    <select id="countUserRequireSumbited" resultType="int">
+        SELECT COUNT(*) FROM <include refid="userRequireTableName"/> WHERE USER_ID = #{userId}
+    </select>
+</mapper>

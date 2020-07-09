@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.MpAccessLinkMapper">
+
+    <sql id="tableName">`MP_ACCESS_LINK`</sql>
+
+    <select id="selectMpAccessLinkListByAppId" resultType="com.sogal.wx.core.dao.domain.link.MpAccessLink">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE `APP_ID` = #{appId}
+        ORDER BY `TIME_UPDATED` DESC
+    </select>
+
+    <insert id="addMpAccessLinkBySelective" parameterType="com.sogal.wx.core.dao.domain.link.MpAccessLink">
+        INSERT INTO
+        <include refid="tableName"/>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                `ID`,
+            </if>
+            <if test="appId != null and appId != ''">
+                `APP_ID`,
+            </if>
+            <if test="linkName != null and linkName != ''">
+                `LINK_NAME`,
+            </if>
+            <if test="linkPath != null and linkPath != ''">
+                `LINK_PATH`,
+            </if>
+            <if test="creator != null and creator != ''">
+                `CREATOR`,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                #{id},
+            </if>
+            <if test="appId != null and appId != ''">
+                #{appId},
+            </if>
+            <if test="linkName != null and linkName != ''">
+                #{linkName},
+            </if>
+            <if test="linkPath != null and linkPath != ''">
+                #{linkPath},
+            </if>
+            <if test="creator != null and creator != ''">
+                #{creator},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateMpAccessLinkById" parameterType="com.sogal.wx.core.dao.domain.link.MpAccessLink">
+        UPDATE
+        <include refid="tableName"/>
+        <set>
+            <if test="appId != null and appId != ''">
+                `APP_ID` = #{appId},
+            </if>
+            <if test="linkName != null and linkName != ''">
+                `LINK_NAME` = #{linkName},
+            </if>
+            <if test="linkPath != null and linkPath != ''">
+                `LINK_PATH` = #{linkPath},
+            </if>
+            <if test="updater != null and updater != ''">
+                `UPDATER` = #{updater},
+            </if>
+        </set>
+        WHERE `ID` = #{id}
+    </update>
+
+    <delete id="deleteMpAccessLinkListById">
+        DELETE FROM
+        <include refid="tableName"/>
+        WHERE `ID` = #{id}
+    </delete>
+
+</mapper>

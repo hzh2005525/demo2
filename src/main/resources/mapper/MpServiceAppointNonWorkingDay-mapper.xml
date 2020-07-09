@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.MpServiceAppointNonWorkingDayMapper">
+    <sql id="tableName">`AS_SERVICE_APPOINT_NON_WORKING_DAY`</sql>
+
+    <insert id="serviceDateSetting" parameterType="com.sogal.wx.core.dao.domain.kitchen.MpServiceAppointNonWorkingDay">
+        INSERT IGNORE INTO <include refid="tableName"/> (
+            ID,
+            `TYPE`,
+            NON_WORKING_DATE,
+            CREATOR
+        ) VALUES (
+            #{id},
+            #{type},
+            #{nonWorkingDate},
+            #{creator}
+            )
+    </insert>
+    <select id="findIdsByTypeAndDate" resultType="java.lang.String">
+        SELECT  ID FROM <include refid="tableName"/> WHERE NON_WORKING_DATE = #{nonWorkingDate} AND  `TYPE` = #{type}
+    </select>
+    <delete id="deleteNonWorkingDateByIds">
+        DELETE FROM <include refid="tableName"/> WHERE ID IN
+        <foreach collection="ids" item="id" index="index" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <select id="findNoneWorkingDay" resultType="java.lang.String">
+        SELECT DATE_FORMAT(NON_WORKING_DATE,"%Y-%m-%d") AS nonWorkingDate
+        FROM <include refid="tableName"/>
+        WHERE  DATE_FORMAT(NON_WORKING_DATE,'%Y-%m')
+          IN (DATE_FORMAT(#{appointDate},'%Y-%m'),
+              DATE_FORMAT(DATE_ADD(#{appointDate},INTERVAL 1 MONTH) ,'%Y-%m'))
+        GROUP BY nonWorkingDate
+    </select>
+</mapper>

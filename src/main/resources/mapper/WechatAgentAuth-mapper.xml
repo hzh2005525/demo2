@@ -1,0 +1,712 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatAgentAuthMapper">
+
+    <sql id="staffTableName">`USER_REPO_STAFF`</sql>
+    <sql id="cooperatorTableName">`USER_REPO_COOPERATOR`</sql>
+    <sql id="otherTableName">`USER_REPO_OTHER`</sql>
+    <sql id="mpUserTableName">`MP_USER`</sql>
+    <sql id="gzhAccessTokenTableName">`GZH_ACCESS_TOKEN`</sql>
+
+    <sql id="WechatStaffAuthAllColumn">
+          `ID`,
+          `NAME`,
+          `MOBILE`,
+          `COMPANY`,
+          `AGENT`,
+          `SOURCE`,
+          `REMARKS`,
+          `CATEGORY`,
+          `PK_STATUS`,
+          `CREATOR`,
+          `TIME_CREATED`,
+          `UPDATER`,
+          `TIME_UPDATED`
+    </sql>
+
+    <sql id="WechatCooperatorAuthAllColumn">
+          `ID`,
+          `NAME`,
+          `MOBILE`,
+          `COMPANY`,
+          `AGENT`,
+          `SOURCE`,
+          `REMARKS`,
+          `CATEGORY`,
+          `PK_COOPERATOR_TYPE`,
+          `PK_APPROVAL_STATUS`,
+          `PK_COOPERATING_STATE`,
+          `CREATOR`,
+          `TIME_CREATED`,
+          `UPDATER`,
+          `TIME_UPDATED`
+    </sql>
+
+    <sql id="WechatOtherAuthAllColumn">
+          `ID`,
+          `NAME`,
+          `MOBILE`,
+          `COMPANY`,
+          `AGENT`,
+          `SOURCE`,
+          `REMARKS`,
+          `CATEGORY`,
+          `CREATOR`,
+          `TIME_CREATED`,
+          `UPDATER`,
+          `TIME_UPDATED`
+    </sql>
+
+    <select id="staffList" resultType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuthDTO">
+        SELECT
+        <include refid="WechatStaffAuthAllColumn"/>
+        FROM
+        <include refid="staffTableName"/>
+        WHERE (`CATEGORY` = 0 OR (`CATEGORY` = 1 AND `PK_STATUS` IN ('TRAIL', 'TRAINEE', 'WAIT', 'FORMAL', 'STOP')))
+        <if test="agentAuthQueryCondition.agent != null and agentAuthQueryCondition.agent != ''">
+            AND `AGENT` = #{agentAuthQueryCondition.agent}
+        </if>
+        <if test="agentAuthQueryCondition.name != null and agentAuthQueryCondition.name != ''">
+            AND (`NAME` LIKE concat('%',#{agentAuthQueryCondition.name},'%')
+            OR `MOBILE` LIKE concat('%',#{agentAuthQueryCondition.name},'%'))
+        </if>
+        ORDER BY `TIME_UPDATED` DESC
+        <if test="pageInfo != null">
+            LIMIT #{pageInfo.offset}, #{pageInfo.size}
+        </if>
+    </select>
+
+    <select id="staffCount" resultType="int">
+        SELECT count(*)
+        FROM
+        <include refid="staffTableName"/>
+        WHERE (`CATEGORY` = 0 OR (`CATEGORY` = 1 AND `PK_STATUS` IN ('TRAIL', 'TRAINEE', 'WAIT', 'FORMAL', 'STOP')))
+        <if test="agentAuthQueryCondition.agent != null and agentAuthQueryCondition.agent != ''">
+            AND `AGENT` = #{agentAuthQueryCondition.agent}
+        </if>
+        <if test="agentAuthQueryCondition.name != null and agentAuthQueryCondition.name != ''">
+            AND (`NAME` LIKE concat('%',#{agentAuthQueryCondition.name},'%')
+            OR `MOBILE` LIKE concat('%',#{agentAuthQueryCondition.name},'%'))
+        </if>
+    </select>
+
+    <select id="cooperatorList" resultType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuthDTO">
+        SELECT
+        <include refid="WechatCooperatorAuthAllColumn"/>
+        FROM
+        <include refid="cooperatorTableName"/>
+        WHERE (`CATEGORY` = 2 OR (`CATEGORY` = 3 AND `PK_APPROVAL_STATUS` = 'PASSED' AND `PK_COOPERATING_STATE` =
+        'RUNNING'))
+        <if test="agentAuthQueryCondition.agent != null and agentAuthQueryCondition.agent != ''">
+            AND `AGENT` = #{agentAuthQueryCondition.agent}
+        </if>
+        <if test="agentAuthQueryCondition.name != null and agentAuthQueryCondition.name != ''">
+            AND (`NAME` LIKE concat('%',#{agentAuthQueryCondition.name},'%')
+            OR `MOBILE` LIKE concat('%',#{agentAuthQueryCondition.name},'%'))
+        </if>
+        ORDER BY `TIME_UPDATED` DESC
+        <if test="pageInfo != null">
+            LIMIT #{pageInfo.offset}, #{pageInfo.size}
+        </if>
+    </select>
+
+    <select id="cooperatorCount" resultType="int">
+        SELECT count(*)
+        FROM
+        <include refid="cooperatorTableName"/>
+        WHERE (`CATEGORY` = 2 OR (`CATEGORY` = 3 AND `PK_APPROVAL_STATUS` = 'PASSED' AND `PK_COOPERATING_STATE` =
+        'RUNNING'))
+        <if test="agentAuthQueryCondition.agent != null and agentAuthQueryCondition.agent != ''">
+            AND `AGENT` = #{agentAuthQueryCondition.agent}
+        </if>
+        <if test="agentAuthQueryCondition.name != null and agentAuthQueryCondition.name != ''">
+            AND (`NAME` LIKE concat('%',#{agentAuthQueryCondition.name},'%')
+            OR `MOBILE` LIKE concat('%',#{agentAuthQueryCondition.name},'%'))
+        </if>
+    </select>
+
+    <select id="otherList" resultType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuthDTO">
+        SELECT
+        <include refid="WechatOtherAuthAllColumn"/>
+        FROM
+        <include refid="otherTableName"/>
+        WHERE `CATEGORY` = 4
+        <if test="agentAuthQueryCondition.agent != null and agentAuthQueryCondition.agent != ''">
+            AND `AGENT` = #{agentAuthQueryCondition.agent}
+        </if>
+        <if test="agentAuthQueryCondition.name != null and agentAuthQueryCondition.name != ''">
+            AND (`NAME` LIKE concat('%',#{agentAuthQueryCondition.name},'%')
+            OR `MOBILE` LIKE concat('%',#{agentAuthQueryCondition.name},'%'))
+        </if>
+        ORDER BY `TIME_UPDATED` DESC
+        <if test="pageInfo != null">
+            LIMIT #{pageInfo.offset}, #{pageInfo.size}
+        </if>
+    </select>
+
+    <select id="otherCount" resultType="int">
+        SELECT count(*)
+        FROM
+        <include refid="otherTableName"/>
+        WHERE `CATEGORY` = 4
+        <if test="agentAuthQueryCondition.agent != null and agentAuthQueryCondition.agent != ''">
+            AND `AGENT` = #{agentAuthQueryCondition.agent}
+        </if>
+        <if test="agentAuthQueryCondition.name != null and agentAuthQueryCondition.name != ''">
+            AND (`NAME` LIKE concat('%',#{agentAuthQueryCondition.name},'%')
+            OR `MOBILE` LIKE concat('%',#{agentAuthQueryCondition.name},'%'))
+        </if>
+    </select>
+
+    <insert id="insertStaffSelective" parameterType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        INSERT INTO
+        <include refid="staffTableName"/>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                `ID`,
+            </if>
+            <if test="name != null and name != ''">
+                `NAME`,
+            </if>
+            <if test="mobile != null and mobile != ''">
+                `MOBILE`,
+            </if>
+            <if test="company != null and company != ''">
+                `COMPANY`,
+            </if>
+            <if test="agent != null and agent != ''">
+                `AGENT`,
+            </if>
+            <if test="remarks != null and remarks != ''">
+                `REMARKS`,
+            </if>
+            <if test="category != null">
+                `CATEGORY`,
+            </if>
+            <if test="creator != null and creator != ''">
+                `CREATOR`,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                #{id},
+            </if>
+            <if test="name != null and name != ''">
+                #{name},
+            </if>
+            <if test="mobile != null and mobile != ''">
+                #{mobile},
+            </if>
+            <if test="company != null and company != ''">
+                #{company},
+            </if>
+            <if test="agent != null and agent != ''">
+                #{agent},
+            </if>
+            <if test="remarks != null and remarks != ''">
+                #{remarks},
+            </if>
+            <if test="category != null">
+                #{category},
+            </if>
+            <if test="creator != null and creator != ''">
+                #{creator},
+            </if>
+        </trim>
+    </insert>
+
+    <insert id="insertCooperatorSelective" parameterType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        INSERT INTO
+        <include refid="cooperatorTableName"/>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                `ID`,
+            </if>
+            <if test="name != null and name != ''">
+                `NAME`,
+            </if>
+            <if test="mobile != null and mobile != ''">
+                `MOBILE`,
+            </if>
+            <if test="company != null and company != ''">
+                `COMPANY`,
+            </if>
+            <if test="agent != null and agent != ''">
+                `AGENT`,
+            </if>
+            <if test="remarks != null and remarks != ''">
+                `REMARKS`,
+            </if>
+            <if test="category != null">
+                `CATEGORY`,
+            </if>
+            <if test="creator != null and creator != ''">
+                `CREATOR`,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                #{id},
+            </if>
+            <if test="name != null and name != ''">
+                #{name},
+            </if>
+            <if test="mobile != null and mobile != ''">
+                #{mobile},
+            </if>
+            <if test="company != null and company != ''">
+                #{company},
+            </if>
+            <if test="agent != null and agent != ''">
+                #{agent},
+            </if>
+            <if test="remarks != null and remarks != ''">
+                #{remarks},
+            </if>
+            <if test="category != null">
+                #{category},
+            </if>
+            <if test="creator != null and creator != ''">
+                #{creator},
+            </if>
+        </trim>
+    </insert>
+
+    <insert id="insertOtherSelective" parameterType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        INSERT INTO
+        <include refid="otherTableName"/>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                `ID`,
+            </if>
+            <if test="name != null and name != ''">
+                `NAME`,
+            </if>
+            <if test="mobile != null and mobile != ''">
+                `MOBILE`,
+            </if>
+            <if test="company != null and company != ''">
+                `COMPANY`,
+            </if>
+            <if test="agent != null and agent != ''">
+                `AGENT`,
+            </if>
+            <if test="source != null and agent != ''">
+                `SOURCE`,
+            </if>
+            <if test="remarks != null and remarks != ''">
+                `REMARKS`,
+            </if>
+            <if test="category != null">
+                `CATEGORY`,
+            </if>
+            <if test="creator != null and creator != ''">
+                `CREATOR`,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                #{id},
+            </if>
+            <if test="name != null and name != ''">
+                #{name},
+            </if>
+            <if test="mobile != null and mobile != ''">
+                #{mobile},
+            </if>
+            <if test="company != null and company != ''">
+                #{company},
+            </if>
+            <if test="agent != null and agent != ''">
+                #{agent},
+            </if>
+            <if test="source != null and agent != ''">
+                #{source},
+            </if>
+            <if test="remarks != null and remarks != ''">
+                #{remarks},
+            </if>
+            <if test="category != null">
+                #{category},
+            </if>
+            <if test="creator != null and creator != ''">
+                #{creator},
+            </if>
+        </trim>
+    </insert>
+
+    <insert id="insertStaffBatch">
+        INSERT INTO
+        <include refid="staffTableName"/>
+        (`ID`, `NAME`, `MOBILE`, `COMPANY`, `AGENT`, `REMARKS`, `CATEGORY`, `CREATOR`)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name}, #{item.mobile}, #{item.company}, #{item.agent}, #{item.remarks},
+            #{item.category}, #{item.creator})
+        </foreach>
+    </insert>
+
+    <insert id="insertCooperatorBatch">
+        INSERT INTO
+        <include refid="cooperatorTableName"/>
+        (`ID`, `NAME`, `MOBILE`, `COMPANY`, `AGENT`, `REMARKS`, `CATEGORY`, `CREATOR`)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name}, #{item.mobile}, #{item.company}, #{item.agent}, #{item.remarks},
+            #{item.category}, #{item.creator})
+        </foreach>
+    </insert>
+
+    <insert id="insertOtherBatch">
+        INSERT INTO
+        <include refid="otherTableName"/>
+        (`ID`, `NAME`, `MOBILE`, `COMPANY`, `AGENT`, `REMARKS`, `CATEGORY`, `CREATOR`)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name}, #{item.mobile}, #{item.company}, #{item.agent}, #{item.remarks},
+            #{item.category}, #{item.creator})
+        </foreach>
+    </insert>
+
+    <update id="updateStaffBySelective" parameterType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        UPDATE
+        <include refid="staffTableName"/>
+        <set>
+            <if test="name != null and name != ''">
+                `NAME` = #{name},
+            </if>
+            <if test="mobile != null and mobile != ''">
+                `MOBILE` = #{mobile},
+            </if>
+            <if test="company != null and company != ''">
+                `COMPANY` = #{company},
+            </if>
+            <if test="agent != null and agent != ''">
+                `AGENT` = #{agent},
+            </if>
+            <if test="source != null and source != ''">
+                `SOURCE` = #{source},
+            </if>
+            <if test="remarks != null and remarks != ''">
+                `REMARKS` = #{remarks},
+            </if>
+            <if test="category != null">
+                `CATEGORY` = #{category},
+            </if>
+            <if test="updater != null and updater != ''">
+                `UPDATER` = #{updater},
+            </if>
+        </set>
+        WHERE `ID` = #{id}
+    </update>
+
+    <update id="updateCooperatorBySelective" parameterType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        UPDATE
+        <include refid="cooperatorTableName"/>
+        <set>
+            <if test="name != null and name != ''">
+                `NAME` = #{name},
+            </if>
+            <if test="mobile != null and mobile != ''">
+                `MOBILE` = #{mobile},
+            </if>
+            <if test="company != null and company != ''">
+                `COMPANY` = #{company},
+            </if>
+            <if test="agent != null and agent != ''">
+                `AGENT` = #{agent},
+            </if>
+            <if test="remarks != null and remarks != ''">
+                `REMARKS` = #{remarks},
+            </if>
+            <if test="category != null">
+                `CATEGORY` = #{category},
+            </if>
+            <if test="updater != null and updater != ''">
+                `UPDATER` = #{updater},
+            </if>
+        </set>
+        WHERE `ID` = #{id}
+    </update>
+
+    <update id="updateOtherBySelective" parameterType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        UPDATE
+        <include refid="otherTableName"/>
+        <set>
+            <if test="name != null and name != ''">
+                `NAME` = #{name},
+            </if>
+            <if test="mobile != null and mobile != ''">
+                `MOBILE` = #{mobile},
+            </if>
+            <if test="company != null and company != ''">
+                `COMPANY` = #{company},
+            </if>
+            <if test="agent != null and agent != ''">
+                `AGENT` = #{agent},
+            </if>
+            <if test="source != null and source != ''">
+                `SOURCE` = #{source},
+            </if>
+            <if test="remarks != null and remarks != ''">
+                `REMARKS` = #{remarks},
+            </if>
+            <if test="category != null">
+                `CATEGORY` = #{category},
+            </if>
+            <if test="updater != null and updater != ''">
+                `UPDATER` = #{updater},
+            </if>
+        </set>
+        WHERE `ID` = #{id}
+    </update>
+
+    <delete id="deleteStaffById" parameterType="java.lang.String">
+        DELETE FROM
+        <include refid="staffTableName"/>
+        WHERE `ID` = #{id}
+    </delete>
+
+    <delete id="deleteCooperatorById" parameterType="java.lang.String">
+        DELETE FROM
+        <include refid="cooperatorTableName"/>
+        WHERE `ID` = #{id}
+    </delete>
+
+    <delete id="deleteOtherById" parameterType="java.lang.String">
+        DELETE FROM
+        <include refid="otherTableName"/>
+        WHERE `ID` = #{id}
+    </delete>
+
+    <select id="selectStaffByMobileAndAgent" resultType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        SELECT
+        <include refid="WechatStaffAuthAllColumn"/>
+        FROM
+        <include refid="staffTableName"/>
+        WHERE `MOBILE` = #{mobile} AND `AGENT` = #{agent}
+    </select>
+
+    <select id="selectCooperatorByMobileAndAgent" resultType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        SELECT
+        <include refid="WechatCooperatorAuthAllColumn"/>
+        FROM
+        <include refid="cooperatorTableName"/>
+        WHERE `MOBILE` = #{mobile} AND `AGENT` = #{agent}
+    </select>
+
+    <select id="selectOtherByMobile" resultType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        SELECT
+        <include refid="WechatOtherAuthAllColumn"/>
+        FROM
+        <include refid="otherTableName"/>
+        WHERE `MOBILE` = #{mobile}
+    </select>
+
+    <select id="selectStaffById" resultType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        SELECT
+        <include refid="WechatStaffAuthAllColumn"/>
+        FROM
+        <include refid="staffTableName"/>
+        WHERE `ID` = #{id}
+    </select>
+
+    <select id="selectCooperatorById" resultType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        SELECT
+        <include refid="WechatCooperatorAuthAllColumn"/>
+        FROM
+        <include refid="cooperatorTableName"/>
+        WHERE `ID` = #{id}
+    </select>
+
+    <select id="selectOtherById" resultType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        SELECT
+        <include refid="WechatOtherAuthAllColumn"/>
+        FROM
+        <include refid="otherTableName"/>
+        WHERE `ID` = #{id}
+    </select>
+
+    <select id="getGzhImageUrl" resultType="string">
+        SELECT
+        gat.IMG_URL
+        FROM
+        <include refid="mpUserTableName"/>
+        mp
+        LEFT JOIN
+        <include refid="gzhAccessTokenTableName"/>
+        gat ON mp.GZH_ID = gat.APPID
+        WHERE mp.SUBSCRIBE = 1
+        AND mp.UNION_ID IN
+        <foreach collection="list" item="item" index="index" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        GROUP BY mp.GZH_ID
+    </select>
+
+    <insert id="batchIncreSyncEmployees">
+        INSERT INTO
+        <include refid="staffTableName"/>
+        (`ID`, `NAME`, `MOBILE`, `AGENT`, `CATEGORY`, `PK_STATUS`)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name}, #{item.mobile}, #{item.agent}, #{item.category}, #{item.pkStatus})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        `ID` = VALUES(`ID`),
+        `NAME` = VALUES(`NAME`),
+        `MOBILE` = VALUES(`MOBILE`),
+        `AGENT` = VALUES(`AGENT`),
+        `CATEGORY` = VALUES(`CATEGORY`),
+        `PK_STATUS` = VALUES(`PK_STATUS`)
+    </insert>
+
+    <insert id="batchIncreSyncCooperators">
+        INSERT INTO
+        <include refid="cooperatorTableName"/>
+        (`ID`, `NAME`, `MOBILE`, `COMPANY`, `AGENT`, `CATEGORY`,
+        `PK_COOPERATOR_TYPE`, `PK_APPROVAL_STATUS`,`PK_COOPERATING_STATE`)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name}, #{item.mobile}, #{item.company}, #{item.agent}, #{item.category},
+            #{item.pkCooperatorType}, #{item.pkApprovalStatus}, #{item.pkCooperatingState})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        `ID` = VALUES(`ID`),
+        `NAME` = VALUES(`NAME`),
+        `MOBILE` = VALUES(`MOBILE`),
+        `COMPANY` = VALUES(`COMPANY`),
+        `AGENT` = VALUES(`AGENT`),
+        `CATEGORY` = VALUES(`CATEGORY`),
+        `PK_COOPERATOR_TYPE` = VALUES(`PK_COOPERATOR_TYPE`),
+        `PK_APPROVAL_STATUS` = VALUES(`PK_APPROVAL_STATUS`),
+        `PK_COOPERATING_STATE` = VALUES(`PK_COOPERATING_STATE`)
+    </insert>
+
+    <select id="findStaffsByMobile" resultType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        SELECT
+        <include refid="WechatStaffAuthAllColumn"/>
+        FROM
+        <include refid="staffTableName"/>
+        WHERE `MOBILE` = #{mobile}
+        AND (`CATEGORY` = 0 OR (`CATEGORY` = 1 AND `PK_STATUS` IN ('TRAIL', 'TRAINEE', 'WAIT', 'FORMAL', 'STOP')))
+        ORDER BY `TIME_UPDATED` DESC
+        LIMIT 1
+    </select>
+
+    <select id="findCooperatorsByMobile" resultType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        SELECT
+        <include refid="WechatCooperatorAuthAllColumn"/>
+        FROM
+        <include refid="cooperatorTableName"/>
+        WHERE `MOBILE` = #{mobile}
+        AND (`CATEGORY` = 2 OR (`CATEGORY` = 3 AND `PK_APPROVAL_STATUS` = 'PASSED' AND `PK_COOPERATING_STATE` =
+        'RUNNING'))
+        ORDER BY `TIME_UPDATED` DESC
+        LIMIT 1
+    </select>
+
+    <select id="findOthersByMobile" resultType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        SELECT
+        <include refid="WechatOtherAuthAllColumn"/>
+        FROM
+        <include refid="otherTableName"/>
+        WHERE `MOBILE` = #{mobile}
+        AND `CATEGORY` = 4
+    </select>
+
+    <insert id="addOtherBySelective" parameterType="com.sogal.wx.core.dao.domain.agent.WechatAgentAuth">
+        INSERT INTO
+        <include refid="otherTableName"/>
+        (`ID`, `NAME`, `MOBILE`, `COMPANY`, `SOURCE`)
+        VALUES (#{id}, #{name}, #{mobile}, #{company}, #{source})
+        ON DUPLICATE KEY UPDATE
+        `NAME` = VALUES(`NAME`),
+        `MOBILE` = VALUES(`MOBILE`),
+        `COMPANY` = VALUES(`COMPANY`),
+        `SOURCE` = VALUES(`SOURCE`)
+    </insert>
+
+    <select id="selectCancelBaseStaffAuthMobiles" resultType="string">
+        SELECT
+        ur.MOBILE
+        FROM
+	    user_auth_base um
+        LEFT JOIN user_repo_staff ur ON ur.ID = um.REPO_ID
+        WHERE um.EMISSARY_TYPE = '员工'
+        AND um.UNION_ID NOT IN (
+	        SELECT
+		    ui.UNION_ID
+	        FROM
+		    user_auth_base ui
+	        LEFT JOIN user_repo_staff urs ON urs.ID = ui.REPO_ID
+	        WHERE
+		    ui.EMISSARY_TYPE = '员工'
+	        AND (
+		        urs.CATEGORY = 0
+		        OR (
+			        urs.CATEGORY = 1
+			        AND urs.PK_STATUS IN (
+				    'TRAIL',
+				    'TRAINEE',
+				    'WAIT',
+				    'FORMAL',
+				    'STOP'
+			        )
+		        )
+	        )
+        )
+        GROUP BY
+        ur.MOBILE
+    </select>
+
+    <select id="selectCancelBaseCooperatorAuthMobiles" resultType="string">
+        SELECT
+	    ur.MOBILE
+        FROM
+	    user_auth_base um
+        LEFT JOIN user_repo_cooperator ur ON ur.ID = um.REPO_ID
+        WHERE
+	    um.EMISSARY_TYPE IN (
+		'合作设计师',
+		'合作装饰公司',
+		'合作老客户',
+		'合作平台',
+		'工长',
+		'品牌联盟',
+		'异业联盟',
+		'合作方'
+	    )
+        AND um.UNION_ID NOT IN (
+	        SELECT
+		    ui.UNION_ID
+	        FROM
+		    user_auth_base ui
+	        LEFT JOIN user_repo_cooperator urc ON urc.ID = ui.REPO_ID
+	        WHERE
+		    ui.EMISSARY_TYPE IN (
+			'合作设计师',
+			'合作装饰公司',
+			'合作老客户',
+			'合作平台',
+			'工长',
+			'品牌联盟',
+			'异业联盟',
+			'合作方'
+		    )
+	        AND (
+		         urc.CATEGORY = 2
+		         OR (
+			          urc.CATEGORY = 3
+			          AND urc.PK_APPROVAL_STATUS = 'PASSED'
+			          AND urc.PK_COOPERATING_STATE = 'RUNNING'
+		         )
+	        )
+        )
+        GROUP BY
+        ur.MOBILE
+    </select>
+
+</mapper>

@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatUserOrderMapper">
+    <sql id="tableName">`USER_ORDER`</sql>
+
+    <insert id="batchReplaceInto" parameterType="java.util.List">
+        REPLACE INTO <include refid="tableName"/> (
+            ID,
+            CUST_ID,
+            CUST_NAME,
+            CUST_MOBILE,
+            ORDER_ID,
+            ORDER_NO,
+            ORDER_STATUS,
+            ORDER_ORG_NAME,
+            ORDER_GUIDE_NAME,
+            KJL_CODE,
+            KJL_COVER_URL,
+            KJL_PANORAMA,
+            CONTRACT_SIGNING_DATE,
+            CONTRACT_AMOUNT,
+            CONTRACT_DELIVERY_DATE,
+            PLAN_DELIVERY_DATE,
+            PLAN_DELIVERY_TIME,
+            DRIVER_NAME,
+            DRIVER_MOBILE,
+            PLAN_INSTALL_DATE,
+            PLAN_INSTALL_TIME,
+            INSTALL_LEADER_NAME,
+            INSTALL_LEADER_MOBILE,
+            HOUSE_ADDR,
+            LONGITUDE,
+            LATITUDE,
+            SYNC_TIME
+        ) VALUES
+        <foreach collection="list" index="index" separator="," item="item">
+            (
+            #{item.id},
+            #{item.custId},
+            #{item.custName},
+            #{item.custMobile},
+            #{item.orderId},
+            #{item.orderNo},
+            #{item.orderStatus},
+            #{item.orderOrgName},
+            #{item.orderGuideName},
+            #{item.kjlCode},
+            #{item.kjlCoverUrl},
+            #{item.kjlPanorama},
+            #{item.contractSigningDate},
+            #{item.contractAmount},
+            #{item.contractDeliveryDate},
+            #{item.planDeliveryDate},
+            #{item.planDeliveryTime},
+            #{item.driverName},
+            #{item.driverMobile},
+            #{item.planInstallDate},
+            #{item.planInstallTime},
+            #{item.installLeaderName},
+            #{item.installLeaderMobile},
+            #{item.houseAddr},
+            #{item.longitude},
+            #{item.latitude},
+            now()
+            )
+        </foreach>
+    </insert>
+    <select id="findUserCustRelationNotEstablished" resultType="com.sogal.wx.core.dao.domain.order.UserCust">
+        SELECT wu.ID as userId ,uco.CUST_ID,wu.UNION_ID
+        FROM wxdb.MP_USER wu
+        INNER JOIN  wxdb.USER_ORDER uco ON wu.MOBILE = uco.CUST_MOBILE
+        WHERE wu.MOBILE IS NOT NULL AND  wu.UNION_ID IS NOT NULL AND wu.CATEGORY ='DESIGN' AND
+        NOT EXISTS
+        (SELECT * FROM wxdb.USER_CUST uc WHERE uc.UNION_ID=wu.UNION_ID AND uc.CUST_ID=uco.CUST_ID)
+        GROUP BY wu.UNION_ID,uco.CUST_ID
+    </select>
+    <insert id="batchInsertIgnoreUserCust" parameterType="java.util.List">
+        INSERT IGNORE INTO USER_CUST (
+            ID,
+            USER_ID,
+            CUST_ID,
+            UNION_ID
+        ) VALUES
+        <foreach collection="list" index="index" separator="," item="item">
+        (
+            #{item.id},
+            #{item.userId},
+            #{item.custId},
+            #{item.unionId}
+        )
+        </foreach>
+    </insert>
+
+    <select id="findUserOrderPagedAtC"
+            resultType="com.sogal.wx.core.dao.domain.order.UserOrderResultPagedAtC">
+        SELECT  uco.ID, uco.ORDER_NO,uco.ORDER_STATUS,uco.CONTRACT_AMOUNT,uco.HOUSE_ADDR,uco.KJL_COVER_URL,
+        uco.KJL_CODE,uco.CONTRACT_DELIVERY_DATE,uco.DRIVER_NAME,uco.DRIVER_MOBILE,uco.PLAN_DELIVERY_DATE,
+        uco.PLAN_DELIVERY_TIME,uco.PLAN_INSTALL_DATE,uco.PLAN_INSTALL_TIME
+        FROM USER_CUST uc
+        INNER JOIN <include refid="tableName"/> uco ON uc.CUST_ID =  uco.CUST_ID
+        <include refid="findUserOrderPagedAtCCondition"/>
+        ORDER BY uco.CONTRACT_SIGNING_DATE DESC
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <select id="countTotalSizeOfUserOrderPagedAtC" resultType="int">
+        SELECT COUNT(*)
+        FROM USER_CUST uc
+        INNER JOIN <include refid="tableName"/> uco ON uc.CUST_ID =  uco.CUST_ID
+        <include refid="findUserOrderPagedAtCCondition"/>
+    </select>
+    <sql id="findUserOrderPagedAtCCondition">
+        <where>
+            uc.USER_ID = #{userId}
+            AND uco.ORDER_STATUS
+            IN ('WAIT_PLAN', 'WAIT_DELIVERY', 'WAIT_INSTALL', 'INSTALLED', 'INTERVIEWED')
+        </where>
+    </sql>
+    <select id="findUserOrderDetailInfoAtC"
+            resultType="com.sogal.wx.core.dao.domain.order.UserOrderDetailResultAtC">
+          SELECT uco.ID,uco.ORDER_NO,uco.ORDER_STATUS,uco.CONTRACT_AMOUNT,uco.HOUSE_ADDR,
+            uco.CONTRACT_DELIVERY_DATE,uco.DRIVER_NAME,uco.DRIVER_MOBILE,uco.PLAN_DELIVERY_DATE,uco.PLAN_DELIVERY_TIME,
+            uco.PLAN_INSTALL_DATE,uco.PLAN_INSTALL_TIME,uco.CUST_NAME,uco.CUST_MOBILE, uco.KJL_PANORAMA, uco.KJL_CODE,
+            uco.KJL_COVER_URL,uco.ORDER_ORG_NAME,uco.ORDER_GUIDE_NAME,uco.LONGITUDE,uco.LATITUDE
+          FROM  <include refid="tableName"/> uco
+          INNER JOIN USER_CUST uc ON  uco.CUST_ID = uc.CUST_ID
+          WHERE uco.ID = #{userOrderId} AND uc.USER_ID = #{userId}
+    </select>
+
+    <update id="updateUserOrderKJLInfo" parameterType="com.sogal.common.domain.appletc.UserCustOrder">
+        UPDATE <include refid="tableName"/> uco
+        SET uco.KJL_COVER_URL = #{kjlCoverUrl},uco.KJL_PANORAMA = #{kjlPanorama} WHERE uco.ID = #{id}
+    </update>
+
+    <select id="findMyOrdersInfoAtAdmin"
+            resultType="com.sogal.wx.core.dao.domain.order.UserOrderResultPagedAtAdmin">
+        SELECT  uco.ID, uco.ORDER_NO,uco.ORDER_STATUS,uco.CONTRACT_AMOUNT,uco.HOUSE_ADDR,
+        uco.CONTRACT_DELIVERY_DATE,uco.DRIVER_NAME,uco.DRIVER_MOBILE,uco.PLAN_DELIVERY_DATE,
+        uco.PLAN_DELIVERY_TIME,uco.PLAN_INSTALL_DATE,uco.PLAN_INSTALL_TIME,uco.CUST_NAME,uco.CUST_MOBILE,
+        uco.KJL_PANORAMA, uco.KJL_CODE, uco.KJL_COVER_URL,uco.ORDER_ORG_NAME,uco.ORDER_GUIDE_NAME,
+        uco.LONGITUDE,uco.LATITUDE
+        FROM USER_CUST uc
+        INNER JOIN <include refid="tableName"/> uco ON uc.CUST_ID =  uco.CUST_ID
+        WHERE    uc.USER_ID = #{userId}
+        ORDER BY uco.CONTRACT_SIGNING_DATE DESC
+    </select>
+
+    <select id="countCustsAssociatedByUnionId"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM USER_CUST uc
+        WHERE uc.UNION_ID = #{unionId}
+    </select>
+
+    <select id="findUserCustRelationNotEstablishedByUserIdAndMobile"
+            resultType="com.sogal.wx.core.dao.domain.order.UserCust">
+        SELECT wu.ID as userId ,uco.CUST_ID,wu.UNION_ID
+        FROM wxdb.MP_USER wu
+        INNER JOIN  wxdb.USER_ORDER uco ON wu.MOBILE = uco.CUST_MOBILE
+        WHERE wu.MOBILE IS NOT NULL AND  wu.UNION_ID IS NOT NULL AND wu.CATEGORY ='DESIGN' AND
+        NOT EXISTS
+        (SELECT * FROM wxdb.USER_CUST uc WHERE uc.UNION_ID=wu.UNION_ID AND uc.CUST_ID=uco.CUST_ID)
+        AND wu.ID = #{userId} AND  wu.MOBILE = #{mobile}
+        GROUP BY wu.UNION_ID,uco.CUST_ID
+    </select>
+</mapper>

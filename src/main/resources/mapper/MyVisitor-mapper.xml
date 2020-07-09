@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.MyVisitorMapper">
+
+    <sql id="tableName">MP_USER_VISITOR</sql>
+
+    <sql id="mpAccessRecordTableName">`MP_ACCESS_RECORD`</sql>
+
+    <insert id="addMyVisitor" parameterType="com.sogal.wx.core.dao.domain.mine.MyVisitor">
+        INSERT IGNORE INTO <include refid="tableName"/> (
+          ID,
+          SERVANT,
+          VISITOR,
+          CATEGORY,
+          VISIT_DATE
+        ) VALUES (
+          #{id},
+          #{servant},
+          #{visitor},
+          #{category},
+          CURRENT_DATE ()
+        )
+    </insert>
+
+    <select id="findMyVisitorIds" resultType="java.lang.String" parameterType="com.sogal.wx.core.dao.domain.mine.MyRecordDTO">
+        SELECT DISTINCT `VISITOR`  FROM <include refid="tableName"/> AS MV <include refid="findMyVisitorCondition"/>
+    </select>
+
+    <sql id="findMyVisitorCondition">
+        WHERE MV.SERVANT=#{serventId} AND MV.TIME_CREATED &gt; #{startTime} AND MV.TIME_CREATED &lt; #{endTime}
+    </sql>
+
+    <select id="findMyVisitorTotal" resultType="java.lang.Integer" parameterType="com.sogal.wx.core.dao.domain.mine.MyRecordDTO">
+        SELECT COUNT(1) FROM  <include refid="tableName"/> AS MV <include refid="findMyVisitorCondition"/>
+    </select>
+
+    <select id="findMyVisitors" parameterType="com.sogal.wx.core.dao.domain.mine.MyRecordDTO" resultType="com.sogal.wx.core.dao.domain.mine.MineCustomer">
+        SELECT
+        mp.ID,
+        mp.USER_NO,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS name,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+        (CASE WHEN urs.`MOBILE` IS NULL THEN mp.`MOBILE`
+        ELSE urs.`MOBILE` END)
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+        (CASE WHEN uro.`MOBILE` IS NULL THEN mp.`MOBILE`
+        ELSE uro.`MOBILE` END)
+        ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN mp.`MOBILE`
+        ELSE urc.`MOBILE` END) END AS mobile,
+        mp.NICKNAME,
+        mp.AVATAR_URL,
+        MV.TIME_CREATED,
+        CASE mp.GENDER
+        WHEN '1' THEN '男'
+        WHEN '2' THEN '女'
+        ELSE '未知' END  AS gender,
+        (SELECT COUNT(*) FROM <include refid="mpAccessRecordTableName"/> t WHERE MV.VISITOR = t.VISITOR AND MV.VISIT_DATE = t.VISIT_DATE AND t.SERVANT=#{serventId} AND t.TIME_CREATED &gt; #{startTime} AND t.TIME_CREATED &lt; #{endTime}) AS clickTotal,
+        (SELECT COUNT(*) FROM <include refid="tableName"/>  t1 WHERE MV.VISITOR = t1.VISITOR AND  t1.VISIT_DATE <![CDATA[ < ]]> MV.VISIT_DATE AND t1.SERVANT=#{serventId}) as numOfSameVisitor
+        FROM <include refid="tableName"/> AS MV LEFT JOIN MP_USER AS mp ON MV.VISITOR = mp.id
+        LEFT JOIN USER_AUTH_BASE ui ON mp.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        <include refid="findMyVisitorCondition"/> ORDER BY MV.TIME_CREATED DESC LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+</mapper>

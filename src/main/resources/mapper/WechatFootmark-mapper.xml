@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatFootmarkMapper">
+    <sql id="tableName">`MP_FOOTMARK`</sql>
+
+    <insert id="addWechatFootmark" parameterType="com.sogal.wx.core.dao.domain.footmark.WechatFootmark">
+        INSERT IGNORE INTO <include refid="tableName"/>(ID, USER_ID, DESIGN_ID, BEHAVIOR) VALUES (#{id}, #{userId}, #{designId}, #{behavior});
+    </insert>
+
+    <delete id="deleteWechatFootMark" parameterType="com.sogal.wx.core.dao.domain.footmark.WechatFootmark">
+        DELETE FROM <include refid="tableName"/> WHERE USER_ID = #{userId} AND DESIGN_ID = #{designId} AND BEHAVIOR = #{behavior};
+    </delete>
+
+    <select id="findMyVisitorPointTotal" parameterType="com.sogal.wx.core.dao.domain.mine.MyRecordDTO" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM <include refid="tableName"/>
+        WHERE USER_ID IN (
+          <foreach collection="customer" item="item" index="index" separator=",">
+              #{item}
+          </foreach>
+        ) AND BEHAVIOR = 'VIEW' AND TIME_CREATED &gt; #{startTime} AND TIME_CREATED &lt; #{endTime}
+    </select>
+</mapper>

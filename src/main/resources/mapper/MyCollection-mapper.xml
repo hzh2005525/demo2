@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.MyCollectionMapper">
+    <sql id="tableName">`MP_USER_FAVORITE`</sql>
+    <sql id="cmsArticleTableName">`CMS_ARTICLE`</sql>
+    <sql id="cmsTagTableName">`CMS_TAG`</sql>
+    <sql id="cmsTagBindingTableName">`CMS_TAG_BINDING`</sql>
+    <sql id="cmsImageTableName">`CMS_IMAGE`</sql>
+
+    <insert id="addMyCollection" parameterType="com.sogal.wx.core.dao.domain.mine.MyCollection">
+        INSERT IGNORE INTO <include refid="tableName"/>(ID, USER_ID, REALM_ID, REALM) VALUES (#{id}, #{userId}, #{realmId}, #{realm});
+    </insert>
+
+    <delete id="deleteMyCollection" parameterType="com.sogal.wx.core.dao.domain.mine.MyCollection">
+        DELETE FROM <include refid="tableName"/> WHERE ID = #{id}
+    </delete>
+
+    <select id="findMyCollectionByUniq" parameterType="com.sogal.wx.core.dao.domain.mine.MyCollection"
+            resultType="com.sogal.wx.core.dao.domain.mine.MyCollection">
+        SELECT * FROM <include refid="tableName"/>
+        WHERE USER_ID = #{userId} AND REALM_ID = #{realmId}
+        <if test="realm != null">
+            AND REALM = #{realm}
+        </if>
+    </select>
+
+    <select id="findSignMyCollected" parameterType="com.sogal.wx.core.dao.domain.mine.MyCollectSignDTO"
+            resultType="com.sogal.wx.core.dao.domain.mine.MyCollectSignResult">
+        SELECT wss.ID as  signId, wss.`CODE`,wss.`VALUE` ,wi1.IMAGE_URL AS iconUrl,
+        (SELECT COUNT(DISTINCT wd.ID)
+         FROM  <include refid="cmsArticleTableName"/> wd
+         INNER JOIN <include refid="cmsTagBindingTableName"/> wssb
+         ON wd.ID = wssb.REALM_ID AND wd.VALID = 1 AND  wd.`SHOW_LEVEL` = 'PUBLIC' AND  wssb.REALM ='WECHAT_DESIGN'
+         WHERE mc.REALM_ID = wssb.SIGN_ID) as quoteNum
+        FROM  <include refid="tableName"/> mc
+        INNER JOIN <include refid="cmsTagTableName"/> wss ON mc.REALM_ID = wss.ID
+        LEFT JOIN <include refid="cmsImageTableName"/> AS wi1 ON wss.ICON = wi1.ID
+        <include refid="findSignMyCollectedConditon"/>
+        ORDER BY mc.TIME_CREATED DESC
+        LIMIT #{pageStart}, #{pageSize}
+    </select>
+    <select id="findSignMyCollectedTotal"  parameterType="com.sogal.wx.core.dao.domain.mine.MyCollectSignDTO"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM  <include refid="tableName"/>  mc
+        INNER JOIN <include refid="cmsTagTableName"/> wss ON mc.REALM_ID = wss.ID
+        <include refid="findSignMyCollectedConditon"/>
+    </select>
+    <sql id="findSignMyCollectedConditon">
+         WHERE mc.USER_ID = #{userId} AND mc.REALM = 'WECHAT_SIGN'
+    </sql>
+
+    <select id="findMyCollectInfoAtAdmin" resultType="com.sogal.wx.core.dao.domain.mine.MyCollectionResultAtAdmin">
+        SELECT t.* FROM (
+        SELECT mc.REALM, mc.REALM_ID,wd.TITLE as realmContent,mc.TIME_CREATED
+        FROM <include refid="tableName"/>  mc
+        INNER JOIN <include refid="cmsArticleTableName"/> wd ON mc.REALM_ID = wd.ID  AND mc.REALM ='WECHAT_DESIGN'
+        WHERE mc.USER_ID = #{userId}
+        UNION
+        SELECT mc.REALM, mc.REALM_ID,wss.`VALUE` as realmContent,mc.TIME_CREATED
+        FROM <include refid="tableName"/>  mc
+        INNER JOIN <include refid="cmsTagTableName"/> wss ON mc.REALM_ID = wss.ID  AND mc.REALM ='WECHAT_SIGN'
+        WHERE mc.USER_ID = #{userId}
+        )t
+        ORDER BY t.TIME_CREATED
+        <if test="isPaged != null and isPaged == true ">
+            LIMIT #{pageInfo.offset}, #{pageInfo.size}
+        </if>
+    </select>
+    <select id="findMyCollectInfoTotalSizeAtAdmin" resultType="int">
+        SELECT SUM(t.NUM) FROM (
+        SELECT COUNT(*) AS NUM
+        FROM <include refid="tableName"/>  mc
+        INNER JOIN <include refid="cmsArticleTableName"/> wd ON mc.REALM_ID = wd.ID  AND mc.REALM ='WECHAT_DESIGN'
+        WHERE mc.USER_ID = #{userId}
+        UNION ALL
+        SELECT COUNT(*) AS NUM
+        FROM <include refid="tableName"/>  mc
+        INNER JOIN <include refid="cmsTagTableName"/> wss ON mc.REALM_ID = wss.ID  AND mc.REALM ='WECHAT_SIGN'
+        WHERE mc.USER_ID = #{userId}
+        )t
+    </select>
+</mapper>

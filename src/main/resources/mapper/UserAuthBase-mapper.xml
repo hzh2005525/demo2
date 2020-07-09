@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.UserAuthBaseMapper">
+
+    <sql id="tableName">`USER_AUTH_BASE`</sql>
+
+    <sql id="mpUserTableName">`MP_USER`</sql>
+
+    <insert id="addUserAuthBaseBySelective" parameterType="com.sogal.wx.core.dao.domain.user.WechatUser">
+        INSERT INTO
+        <include refid="tableName"/>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                `ID`,
+            </if>
+            <if test="unionId != null and unionId != ''">
+                `UNION_ID`,
+            </if>
+            <if test="repoId != null and repoId != ''">
+                `REPO_ID`,
+            </if>
+            <if test="emissaryType != null and emissaryType != ''">
+                `EMISSARY_TYPE`,
+            </if>
+            <if test="isEmissary != null">
+                `IS_EMISSARY`,
+            </if>
+            <if test="agreement != null and agreement != ''">
+                `AGREEMENT`,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                #{id},
+            </if>
+            <if test="unionId != null and unionId != ''">
+                #{unionId},
+            </if>
+            <if test="repoId != null and repoId != ''">
+                #{repoId},
+            </if>
+            <if test="emissaryType != null and emissaryType != ''">
+                #{emissaryType},
+            </if>
+            <if test="isEmissary != null">
+                #{isEmissary},
+            </if>
+            <if test="agreement != null and agreement != ''">
+                #{agreement},
+            </if>
+        </trim>
+    </insert>
+
+    <delete id="deleteByUnionId">
+        DELETE FROM
+        <include refid="tableName"/>
+        WHERE `UNION_ID` = #{unionId}
+    </delete>
+
+    <select id="selectByUnionId" resultType="com.sogal.wx.core.dao.domain.user.UserAuthBase">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE `UNION_ID` = #{unionId}
+    </select>
+
+    <select id="selectByUserNo" resultType="com.sogal.wx.core.dao.domain.user.UserAuthBase">
+        SELECT ui.* FROM
+        <include refid="mpUserTableName"/>
+        mp
+        LEFT JOIN
+        <include refid="tableName"/>
+        ui
+        ON mp.UNION_ID = ui.UNION_ID
+        WHERE mp.`USER_NO` = #{userNo}
+    </select>
+
+    <select id="findUserNameByUnionId" resultType="string">
+        SELECT
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS name
+        FROM
+        <include refid="tableName"/>
+        ui
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        WHERE ui.`UNION_ID` = #{unionId}
+    </select>
+
+</mapper>

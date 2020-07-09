@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatImageMapper">
+    <sql id="tableName">`CMS_IMAGE`</sql>
+
+    <insert id="addWechatImage" parameterType="com.sogal.wx.core.dao.domain.image.WechatImage">
+        INSERT INTO <include refid="tableName"/> (
+          ID,
+          IMAGE_URL,
+          IMAGE_MD5,
+          CREATOR,
+          REDUCE_URL,
+          `NAME`,
+          EXT,
+          REALM,
+          REALM_ID,
+          `SIZE`
+        ) VALUES (
+          #{id},
+          #{imageUrl},
+          #{imageMd5},
+          #{creator},
+          #{reduceUrl},
+          #{name},
+          #{ext},
+          #{realm},
+          #{realmId},
+          #{size}
+        )
+    </insert>
+
+    <insert id="addWechatImages" parameterType="java.util.List">
+    INSERT INTO <include refid="tableName"/> (
+      ID,
+      IMAGE_URL,
+      IMAGE_MD5,
+      CREATOR,
+      REDUCE_URL,
+      `NAME`,
+      EXT,
+      REALM,
+      REALM_ID,
+      `SIZE`
+    ) VALUES
+      <foreach collection="list" item="item" separator="," index="index">
+          (#{item.id},
+        #{item.imageUrl},
+        #{item.imageMd5},
+        #{item.creator},
+        #{item.reduceUrl},
+        #{item.name},
+        #{item.ext},
+        #{item.realm},
+        #{item.realmId},
+        #{item.size})
+      </foreach>
+    </insert>
+
+
+    <select id="findEntityById" resultType="com.sogal.wx.core.dao.domain.image.WechatImage">
+        SELECT * FROM <include refid="tableName"/> WHERE ID = #{id}
+    </select>
+
+    <update id="replaceWechatDesignCover" parameterType="com.sogal.wx.core.dao.domain.image.WechatImage">
+        UPDATE <include refid="tableName"/>
+        <set>
+            <if test="size != null">
+                `SIZE` = #{size},
+            </if>
+            IMAGE_URL = #{imageUrl},
+            IMAGE_MD5 = #{imageMd5},
+            REDUCE_URL = #{reduceUrl},
+            `NAME` = #{name},
+            EXT = #{ext}
+        </set>
+        WHERE ID = #{id}
+    </update>
+
+    <delete id="deleteImage" parameterType="java.lang.String">
+        DELETE FROM <include refid="tableName"/> WHERE ID = #{id}
+    </delete>
+
+    <delete id="deleteImageByIds">
+        DELETE FROM <include refid="tableName"/> WHERE ID IN
+        <foreach collection="list" item="item" index="index" separator="," close="(" open=")">
+          #{item}
+        </foreach>
+    </delete>
+    <select id="findByRealmAndRealmId" resultType="com.sogal.wx.core.dao.domain.image.WechatImage">
+        SELECT * FROM <include refid="tableName"/> WHERE REALM = #{realm} AND REALM_ID = #{realmId}
+    </select>
+</mapper>

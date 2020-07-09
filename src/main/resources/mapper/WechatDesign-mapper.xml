@@ -1,0 +1,1087 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatDesignMapper">
+
+    <sql id="tableName">`CMS_ARTICLE`</sql>
+
+    <sql id="cmsArticleTableName">`CMS_ARTICLE`</sql>
+
+    <sql id="articleTableName">`CMS_ARTICLE_RICH_TEXT`</sql>
+
+    <sql id="cmsArticleRighTextTableName">`CMS_ARTICLE_RICH_TEXT`</sql>
+
+    <sql id="wechatImageName">`CMS_IMAGE`</sql>
+
+    <sql id="cmsImageTableName">`CMS_IMAGE`</sql>
+
+    <sql id="myCollectionTableName">`MP_USER_FAVORITE`</sql>
+
+    <sql id="wechatDesignerTableName">`USER_AUTH_DESIGNER`</sql>
+
+    <sql id="cmsTagTableName">`CMS_TAG`</sql>
+
+    <sql id="cmsTagBindingTableName">`CMS_TAG_BINDING`</sql>
+
+    <sql id="cmsArticlePlainTextTableName">`CMS_ARTICLE_PLAIN_TEXT`</sql>
+
+    <sql id="mpUserRegisterTableName">`MP_USER_REGISTER`</sql>
+
+    <sql id="wechatArticleAllColumn">
+          wa.`ID`,
+          wa.`TITLE`,
+          wa.`IMAGE_NUM`,
+          wa.`CONTENT`,
+          wa.`CONTENT_SYLLABUS`,
+          wa.`REALM`,
+          wa.`REALM_ID`,
+          wa.`VALID`,
+          wa.`CREATOR`,
+          wa.`TIME_CREATED`
+    </sql>
+
+    <resultMap id="adminWechatDesignDetail" type="com.sogal.wx.core.dao.domain.design.WechatDesignDetailDTO">
+        <result column="ID" property="id"></result>
+        <result column="DESIGN_NO" property="designNo"></result>
+        <result column="UNIQUE_NO" property="uniqueNo"></result>
+        <result column="HOT_LEVEL" property="hotLevel"></result>
+        <result column="TITLE" property="title"></result>
+        <result column="CONTENT_SYLLABUS" property="contentSyllabus"></result>
+        <result column="HOUSE_TYPE" property="houseType"></result>
+        <result column="VALID" property="valid"></result>
+        <result column="DESIGNER" property="designer"></result>
+        <result column="DESIGNER_NAME" property="designerName"></result>
+        <result column="DESIGNER_TYPE" property="designerType"></result>
+        <result column="PANORAMA" property="panorama"></result>
+        <result column="TIME_CREATED" property="timeCreated"></result>
+        <result column="SHOW_LEVEL" property="showLevel"></result>
+        <result column="UPDATOR" property="updater"></result>
+        <result column="TIME_UPDATED" property="timeUpdated"></result>
+        <result column="CREATOR" property="creator"></result>
+
+        <result column="CREATOR_IDENTITY" property="creatorIdentity"></result>
+        <result column="H_PRICE" property="hprice"></result>
+        <result column="L_PRICE" property="lprice"></result>
+        <result column="F_PRICE" property="fprice"></result>
+        <result column="DESCRIBE_ARTICLE" property="describeArticle"></result>
+        <result column="QR_CODE_LINK" property="qrCodeLink"></result>
+        <result column="PUBLISH_TIME" property="publishTime"></result>
+
+        <result column="CATEGORY" property="category"></result>
+        <result column="TOPIC_ID" property="topicId"></result>
+        <result column="KIND" property="kind"></result>
+        <result column="AREA" property="area"></result>
+        <result column="NAVIGATION_BAR_BACKGROUND_COLOR" property="navigationBarBackgroundColor"></result>
+        <result column="VIEW_NUM" property="viewNum"></result>
+        <result column="COLLECT_NUM" property="collectNum"></result>
+        <result column="SHARE_NUM" property="shareNum"></result>
+        <result column="PRAISE_NUM" property="praiseNum"></result>
+        <result column="SIGNUP_NUM" property="signupNum"></result>
+        <result column="actualSignupNumStr" property="actualSignupNumStr"></result>
+
+        <result column="BTN_ICON" property="btnIcon"></result>
+        <result column="BTN_TEXT" property="btnText"></result>
+        <result column="BTN_ONCLICK_URL" property="btnOnclickUrl"></result>
+        <result column="BTN_ONCLICK_PARAMS" property="btnOnclickParams"></result>
+        <result column="TEMPLATE_ID" property="templateId"></result>
+        <result column="CONTENT_TYPE" property="contentType"></result>
+        <result column="IMAGE_NUM" property="imageNum"></result>
+        <result column="FORMALED" property="formaled"></result>
+        <result column="BG_IMAGE_URL" property="bgImageUrl"></result>
+        <result column="BG_IMAGE_COLOR" property="bgImageColor"></result>
+        <result column="MATCHED_CONTENT" property="matchedContent"></result>
+        <result column="SHARE_METHOD_ALLOWED" property="shareMethodAllowed"></result>
+        <result column="PAID_PROMOTE_STAUS" property="paidPromoteStaus"></result>
+        <result column="TARGET_APP_ID" property="targetAppId"></result>
+        <result column="TARGET_PAGE_PATH" property="targetPagePath"></result>
+        <association property="wechatImage" javaType="com.sogal.wx.core.dao.domain.image.WechatImage">
+            <result column="IMAGE_URL" property="imageUrl"></result>
+            <result column="REDUCE_URL" property="reduceUrl"></result>
+            <result column="NAME" property="name"></result>
+            <result column="IMAGE_MD5" property="imageMd5"></result>
+            <result column="EXT" property="ext"></result>
+            <result column="coverId" property="id"></result>
+            <result column="SIZE" property="size"></result>
+        </association>
+        <association property="posterImage" javaType="com.sogal.wx.core.dao.domain.image.WechatImage">
+            <result column="POSTER_IMAGE_URL" property="imageUrl"></result>
+            <result column="POSTER_REDUCE_URL" property="reduceUrl"></result>
+            <result column="POSTER_NAME" property="name"></result>
+            <result column="POSTER_IMAGE_MD5" property="imageMd5"></result>
+            <result column="POSTER_EXT" property="ext"></result>
+            <result column="posterId" property="id"></result>
+            <result column="POSTER_SIZE" property="size"></result>
+        </association>
+        <association property="wechatArticle"
+                     select="com.sogal.wx.core.dao.mapper.WechatDesignMapper.selectWechatArticlesByRealmId"
+                      column="{realmId = id}" fetchType="eager">
+        </association>
+        <collection property="paragraphs" column="{realmId = id}"
+                    select="com.sogal.wx.core.dao.mapper.CMSArticlePlainTextMapper.selectCMSArticlePlainTextByRealmIdAtAdmin">
+        </collection>
+    </resultMap>
+
+    <resultMap id="wechatDesignDetailAtC" type="com.sogal.wx.core.dao.domain.design.WechatDesignDetailDTO">
+        <result column="ID" property="id"></result>
+        <result column="DESIGN_NO" property="designNo"></result>
+        <result column="UNIQUE_NO" property="uniqueNo"></result>
+        <result column="HOT_LEVEL" property="hotLevel"></result>
+        <result column="TITLE" property="title"></result>
+        <result column="CONTENT_SYLLABUS" property="contentSyllabus"></result>
+        <result column="HOUSE_TYPE" property="houseType"></result>
+        <result column="VALID" property="valid"></result>
+        <result column="DESIGNER" property="designer"></result>
+        <result column="DESIGNER_NAME" property="designerName"></result>
+        <result column="PANORAMA" property="panorama"></result>
+        <result column="TIME_CREATED" property="timeCreated"></result>
+        <result column="SHOW_LEVEL" property="showLevel"></result>
+        <result column="UPDATOR" property="updater"></result>
+        <result column="TIME_UPDATED" property="timeUpdated"></result>
+        <result column="CREATOR" property="creator"></result>
+
+        <result column="H_PRICE" property="hprice"></result>
+        <result column="L_PRICE" property="lprice"></result>
+        <result column="DESCRIBE_ARTICLE" property="describeArticle"></result>
+        <result column="QR_CODE_LINK" property="qrCodeLink"></result>
+        <result column="PUBLISH_TIME" property="publishTime"></result>
+
+        <result column="CATEGORY" property="category"></result>
+        <result column="KIND" property="kind"></result>
+        <result column="AREA" property="area"></result>
+        <result column="NAVIGATION_BAR_BACKGROUND_COLOR" property="navigationBarBackgroundColor"></result>
+        <result column="VIEW_NUM" property="viewNum"></result>
+        <result column="COLLECT_NUM" property="collectNum"></result>
+        <result column="SHARE_NUM" property="shareNum"></result>
+        <result column="PRAISE_NUM" property="praiseNum"></result>
+        <result column="SIGNUP_NUM" property="signupNum"></result>
+        <result column="actualSignupNumStr" property="actualSignupNumStr"></result>
+
+        <result column="BTN_ICON" property="btnIcon"></result>
+        <result column="BTN_TEXT" property="btnText"></result>
+        <result column="BTN_ONCLICK_URL" property="btnOnclickUrl"></result>
+        <result column="BTN_ONCLICK_PARAMS" property="btnOnclickParams"></result>
+        <result column="FORMALED" property="formaled"></result>
+        <result column="CONTENT_TYPE" property="contentType"></result>
+        <result column="IMAGE_NUM" property="imageNum"></result>
+        <result column="BG_IMAGE_URL" property="bgImageUrl"></result>
+        <result column="BG_IMAGE_COLOR" property="bgImageColor"></result>
+        <result column="MATCHED_CONTENT" property="matchedContent"></result>
+        <result column="SHARE_METHOD_ALLOWED" property="shareMethodAllowed"></result>
+        <result column="PAID_PROMOTE_STAUS" property="paidPromoteStaus"></result>
+
+        <result column="designerNameAuthed" property="designerNameAuthed"></result>
+        <result column="designerLevel" property="designerLevel"></result>
+        <result column="designerCompany" property="designerCompany"></result>
+        <result column="designerAddr" property="designerAddr"></result>
+        <result column="designerAvatarUrl" property="designerAvatarUrl"></result>
+        <result column="designerStatus" property="designerStatus"></result>
+
+        <association property="wechatImage" javaType="com.sogal.wx.core.dao.domain.image.WechatImage">
+            <result column="IMAGE_URL" property="imageUrl"></result>
+            <result column="REDUCE_URL" property="reduceUrl"></result>
+            <result column="NAME" property="name"></result>
+            <result column="IMAGE_MD5" property="imageMd5"></result>
+            <result column="EXT" property="ext"></result>
+            <result column="coverId" property="id"></result>
+            <result column="SIZE" property="size"></result>
+        </association>
+        <association property="posterImage" javaType="com.sogal.wx.core.dao.domain.image.WechatImage">
+            <result column="POSTER_IMAGE_URL" property="imageUrl"></result>
+            <result column="POSTER_REDUCE_URL" property="reduceUrl"></result>
+            <result column="POSTER_NAME" property="name"></result>
+            <result column="POSTER_IMAGE_MD5" property="imageMd5"></result>
+            <result column="POSTER_EXT" property="ext"></result>
+            <result column="posterId" property="id"></result>
+            <result column="POSTER_SIZE" property="size"></result>
+        </association>
+        <!--<association property="wechatArticle"-->
+                     <!--select="com.sogal.wx.core.dao.mapper.WechatDesignMapper.selectWechatArticlesByRealmId"-->
+                     <!--column="{realmId = id}" fetchType="eager">-->
+        <!--</association>-->
+        <discriminator javaType="java.lang.String" column="CONTENT_TYPE">
+            <case value="dom" resultMap="domCMSArticlePlainTextResultMapAtC"/>
+            <case value="rtf" resultMap="rtfCMSArticleRichTextResultMapAtC"/>
+        </discriminator>
+    </resultMap>
+    <resultMap id="domCMSArticlePlainTextResultMapAtC" extends="wechatDesignDetailAtC"
+               type="com.sogal.wx.core.dao.domain.design.WechatDesignDetailDTO">
+        <collection property="paragraphs" column="{realmId = id}"
+                    select="com.sogal.wx.core.dao.mapper.CMSArticlePlainTextMapper.selectCMSArticlePlainTextByRealmIdAtC">
+        </collection>
+    </resultMap>
+    <resultMap id="rtfCMSArticleRichTextResultMapAtC" extends="wechatDesignDetailAtC"
+               type="com.sogal.wx.core.dao.domain.design.WechatDesignDetailDTO">
+        <collection property="wechatArticle" column="{realmId = id}"
+                    select="com.sogal.wx.core.dao.mapper.WechatDesignMapper.selectWechatArticlesByRealmId">
+        </collection>
+    </resultMap>
+
+    <resultMap id="wechatArticleMap" type="com.sogal.wx.core.dao.domain.article.WechatArticleDTO">
+        <result column="CONTENT" property="content"  jdbcType="BLOB" typeHandler="com.sogal.wx.core.config.MybatisBlobTypeHandler"></result>
+    </resultMap>
+
+    <insert id="insertWechatDesign">
+        INSERT INTO
+        <include refid="tableName"/>
+        (
+        `ID`,
+        `DESIGN_NO`,
+        `UNIQUE_NO`,
+        `HOT_LEVEL`,
+        `TITLE`,
+        `CONTENT_SYLLABUS`,
+        `HOUSE_TYPE`,
+        `DESIGNER`,
+        `DESIGNER_NAME`,
+        `DESIGNER_TYPE`,
+        `PANORAMA`,
+        `SHOW_LEVEL`,
+        `UPDATOR`,
+        `CREATOR`,
+        `CREATOR_IDENTITY`,
+        `H_PRICE`,
+        `L_PRICE`,
+        `F_PRICE`,
+        `COVER`,
+        `DESCRIBE_ARTICLE`,
+        `QR_CODE_LINK`,
+        `CATEGORY`,
+        `TOPIC_ID`,
+        `KIND`,
+        `AREA`,
+        `NAVIGATION_BAR_BACKGROUND_COLOR`,
+        `POSTER`,
+        `BTN_ICON`,
+        `BTN_TEXT`,
+        `BTN_ONCLICK_URL`,
+        `BTN_ONCLICK_PARAMS`,
+        `TEMPLATE_ID`,
+        `FORMALED`,
+        `CONTENT_TYPE`,
+        `IMAGE_NUM`,
+        `BG_IMAGE_URL`,
+        `BG_IMAGE_COLOR`,
+        `MATCHED_CONTENT`,
+        `SHARE_METHOD_ALLOWED`,
+        `PAID_PROMOTE_STAUS`,
+        `TARGET_APP_ID`,
+        `TARGET_PAGE_PATH`
+        )VALUES(
+        #{id},
+        #{designNo},
+        #{uniqueNo},
+        (SELECT IFNULL( (SELECT MAX(t.HOT_LEVEL) as HOT_LEVEL FROM <include refid="cmsArticleTableName"/> t),0) + 1),
+        #{title},
+        #{contentSyllabus},
+        #{houseType},
+        #{designer},
+        #{designerName},
+        #{designerType},
+        #{panorama},
+        #{showLevel},
+        #{updater},
+        #{creator},
+        #{creatorIdentity},
+        #{hprice},
+        #{lprice},
+        #{fprice},
+        #{cover},
+        #{describeArticle},
+        #{qrCodeLink},
+        #{category},
+        #{topicId},
+        #{kind},
+        #{area},
+        #{navigationBarBackgroundColor},
+        #{poster},
+        #{btnIcon},
+        #{btnText},
+        #{btnOnclickUrl},
+        #{btnOnclickParams},
+        #{templateId},
+        #{formaled},
+        #{contentType},
+        #{imageNum},
+        #{bgImageUrl},
+        #{bgImageColor},
+        #{matchedContent},
+        #{shareMethodAllowed},
+        #{paidPromoteStaus},
+        #{targetAppId},
+        #{targetPagePath}
+        )
+    </insert>
+
+    <insert id="insertWechatArticle" parameterType="map">
+        INSERT INTO
+        <include refid="articleTableName"/>
+        (
+        `ID`,
+        `TITLE`,
+        `IMAGE_NUM`,
+        `CONTENT`,
+        `CONTENT_SYLLABUS`,
+        `REALM`,
+        `REALM_ID`,
+        `CREATOR`
+        )VALUES (
+        #{wechatArticle.id},
+        #{wechatArticle.title},
+        #{wechatArticle.imageNum},
+        #{wechatArticle.content},
+        #{wechatArticle.contentSyllabus},
+        #{wechatArticle.realm},
+        #{wechatArticle.realmId},
+        #{wechatArticle.creator}
+        )
+    </insert>
+
+    <select id="findEntityByNo" resultType="com.sogal.wx.core.dao.domain.design.WechatDesign">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE `DESIGN_NO` = #{designNo}
+    </select>
+
+    <select id="findEntityByUniqueNo" resultType="com.sogal.wx.core.dao.domain.design.WechatDesign">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE `UNIQUE_NO` = #{uniqueNo}
+    </select>
+
+    <select id="findLatestDesign" resultType="com.sogal.wx.core.dao.domain.design.WechatDesign">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE KIND ='DESIGN' AND POSTER IS NOT NULL
+        ORDER BY PUBLISH_TIME DESC
+        LIMIT 1
+    </select>
+    <select id="findArticleNoPoster" resultType="com.sogal.wx.core.dao.domain.design.WechatDesign">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE COVER IS NOT  NULL  AND  POSTER IS  NULL
+        ORDER BY PUBLISH_TIME DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectWechatArticleById" parameterType="map"
+            resultType="com.sogal.wx.core.dao.domain.article.WechatArticle">
+        SELECT
+        <include refid="wechatArticleAllColumn"/>
+        FROM
+        <include refid="articleTableName"/> wa
+        WHERE `ID` = #{id}
+    </select>
+
+    <select id="selectWechatArticlesByRealmId" parameterType="map"
+            resultMap="wechatArticleMap">
+        SELECT
+        <include refid="wechatArticleAllColumn"/>
+        FROM
+        <include refid="articleTableName"/> wa
+        WHERE `REALM_ID` = #{realmId}
+    </select>
+
+    <update id="updateWechatDesign" parameterType="map">
+        UPDATE
+        <include refid="tableName"/>
+        <set>
+            `HOUSE_TYPE` = #{wechatDesign.houseType},
+            `DESIGNER` = #{wechatDesign.designer},
+            `DESIGNER_NAME` = #{wechatDesign.designerName},
+            `DESIGNER_TYPE` = #{wechatDesign.designerType},
+            <if test="wechatDesign.panorama != 'NOT_CLEAR'">
+                `PANORAMA` = #{wechatDesign.panorama},
+            </if>
+            <if test="wechatDesign.showLevel != null">
+                `SHOW_LEVEL` = #{wechatDesign.showLevel},
+            </if>
+            `UPDATOR` = #{wechatDesign.updater},
+            <if test="wechatDesign.hprice != null">
+                `H_PRICE` = #{wechatDesign.hprice},
+            </if>
+            <if test="wechatDesign.lprice != null">
+                `L_PRICE` = #{wechatDesign.lprice},
+            </if>
+            `F_PRICE` = #{wechatDesign.fprice},
+            `COVER` = #{wechatDesign.cover},
+            `POSTER` = #{wechatDesign.poster},
+            `QR_CODE_LINK` = #{wechatDesign.qrCodeLink},
+            `CATEGORY` = #{wechatDesign.category},
+            `TOPIC_ID` = #{wechatDesign.topicId},
+            <if test="wechatDesign.area != null">
+                `AREA` = #{wechatDesign.area},
+            </if>
+            <if test="wechatDesign.kind != null">
+                `KIND` = #{wechatDesign.kind},
+            </if>
+            <if test="wechatDesign.templateId != null">
+                `TEMPLATE_ID` = #{wechatDesign.templateId},
+            </if>
+            <if test="wechatDesign.contentType != null">
+                `CONTENT_TYPE` = #{wechatDesign.contentType},
+            </if>
+            <if test="wechatDesign.imageNum != null">
+                `IMAGE_NUM` = #{wechatDesign.imageNum},
+            </if>
+            <if test="wechatDesign.paidPromoteStaus != null">
+                `PAID_PROMOTE_STAUS` = #{wechatDesign.paidPromoteStaus},
+            </if>
+            `TITLE` = #{wechatDesign.title},
+            `CONTENT_SYLLABUS` = #{wechatDesign.contentSyllabus},
+            `NAVIGATION_BAR_BACKGROUND_COLOR` = #{wechatDesign.navigationBarBackgroundColor},
+            `BTN_ICON` = #{wechatDesign.btnIcon},
+            `BTN_TEXT` = #{wechatDesign.btnText},
+            `BTN_ONCLICK_URL` = #{wechatDesign.btnOnclickUrl},
+            `BTN_ONCLICK_PARAMS` = #{wechatDesign.btnOnclickParams},
+            `UNIQUE_NO` = #{wechatDesign.uniqueNo},
+             DESCRIBE_ARTICLE = #{wechatDesign.describeArticle},
+            `BG_IMAGE_URL` = #{wechatDesign.bgImageUrl},
+            `BG_IMAGE_COLOR` = #{wechatDesign.bgImageColor},
+            `MATCHED_CONTENT` = #{wechatDesign.matchedContent},
+            `SHARE_METHOD_ALLOWED` = #{wechatDesign.shareMethodAllowed},
+            `TARGET_APP_ID` = #{wechatDesign.targetAppId},
+            `TARGET_PAGE_PATH` = #{wechatDesign.targetPagePath}
+        </set>
+        WHERE id = #{wechatDesign.id}
+    </update>
+
+    <update id="updateWechatArticle" parameterType="map">
+        UPDATE
+        <include refid="articleTableName"/>
+        SET
+            `TITLE` = #{title},
+            `IMAGE_NUM` = #{imageNum},
+            `CONTENT` = #{content},
+            `CONTENT_SYLLABUS` = #{contentSyllabus}
+        WHERE `ID` = #{id}
+    </update>
+
+    <update id="markDesignInvalidById">
+        UPDATE
+        <include refid="tableName"/>
+        SET VALID = 0
+        WHERE ID = #{id}
+    </update>
+
+    <update id="markDesignValidByIds">
+        UPDATE
+        <include refid="tableName"/>
+        SET VALID = 1,UPDATOR = #{employee.id}
+        WHERE ID IN (
+        <foreach collection="ids" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+        )
+    </update>
+
+    <update id="markArticleInvalidByDesignId">
+        UPDATE
+        <include refid="articleTableName"/>
+        SET VALID = 0
+        WHERE REALM_ID = #{realmId}
+    </update>
+
+    <update id="markArticleValidByDesignIds">
+        UPDATE
+        <include refid="articleTableName"/>
+        SET VALID = 1
+        WHERE REALM_ID IN (
+        <foreach collection="ids" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+        )
+    </update>
+
+
+    <update id="markDesignAndArticleInvalidByIds">
+        UPDATE
+        <include refid="tableName"/>
+        wd
+        INNER JOIN
+        <include refid="cmsArticleRighTextTableName"/>
+        wa
+        ON wd.DESCRIBE_ARTICLE = wa.ID
+        SET wd.VALID = 0,wd.UPDATOR = #{employee.id},wd.VALID = 0
+        WHERE wd.ID IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+
+    <update id="markArticleInvalidByIds">
+        UPDATE
+        <include refid="cmsArticleTableName"/> ca
+        SET ca.VALID = 0,ca.UPDATOR = #{user.id}
+        WHERE ca.ID IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+
+    <update id="markDesignAndArticleValidByIds">
+        UPDATE
+        <include refid="tableName"/>
+        wd
+        INNER JOIN
+        <include refid="articleTableName"/>
+        wa
+        ON wd.DESCRIBE_ARTICLE = wa.ID
+        SET wd.VALID = 1,wd.UPDATOR = #{employee.id},wd.VALID = 1
+        WHERE wd.ID IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="findDesignDetailByIdAtAdmin" resultMap="adminWechatDesignDetail">
+        SELECT <include refid="wechatDesignAllColumn"/>,wd.FORMALED ,wd.IMAGE_NUM,wd.TARGET_APP_ID,wd.TARGET_PAGE_PATH,
+        wi.`IMAGE_URL`,wi.`REDUCE_URL`,wi.`NAME`,wi.`ID` as `coverId`,wi.`IMAGE_MD5`,wi.`EXT`,wi.`SIZE`,
+        wip.`IMAGE_URL` as `POSTER_IMAGE_URL`,wip.`REDUCE_URL` as `POSTER_REDUCE_URL`,wip.`NAME` as `POSTER_NAME`,
+        wip.`ID` as `posterId`,wip.`IMAGE_MD5` as `POSTER_IMAGE_MD5`,wip.`EXT` as `POSTER_EXT`,
+        wip.`SIZE` as `POSTER_SIZE`,
+        (SELECT COUNT(*) FROM <include refid="mpUserRegisterTableName"/> mur WHERE mur.ENTITY_ID = wd.ID) AS actualSignupNumStr
+        FROM <include refid="tableName"/> wd
+        LEFT JOIN <include refid="wechatImageName"/> wi ON wd.COVER = wi.ID
+        LEFT JOIN <include refid="wechatImageName"/> wip ON wd.POSTER = wip.ID
+        WHERE wd.ID = #{id}
+    </select>
+
+    <select id="findDesignDetailByIdAtC" resultMap="wechatDesignDetailAtC">
+        SELECT <include refid="wechatDesignAllColumn"/>,wd.FORMALED,wd.IMAGE_NUM,
+        wi.`IMAGE_URL`,wi.`REDUCE_URL`,wi.`NAME`,wi.`ID` as `coverId`,wi.`SIZE`,
+        wip.`IMAGE_URL` as `POSTER_IMAGE_URL`,wip.`REDUCE_URL` as `POSTER_REDUCE_URL`,wip.`NAME` as `POSTER_NAME`,wip.`ID` as `posterId`,wip.`IMAGE_MD5` as `POSTER_IMAGE_MD5`,wip.`EXT` as `POSTER_EXT`,wip.`SIZE` as `POSTER_SIZE`,
+        designer.NAME as designerNameAuthed, designer.LEVEL as designerLevel, designer.COMPANY as designerCompany,designer.ADDR as designerAddr,designer.AVATAR_URL as designerAvatarUrl,designer.STATUS as designerStatus,
+        (SELECT COUNT(*) FROM <include refid="mpUserRegisterTableName"/> mur WHERE mur.ENTITY_ID = wd.ID) AS actualSignupNumStr
+        FROM <include refid="tableName"/> wd
+        LEFT JOIN <include refid="wechatImageName"/> wi ON wd.COVER = wi.ID
+        LEFT JOIN <include refid="wechatImageName"/> wip ON wd.POSTER = wip.ID
+        LEFT JOIN <include refid="wechatDesignerTableName"/> designer ON  wd.designer = designer.ID
+        WHERE wd.ID = #{id} AND wd.VALID = 1 AND wd.SHOW_LEVEL = 'PUBLIC'
+    </select>
+
+    <sql id="findDesignsPagedQueryCondition">
+        <where>
+            wd.FORMALED = 1
+            <if test="queryCondition.kind != null">
+                AND wd.KIND = #{queryCondition.kind}
+            </if>
+            <if test="queryCondition.topicId != null">
+                AND wd.TOPIC_ID = #{queryCondition.topicId}
+            </if>
+            <if test="queryCondition.designTitle != null">
+                AND  wd.TITLE LIKE concat('%', #{queryCondition.designTitle},'%')
+            </if>
+            <if test="queryCondition.houseType != null">
+                AND  wd.HOUSE_TYPE = #{queryCondition.houseType}
+            </if>
+            <if test="queryCondition.showLevel != null">
+                AND  wd.SHOW_LEVEL = #{queryCondition.showLevel}
+            </if>
+            <if test="queryCondition.designNo != null">
+                AND  wd.DESIGN_NO LIKE concat('%',#{queryCondition.designNo},'%')
+            </if>
+            <if test="queryCondition.valid != null">
+                AND  wd.VALID = #{queryCondition.valid}
+            </if>
+            <if test="queryCondition.noSign == 'NOSIGN' ">
+                AND  wd.ID NOT IN (
+                SELECT `REALM_ID` FROM <include refid="cmsTagBindingTableName"/> WHERE  `REALM` = 'WECHAT_DESIGN'
+                )
+            </if>
+            <if test="queryCondition.signIdsExcluding != null and queryCondition.signIdsExcluding.size()>0">
+                AND
+                  <foreach collection="queryCondition.signIdsExcluding" index="index" separator="AND" open="(" close=")" item="item">
+                       wd.ID NOT IN (
+                      SELECT `REALM_ID` FROM <include refid="cmsTagBindingTableName"/>
+                      WHERE  `REALM` = 'WECHAT_DESIGN' AND SIGN_ID  = #{item}
+                      )
+                  </foreach>
+            </if>
+        </where>
+    </sql>
+
+    <resultMap id="findDesignsPagedByQueryConditionMap" type="com.sogal.wx.core.dao.domain.design.WechatDesignDTO">
+        <result column="ID" property="id"></result>
+        <result column="DESIGN_NO" property="designNo"></result>
+        <result column="HOT_LEVEL" property="hotLevel"></result>
+        <result column="TITLE" property="title"></result>
+        <result column="HOUSE_TYPE" property="houseType"></result>
+        <result column="VALID" property="valid"></result>
+        <result column="DESIGNER" property="designer"></result>
+        <result column="DESIGNER_NAME" property="designerName"></result>
+        <result column="PANORAMA" property="panorama"></result>
+        <result column="TIME_CREATED" property="timeCreated"></result>
+        <result column="SHOW_LEVEL" property="showLevel"></result>
+        <result column="UPDATOR" property="updater"></result>
+        <result column="TIME_UPDATED" property="timeUpdated"></result>
+        <result column="CREATOR" property="creator"></result>
+        <result column="CREATOR_IDENTITY" property="creatorIdentity"></result>
+        <result column="H_PRICE" property="hprice"></result>
+        <result column="L_PRICE" property="lprice"></result>
+        <result column="F_PRICE" property="fprice"></result>
+        <result column="COVER" property="cover"></result>
+        <result column="DESCRIBE_ARTICLE" property="describeArticle"></result>
+        <result column="QR_CODE_LINK" property="qrCodeLink"></result>
+        <result column="CATEGORY" property="category"></result>
+        <result column="TOPIC_ID" property="topicId"></result>
+        <result column="VIEW_NUM" property="viewNum"></result>
+        <result column="COLLECT_NUM" property="collectNum"></result>
+        <result column="SHARE_NUM" property="shareNum"></result>
+        <result column="PRAISE_NUM" property="praiseNum"></result>
+        <result column="SORTED" property="sorted"></result>
+        <result column="SIGNUP_NUM" property="signupNum"></result>
+        <result column="actualSignupNumStr" property="actualSignupNumStr"></result>
+        <result column="PUBLISH_TIME" property="publishTime"></result>
+        <result column="KIND" property="kind"></result>
+        <result column="AREA" property="area"></result>
+        <result column="NAVIGATION_BAR_BACKGROUND_COLOR" property="navigationBarBackgroundColor"></result>
+        <result column="IMAGE_URL" property="imageUrl"></result>
+        <result column="REDUCE_URL" property="reduceUrl"></result>
+        <result column="CONTENT_SYLLABUS" property="contentSyllabus"></result>
+        <result column="IMAGE_NUM" property="imageNum"></result>
+        <result column="PAID_PROMOTE_STAUS" property="paidPromoteStaus"></result>
+        <collection property="signs" column="{designId = id}" select="com.sogal.wx.core.dao.mapper.WechatSysSignBindingMapper.findSignsByDesignId" />
+    </resultMap>
+
+    <sql id="wechatDesignAllColumn">
+        wd.`ID`,
+        wd.`DESIGN_NO`,
+        wd.`UNIQUE_NO`,
+        wd.`HOT_LEVEL`,
+        wd.`TITLE`,
+        wd.`CONTENT_SYLLABUS`,
+        wd.`HOUSE_TYPE`,
+        wd.`VALID`,
+        wd.`DESIGNER`,
+        wd.`DESIGNER_NAME`,
+        wd.`DESIGNER_TYPE`,
+        wd.`PANORAMA`,
+        wd.`TIME_CREATED`,
+        wd.`SHOW_LEVEL`,
+        wd.`UPDATOR`,
+        wd.`TIME_UPDATED`,
+        wd.`CREATOR`,
+        wd.`CREATOR_IDENTITY`,
+        wd.`H_PRICE`,
+        wd.`L_PRICE`,
+        wd.`F_PRICE`,
+        wd.`COVER`,
+        wd.`DESCRIBE_ARTICLE`,
+        wd.`QR_CODE_LINK`,
+        wd.`CATEGORY`,
+        wd.`VIEW_NUM`,
+        wd.`COLLECT_NUM`,
+        wd.`SHARE_NUM`,
+        wd.`PRAISE_NUM`,
+        wd.`SORTED`,
+        wd.`SIGNUP_NUM`,
+        wd.`PUBLISH_TIME`,
+        wd.`KIND`,
+        wd.`AREA`,
+        wd.`NAVIGATION_BAR_BACKGROUND_COLOR`,
+        wd.`POSTER`,
+        wd.`BTN_ICON`,
+        wd.`BTN_TEXT`,
+        wd.`BTN_ONCLICK_URL`,
+        wd.`BTN_ONCLICK_PARAMS`,
+        wd.`TEMPLATE_ID`,
+        wd.`CONTENT_TYPE`,
+        wd.`BG_IMAGE_URL`,
+        wd.`BG_IMAGE_COLOR`,
+        wd.`MATCHED_CONTENT`,
+        wd.`SHARE_METHOD_ALLOWED`,
+        wd.`PAID_PROMOTE_STAUS`
+    </sql>
+
+    <select id="findDesignsPagedByQueryCondition" parameterType="map" resultMap="findDesignsPagedByQueryConditionMap">
+        SELECT <include refid="wechatDesignAllColumn"/>,wi.IMAGE_URL,wi.REDUCE_URL,wd.IMAGE_NUM,
+        (SELECT COUNT(*) FROM <include refid="mpUserRegisterTableName"/> mur WHERE mur.ENTITY_ID = wd.ID) AS actualSignupNumStr
+        FROM <include refid="tableName"/> wd
+        LEFT JOIN <include refid="wechatImageName"/> wi ON wd.COVER = wi.ID
+        LEFT JOIN <include refid="articleTableName"/> wa ON wd.DESCRIBE_ARTICLE = wa.ID
+        <if test="queryCondition.signIds!=null and queryCondition.signIds.size()>0">
+            <foreach collection="queryCondition.signIds" index="index" item="item">
+                INNER JOIN <include refid="cmsTagBindingTableName"/> AS WSSB${index}
+                ON WSSB${index}.REALM_ID = wd.ID AND WSSB${index}.REALM = 'WECHAT_DESIGN' AND WSSB${index}.SIGN_ID = #{item}
+            </foreach>
+        </if>
+        <include refid="findDesignsPagedQueryCondition"/>
+        ORDER BY wd.TIME_CREATED DESC
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <select id="countDesignsPagedByQueryCondition" parameterType="map" resultType="int">
+        SELECT COUNT(wd.ID)
+        FROM <include refid="tableName"/> wd
+        <if test="queryCondition.signIds!=null and queryCondition.signIds.size()>0">
+            <foreach collection="queryCondition.signIds" index="index" item="item">
+                INNER JOIN <include refid="cmsTagBindingTableName"/> AS WSSB${index}
+                ON WSSB${index}.REALM_ID = wd.ID AND WSSB${index}.REALM = 'WECHAT_DESIGN' AND WSSB${index}.SIGN_ID = #{item}
+            </foreach>
+        </if>
+        <include refid="findDesignsPagedQueryCondition"/>
+    </select>
+
+    <select id="findDesignsOfDesignerPaged" resultType="com.sogal.wx.core.dao.domain.design.WechatDesign">
+        SELECT <include refid="wechatDesignAllColumn"/>
+        FROM <include refid="tableName"/> wd
+        <include refid="findDesignsOfDesignerPagedQueryCondition"/>
+        ORDER BY wd.TIME_CREATED DESC
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <select id="countDesignsOfDesignerPagedByQueryCondition"  resultType="int">
+        SELECT COUNT(wd.ID)
+        FROM <include refid="tableName"/> wd
+        <include refid="findDesignsOfDesignerPagedQueryCondition"/>
+    </select>
+
+    <sql id="findDesignsOfDesignerPagedQueryCondition">
+        WHERE wd.DESIGNER = #{queryCondition.designerId}
+    </sql>
+
+    <sql id="findDesignsPagedQueryConditionAtC">
+        <where>
+            wd.VALID = 1 AND  wd.`SHOW_LEVEL` = 'PUBLIC' AND wd.FORMALED = 1
+            <if test="queryCondition.kind != null">
+                AND wd.KIND = #{queryCondition.kind}
+            </if>
+            <if test="queryCondition.designTitle != null">
+                AND wd.TITLE LIKE concat('%',#{queryCondition.designTitle},'%')
+            </if>
+            <if test="queryCondition.houseType != null">
+                AND  wd.HOUSE_TYPE = #{queryCondition.houseType}
+            </if>
+            <if test="queryCondition.showLevel != null">
+                AND  wd.SHOW_LEVEL = #{queryCondition.showLevel}
+            </if>
+            <if test="queryCondition.designNo != null">
+                AND  wd.DESIGN_NO = #{queryCondition.designNo}
+            </if>
+            <if test="queryCondition.lprice != null">
+                AND wd.H_PRICE <![CDATA[>= ]]>  #{queryCondition.lprice}
+            </if>
+            <if test="queryCondition.hprice != null">
+                AND wd.L_PRICE <![CDATA[<= ]]> #{queryCondition.hprice}
+            </if>
+            <if test="queryCondition.minArea != null">
+                AND wd.AREA <![CDATA[>= ]]>  #{queryCondition.minArea}
+            </if>
+            <if test="queryCondition.maxArea != null">
+                AND wd.AREA <![CDATA[<= ]]> #{queryCondition.maxArea}
+            </if>
+            <if test="queryCondition.designerId != null">
+                AND wd.DESIGNER = #{queryCondition.designerId}
+            </if>
+            <if test="queryCondition.signIdsOr!=null and queryCondition.signIdsOr.size()>0">
+                AND wd.ID IN (SELECT wssb.REALM_ID
+                              FROM <include refid="cmsTagBindingTableName"/> wssb
+                              WHERE wssb.REALM ='WECHAT_DESIGN' AND wssb.SIGN_ID IN
+                    <foreach collection="queryCondition.signIdsOr" index="index" item="item"   separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                )
+            </if>
+            <if test="queryCondition.keywords != null">
+                AND (
+                wd.TITLE LIKE concat('%',#{queryCondition.keywords},'%')
+                OR
+                wd.ID IN ( SELECT wssb1.REALM_ID
+                          FROM <include refid="cmsTagTableName"/> wsst1 INNER JOIN
+                          <include refid="cmsTagBindingTableName"/> wssb1 ON wsst1.ID = wssb1.SIGN_ID AND wssb1.REALM ='WECHAT_DESIGN'
+                          WHERE wsst1.VALUE LIKE concat('%',#{queryCondition.keywords},'%') )
+                OR
+                wd.CONTENT_SYLLABUS LIKE concat('%',#{queryCondition.keywords},'%')
+                )
+            </if>
+
+        </where>
+    </sql>
+
+    <select id="findDesignsPagedByQueryConditionAtC" parameterType="map" resultType="com.sogal.wx.core.dao.domain.design.WechatDesignDTO">
+        SELECT <include refid="wechatDesignAllColumn"/>,wd.IMAGE_NUM ,wi.IMAGE_URL,wi.REDUCE_URL,
+        designer.AVATAR_URL as designerAvatarUrl,
+        (SELECT COUNT(*) FROM <include refid="mpUserRegisterTableName"/> mur WHERE mur.ENTITY_ID = wd.ID) AS actualSignupNumStr
+        FROM <include refid="tableName"/> wd
+        LEFT JOIN <include refid="wechatImageName"/> wi ON wd.COVER = wi.ID
+        LEFT JOIN <include refid="articleTableName"/> wa ON wd.DESCRIBE_ARTICLE = wa.ID
+        LEFT JOIN <include refid="wechatDesignerTableName"/> designer ON  wd.DESIGNER = designer.ID
+        <if test="queryCondition.signIds!=null and queryCondition.signIds.size()>0">
+            <foreach collection="queryCondition.signIds" index="index" item="item">
+              INNER JOIN <include refid="cmsTagBindingTableName"/> AS WSSB${index}
+                ON WSSB${index}.REALM_ID = wd.ID AND WSSB${index}.REALM = 'WECHAT_DESIGN' AND WSSB${index}.SIGN_ID = #{item}
+            </foreach>
+        </if>
+        <include refid="findDesignsPagedQueryConditionAtC"/>
+
+        <choose>
+            <when test="queryCondition.orderMethod != null and queryCondition.orderMethod.name() == 'HOT_LEVEL'">
+                ORDER BY  wd.HOT_LEVEL DESC
+            </when>
+            <when test="queryCondition.orderMethod != null and queryCondition.orderMethod.name() == 'PUBLISH_TIME'">
+                ORDER BY  wd.PUBLISH_TIME DESC
+            </when>
+            <when test="queryCondition.orderMethod != null and queryCondition.orderMethod.name() == 'L_PRICE_ASC'">
+                ORDER BY  wd.L_PRICE ASC
+            </when>
+            <when test="queryCondition.orderMethod != null and queryCondition.orderMethod.name() == 'L_PRICE_DESC'">
+                ORDER BY  wd.L_PRICE DESC
+            </when>
+            <when test="queryCondition.orderMethod != null and queryCondition.orderMethod.name() == 'GENERAL'">
+                ORDER BY wd.SORTED DESC , wd.HOT_LEVEL DESC ,wd.PUBLISH_TIME DESC
+            </when>
+            <otherwise>
+                ORDER BY wd.SORTED DESC , wd.HOT_LEVEL DESC ,wd.PUBLISH_TIME DESC
+            </otherwise>
+        </choose>
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <select id="countDesignsPagedByQueryConditionAtC" parameterType="map" resultType="int">
+        SELECT COUNT(wd.ID)
+        FROM <include refid="tableName"/> wd
+        LEFT JOIN <include refid="articleTableName"/> wa ON wd.DESCRIBE_ARTICLE = wa.ID
+        <if test="queryCondition.signIds!=null and queryCondition.signIds.size()>0">
+            <foreach collection="queryCondition.signIds" index="index" item="item">
+                INNER JOIN <include refid="cmsTagBindingTableName"/> AS WSSB${index}
+                ON WSSB${index}.REALM_ID = wd.ID AND WSSB${index}.REALM = 'WECHAT_DESIGN' AND WSSB${index}.SIGN_ID = #{item}
+            </foreach>
+        </if>
+        <include refid="findDesignsPagedQueryConditionAtC"/>
+    </select>
+
+    <update id="updateDesignHotLevel" parameterType="map">
+        UPDATE
+        <include refid="tableName"/>
+        SET HOT_LEVEL = #{changeDesignHotLevel.hotLevel},
+        UPDATOR = #{changeDesignHotLevel.updator}
+        WHERE ID = #{changeDesignHotLevel.id}
+    </update>
+
+    <update id="updateDesignsIndexNum" parameterType="map">
+        UPDATE
+        <include refid="tableName"/>
+        SET
+        <if test="changeDesignIndexNum.viewNum != null">
+            VIEW_NUM = #{changeDesignIndexNum.viewNum},
+        </if>
+        <if test="changeDesignIndexNum.collectNum != null">
+            COLLECT_NUM = #{changeDesignIndexNum.collectNum},
+        </if>
+        <if test="changeDesignIndexNum.shareNum != null">
+            SHARE_NUM = #{changeDesignIndexNum.shareNum},
+        </if>
+        <if test="changeDesignIndexNum.praiseNum != null">
+            PRAISE_NUM = #{changeDesignIndexNum.praiseNum},
+        </if>
+        <if test="changeDesignIndexNum.sorted != null">
+            SORTED = #{changeDesignIndexNum.sorted},
+        </if>
+        <if test="changeDesignIndexNum.signupNum != null">
+            SIGNUP_NUM = #{changeDesignIndexNum.signupNum},
+        </if>
+        UPDATOR = #{changeDesignIndexNum.updator}
+        WHERE ID = #{changeDesignIndexNum.id}
+    </update>
+
+    <select id="findHotLevelForRecommend" resultType="com.sogal.wx.core.dao.domain.design.WechatDesignScore">
+        SELECT ID AS designId, HOT_LEVEL AS score FROM <include refid="tableName"/> WHERE VALID = 1 AND SHOW_LEVEL = 'PUBLIC'
+    </select>
+
+    <update id="synchronousHotLevel">
+      UPDATE <include refid="cmsArticleTableName"/> AS WD, CMS_ARTICLE_SCORE AS WDS SET WD.HOT_LEVEL = WDS.SCORE WHERE WD.ID = WDS.DESIGN_ID
+    </update>
+
+    <select id="findDesignsForBanner" parameterType="com.sogal.wx.core.dao.domain.design.DesignForBanner"
+            resultType="com.sogal.wx.core.dao.domain.design.WechatDesign">
+        SELECT ${columns} FROM <include refid="tableName"/> WHERE SHOW_LEVEL = 'PUBLIC' AND VALID = 1
+        ORDER BY TIME_CREATED DESC LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="findRecommendDesignBySysSigns" resultType="com.sogal.wx.core.dao.domain.design.WechatDesign">
+        SELECT DISTINCT WD.ID, WD.DESIGN_NO, WD.HOUSE_TYPE, WD.DESIGNER, WD.DESIGNER_NAME, WD.TITLE, WI.IMAGE_URL AS cover
+        FROM <include refid="tableName"/> AS WD LEFT JOIN <include refid="cmsImageTableName"/> AS WI ON WD.COVER = WI.ID WHERE WD.VALID = 1  AND
+        WD.SHOW_LEVEL = 'PUBLIC' AND WD.ID != #{designId}
+        <if test="dto.category != null">
+            AND WD.CATEGORY = #{dto.category}
+        </if>
+        <if test="dto.topicId != null">
+            AND WD.TOPIC_ID = #{dto.topicId}
+        </if>
+        <if test="dto.kind != null">
+            AND WD.KIND = #{dto.kind}
+        </if>
+        <if test="designs != null and designs.size() > 0">
+            AND WD.ID NOT IN (
+              <foreach collection="designs" item="item" separator="," index="index" >
+                  #{item.id}
+              </foreach>
+            )
+        </if>
+        ORDER BY WD.SORTED DESC , WD.HOT_LEVEL DESC , WD.TIME_CREATED
+        DESC LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <update id="publishDesigns" parameterType="map">
+        UPDATE
+        <include refid="tableName"/>
+        SET SHOW_LEVEL = #{wechatDesign.showLevel},
+        HOT_LEVEL = (SELECT t1.HOT_LEVEL FROM (SELECT (IFNULL(MAX(t.HOT_LEVEL),0)+1) as HOT_LEVEL FROM <include refid="cmsArticleTableName"/> t)t1),
+        UPDATOR = #{wechatDesign.updater},
+        PUBLISH_TIME = now()
+        WHERE SHOW_LEVEL <![CDATA[ <> ]]> 'PUBLIC' AND ID IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+        #{id}
+        </foreach>
+    </update>
+
+    <update id="cancelPublish" parameterType="map">
+        UPDATE
+        <include refid="tableName"/>
+        SET SHOW_LEVEL = #{wechatDesign.showLevel},
+        UPDATOR = #{wechatDesign.updater},
+        PUBLISH_TIME = NULL
+        WHERE SHOW_LEVEL <![CDATA[ <> ]]> 'PRIVATE' AND ID IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+
+
+    <select id="findDesignBasicInfoById" parameterType="java.lang.String" resultType="com.sogal.wx.core.dao.domain.design.WechatDesign">
+        SELECT <include refid="wechatDesignAllColumn"/>
+        FROM <include refid="tableName"/> wd
+        WHERE wd.ID = #{id}
+    </select>
+
+
+    <select id="findSignBindingEntities" resultType="com.sogal.wx.core.dao.domain.sign.SignBindingEntity">
+        SELECT WD.ID AS realmId, WD.DESIGN_NO as remark4, WD.TITLE AS remark1, WI.IMAGE_URL AS coverUrl, WA.CONTENT_SYLLABUS AS remark2
+        FROM <include refid="cmsArticleTableName"/> AS WD
+        LEFT JOIN <include refid="cmsArticleRighTextTableName"/> AS WA ON WD.DESCRIBE_ARTICLE = WA.ID
+        LEFT JOIN <include refid="cmsImageTableName"/> AS WI ON WD.COVER = WI.ID
+        WHERE WD.ID IN
+        <foreach collection="list" open="(" close=")" separator="," index="index" item="item">
+            #{item}
+        </foreach>
+        <if test="title!=null">
+            AND (WD.TITLE LIKE CONCAT('%',#{title}, '%') OR WA.CONTENT_SYLLABUS LIKE CONCAT('%',#{title}, '%'))
+        </if>
+    </select>
+
+    <update id="replaceWechatDesignCoverId" parameterType="java.lang.String">
+        UPDATE <include refid="tableName"/> SET `COVER` = #{cover} WHERE ID = #{id}
+    </update>
+
+    <update id="replaceWechatDesignPosterId" parameterType="java.lang.String">
+        UPDATE <include refid="tableName"/> SET `POSTER` = #{poster} WHERE ID = #{id}
+    </update>
+
+    <sql id="findMyCollectCondition">
+         WHERE mc.USER_ID = #{userId} AND mc.REALM = 'WECHAT_DESIGN' AND wd.KIND = #{kind}
+    </sql>
+
+    <select id="findMyCollect" parameterType="com.sogal.wx.core.dao.domain.mine.MyCollectDTO"
+            resultType="com.sogal.wx.core.dao.domain.mine.MineCollect">
+        SELECT <include refid="wechatDesignAllColumn"/>,wi.IMAGE_URL as coverUrl,wi.REDUCE_URL as coverReduceUrl,wd.IMAGE_NUM
+        FROM <include refid="myCollectionTableName"/> mc
+        INNER JOIN <include refid="tableName"/>wd ON mc.REALM_ID = wd.ID
+        LEFT JOIN <include refid="wechatImageName"/> wi ON wd.COVER = wi.ID
+        LEFT JOIN <include refid="articleTableName"/> wa ON wd.DESCRIBE_ARTICLE = wa.ID
+       <include refid="findMyCollectCondition"/>
+        ORDER BY mc.TIME_CREATED DESC LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="findMyCollectTotal" parameterType="com.sogal.wx.core.dao.domain.mine.MyCollectDTO" resultType="int">
+        SELECT count(*)
+        FROM  <include refid="myCollectionTableName"/>mc
+        INNER JOIN <include refid="tableName"/>wd ON mc.REALM_ID = wd.ID
+        <include refid="findMyCollectCondition"/>
+    </select>
+
+    <select id="findDesignBasicInfo" parameterType="com.sogal.wx.core.dao.domain.design.QueryDesignNotLoginCondition"
+            resultType="com.sogal.wx.core.dao.domain.design.WechatDesignBasicInfo">
+        SELECT wd.DESIGN_NO,wd.TITLE,wd.KIND,wi.`IMAGE_URL` as coverUrl,wi.`REDUCE_URL` as coverReduceUrl,
+        wip.`IMAGE_URL` as `posterUrl`,wip.`REDUCE_URL` as `posterReduceUrl`
+        FROM <include refid="tableName"/> wd
+        LEFT JOIN <include refid="wechatImageName"/> wi ON wd.COVER = wi.ID
+        LEFT JOIN <include refid="wechatImageName"/> wip ON wd.POSTER = wip.ID
+        WHERE wd.DESIGN_NO = #{designNo}
+        LIMIT 1
+    </select>
+
+    <select id="findDesignsByTemplateId"  parameterType="java.lang.String" resultType="com.sogal.wx.core.dao.domain.design.WechatDesignDTO">
+        SELECT <include refid="wechatDesignAllColumn"/>
+        FROM <include refid="tableName"/> wd
+        WHERE wd.TEMPLATE_ID = #{templateId}  AND wd.FORMALED = 1
+    </select>
+
+    <select id="findAllDesign" resultType="com.sogal.wx.core.dao.domain.design.WechatDesign">
+        SELECT <include refid="wechatDesignAllColumn"/>
+        FROM <include refid="tableName"/> wd WHERE wd.FORMALED = 1
+    </select>
+
+    <select id="findDesignByDesignerId" parameterType="java.lang.String" resultType="com.sogal.wx.core.dao.domain.design.WechatDesign">
+        SELECT <include refid="wechatDesignAllColumn"/>
+        FROM <include refid="tableName"/> wd
+        WHERE wd.DESIGNER = #{designerId}
+    </select>
+
+    <insert id="batchInsertDesignIndexNum" parameterType="com.sogal.wx.core.dao.domain.design.DesignIndexNum">
+        INSERT INTO DESIGN_INDEX_NUM(
+            `ID`,
+            `DESIGN_ID`,
+            `VIEW_NUM`,
+            `COLLECT_NUM`,
+            `SHARE_NUM`,
+            `PRAISE_NUM`,
+            `SYNC_DATE`
+        )VALUES
+        <foreach collection="list" item="item" separator="," index="index">
+            (
+            #{item.id},
+            #{item.designId},
+            #{item.viewNum},
+            #{item.collectNum},
+            #{item.shareNum},
+            #{item.praiseNum},
+            CURRENT_DATE ()
+            )
+        </foreach>
+    </insert>
+
+    <insert id="batchInsertDesignSpecialIndexNum" parameterType="com.sogal.wx.core.dao.domain.design.DesignIndexNum">
+        REPLACE INTO CMS_ARTICLE_STAT(
+        `ID`,
+        `DESIGN_ID`,
+        `VIEW_NUM`,
+        `COLLECT_NUM`,
+        `SHARE_NUM`,
+        `PRAISE_NUM`,
+        `SYNC_DATE`
+        )VALUES
+        <foreach collection="list" item="item" separator="," index="index">
+            (
+            #{item.id},
+            #{item.designId},
+            #{item.viewNum},
+            #{item.collectNum},
+            #{item.shareNum},
+            #{item.praiseNum},
+            CURRENT_DATE ()
+            )
+        </foreach>
+    </insert>
+
+    <select id="countByUniqueNoId" resultType="int">
+        SELECT COUNT(*)
+        FROM <include refid="cmsArticleTableName"/>
+        WHERE UNIQUE_NO = #{uniqueNo}
+        <if test="id != null">
+            AND ID <![CDATA[ <> ]]> #{id}
+        </if>
+    </select>
+
+</mapper>

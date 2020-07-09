@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.UserPromotionIdentifyCardMapper">
+
+    <sql id="tableName">`USER_PROMOTION_IDENTIFY_CARD`</sql>
+
+    <sql id="userPromotionContractTableName">`USER_PROMOTION_CONTRACT`</sql>
+
+    <select id="selectUserPromotionIdentifyCardById"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionIdentifyCard">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE UNION_ID = #{id}
+    </select>
+
+    <select id="selectUserPromotionIdentifyCardByIdentityCode"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionIdentifyCard">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE IDENTITY_CODE = #{identityCode}
+    </select>
+
+    <insert id="addUserPromotionIdentifyCardBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserPromotionIdentifyCard">
+        INSERT INTO
+        <include refid="tableName"/>
+        (`UNION_ID`, `STATUS`, `NAME`, `IDENTITY_CODE`, `FRONT_URL`, `BACK_URL`, `SIGN_DT`, `INVALID_DT`,
+        `TIME_CREATED`)
+        VALUES (#{unionId}, #{status}, #{name}, #{identityCode}, #{frontUrl}, #{backUrl}, #{signDt}, #{invalidDt},
+        #{timeCreated})
+        ON DUPLICATE KEY UPDATE
+        `STATUS` = VALUES(`STATUS`),
+        `NAME` = VALUES(`NAME`),
+        `IDENTITY_CODE` = VALUES(`IDENTITY_CODE`),
+        `FRONT_URL` = VALUES(`FRONT_URL`),
+        `BACK_URL` = VALUES(`BACK_URL`),
+        `SIGN_DT` = VALUES(`SIGN_DT`),
+        `INVALID_DT` = VALUES(`INVALID_DT`),
+        `TIME_CREATED` = VALUES(`TIME_CREATED`)
+    </insert>
+
+    <update id="updateUserPromotionIdentifyCardById"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserPromotionIdentifyCard">
+        UPDATE
+        <include refid="tableName"/>
+        <set>
+            <if test="status != null">
+                `STATUS` = #{status},
+            </if>
+            <if test="name != null and name != ''">
+                `NAME` = #{name},
+            </if>
+            <if test="identityCode != null and identityCode != ''">
+                `IDENTITY_CODE` = #{identityCode},
+            </if>
+            <if test="frontUrl != null and frontUrl != ''">
+                `FRONT_URL` = #{frontUrl},
+            </if>
+            <if test="backUrl != null and backUrl != ''">
+                `BACK_URL` = #{backUrl},
+            </if>
+            <if test="signDt != null and signDt != ''">
+                `SIGN_DT` = #{signDt},
+            </if>
+            <if test="invalidDt != null and invalidDt != ''">
+                `INVALID_DT` = #{invalidDt},
+            </if>
+            <if test="bankStatus != null">
+                `BANK_STATUS` = #{bankStatus},
+            </if>
+            <if test="accountNo != null and accountNo != ''">
+                `ACCOUNT_NO` = #{accountNo},
+            </if>
+            <if test="accountBank != null and accountBank != ''">
+                `ACCOUNT_BANK` = #{accountBank},
+            </if>
+            <if test="aesId != null and aesId != ''">
+                `AES_ID` = #{aesId},
+            </if>
+        </set>
+        WHERE `UNION_ID` = #{unionId}
+    </update>
+
+    <update id="updateUserPromotionIdentifyCardByIdentityCode"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserPromotionIdentifyCard">
+        UPDATE
+        <include refid="tableName"/>
+        <set>
+            <if test="status != null">
+                `STATUS` = #{status},
+            </if>
+            <if test="name != null and name != ''">
+                `NAME` = #{name},
+            </if>
+            <if test="frontUrl != null and frontUrl != ''">
+                `FRONT_URL` = #{frontUrl},
+            </if>
+            <if test="backUrl != null and backUrl != ''">
+                `BACK_URL` = #{backUrl},
+            </if>
+            <if test="signDt != null and signDt != ''">
+                `SIGN_DT` = #{signDt},
+            </if>
+            <if test="invalidDt != null and invalidDt != ''">
+                `INVALID_DT` = #{invalidDt},
+            </if>
+            <if test="bankStatus != null">
+                `BANK_STATUS` = #{bankStatus},
+            </if>
+            <if test="accountNo != null and accountNo != ''">
+                `ACCOUNT_NO` = #{accountNo},
+            </if>
+            <if test="accountBank != null and accountBank != ''">
+                `ACCOUNT_BANK` = #{accountBank},
+            </if>
+            <if test="aesId != null and aesId != ''">
+                `AES_ID` = #{aesId},
+            </if>
+        </set>
+        WHERE `IDENTITY_CODE` = #{identityCode}
+    </update>
+
+    <select id="selectUserPromotionSignInfoByUnionId"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionSignInfo">
+        SELECT upic.`STATUS` AS status, upic.`NAME` AS name, upic.`IDENTITY_CODE` AS identityCode,
+        upic.`INVALID_DT` AS invalidDt, upic.`BANK_STATUS` AS bankStatus, upic.`ACCOUNT_NO` AS accountNo,
+        upic.`ACCOUNT_BANK` AS accountBank, upc.`AES_ID` AS aesId, upc.`STATUS` AS SignStatus,
+        upc.`SIGN_DT` AS contractSignDt, upc.`INVALID_DT` AS contractInvalidDt, upc.`FILE_URL` AS contractUrl
+        FROM
+        <include refid="tableName"/>
+        upic
+        LEFT JOIN
+        <include refid="userPromotionContractTableName"/>
+        upc
+        ON upic.AES_ID = upc.AES_ID
+        WHERE upic.`UNION_ID` = #{unionId}
+    </select>
+
+</mapper>

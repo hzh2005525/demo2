@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatSysSignTypeMapper">
+    <sql id="tableName">`CMS_TAG_GROUP`</sql>
+    <sql id="cmsTagGroupTableName">`CMS_TAG_GROUP`</sql>
+
+    <insert id="addSysSignType" parameterType="com.sogal.wx.core.dao.domain.sign.SysSignType">
+        INSERT INTO <include refid="tableName"/> (
+          ID,
+          `TYPE`,
+          `VALUE`,
+          CREATOR,
+          UPDATOR,
+          ST_COVER_URL,
+          `SORT`
+        ) VALUES (
+          #{id},
+          #{type},
+          #{value},
+          #{creator},
+          #{updater},
+          #{stCoverUrl},
+          (SELECT (IFNULL(MAX(t.SORT),0)+1) as SORT FROM <include refid="cmsTagGroupTableName"/> t)
+        )
+    </insert>
+    <sql id="commonColumns">
+         wsst.ID,
+         wsst.`TYPE`,
+         wsst.`VALUE`,
+         wsst.CATEGORY,
+         wsst.ST_COVER_URL,
+         wsst.SORT,
+         wsst.SHOW_VALID
+    </sql>
+
+    <select id="findSysSignTypeWithCategory" resultType="com.sogal.wx.core.dao.domain.sign.SysSignType">
+        SELECT ID, `TYPE`, `VALUE`, `CATEGORY`,`ST_COVER_URL`, `SHOW_VALID`
+        FROM <include refid="tableName"/> wsst
+        ORDER BY wsst.SORT
+    </select>
+    <select id="findSysSignTypeWithCategoryId" resultType="com.sogal.wx.core.dao.domain.sign.SysSignType">
+        SELECT ID, `TYPE`, `VALUE`, `CATEGORY`,`ST_COVER_URL`,`SHOW_VALID` FROM <include refid="tableName"/>   WHERE ID=#{id} AND CATEGORY=#{category}
+    </select>
+    <select id="findSysSignTypeById" resultType="com.sogal.wx.core.dao.domain.sign.SysSignType">
+        SELECT <include refid="commonColumns"/> FROM <include refid="tableName"/> wsst  WHERE ID=#{id}
+    </select>
+
+    <select id="findShowSignTypesByCondition" resultType="com.sogal.wx.core.dao.domain.sign.SysSignTypeResultAtC">
+        SELECT ID, `TYPE`, `VALUE`, `CATEGORY`,`ST_COVER_URL` FROM <include refid="tableName"/>
+        WHERE `SHOW_VALID` = 1
+        ORDER BY SORT
+    </select>
+
+    <select id="findSysSignTypeExisted" resultType="int">
+        SELECT COUNT(*)
+        FROM <include refid="tableName"/> wsst
+        WHERE  wsst.CATEGORY=#{category} AND wsst.TYPE =#{type}
+        <if test="id != null">
+           AND wsst.ID <![CDATA[ <> ]]>  #{id}
+        </if>
+    </select>
+    <select id="querySysSignTypeExisted" resultType="int">
+        SELECT COUNT(*)
+        FROM <include refid="tableName"/> wsst
+        WHERE  wsst.TYPE =#{type}
+        <if test="id != null">
+            AND wsst.ID <![CDATA[ <> ]]>  #{id}
+        </if>
+    </select>
+
+    <update id="updateSysSignType" parameterType="com.sogal.wx.core.dao.domain.sign.SysSignType">
+        UPDATE <include refid="tableName"/> SET
+        <if test="type != null">
+            `TYPE`=#{type},
+        </if>
+        `VALUE`=#{value}, `ST_COVER_URL`=#{stCoverUrl},
+        UPDATOR=#{updater} WHERE ID = #{id}
+    </update>
+    <update id="updateSysSignTypeShowValid" parameterType="com.sogal.wx.core.dao.domain.sign.SysSignType">
+        UPDATE <include refid="tableName"/> SET `SHOW_VALID`=#{showValid}, UPDATOR=#{updater} WHERE ID = #{id}
+    </update>
+    <update id="updateSysSignTypeSortToMax">
+        UPDATE <include refid="tableName"/>
+        SET `SORT` =  (SELECT t1.SORT FROM (SELECT (IFNULL(MAX(t.SORT),0)+1) as SORT FROM <include refid="cmsTagGroupTableName"/> t)t1),
+        UPDATOR=#{updater}
+        WHERE ID = #{id}
+    </update>
+    <update id="updateSysSignTypeSort">
+        UPDATE <include refid="tableName"/> SET `SORT` =  #{sort} WHERE ID = #{id}
+    </update>
+
+    <delete id="deleteSysSignType">
+        DELETE FROM <include refid="tableName"/> WHERE ID = #{id}
+    </delete>
+
+    <select id="findltTargetSortedSignTypeIds" resultType="java.lang.String">
+        SELECT
+        `ID`
+        FROM <include refid="tableName"/>
+        WHERE `SORT`  <![CDATA[< ]]> #{sort}
+    </select>
+    <select id="findmtTargetSortedSignTypeIds" resultType="java.lang.String">
+        SELECT
+        `ID`
+        FROM <include refid="tableName"/>
+        WHERE `SORT` <![CDATA[> ]]> #{sort}
+    </select>
+    <update id="subSignTypesortedltTargetSorted">
+        UPDATE <include refid="tableName"/> SET `SORT` =  (SORT-1)
+        WHERE `ID` IN (
+        <foreach collection="ids" item="item" separator="," index="index">
+            #{item}
+        </foreach>
+        )
+    </update>
+    <update id="addSignTypesortedmtTargetSorted">
+        UPDATE <include refid="tableName"/> SET `SORT` =  (SORT + 1)
+        WHERE `ID` IN (
+        <foreach collection="ids" item="item" separator="," index="index">
+            #{item}
+        </foreach>
+        )
+    </update>
+</mapper>

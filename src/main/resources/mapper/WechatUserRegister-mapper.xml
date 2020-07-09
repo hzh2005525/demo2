@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatUserRegisterMapper">
+
+    <sql id="tableName">`MP_USER_REGISTER`</sql>
+
+    <sql id="mpUserRegisterTableName">`MP_USER_REGISTER`</sql>
+
+    <sql id="cmsArticleTableName">`CMS_ARTICLE`</sql>
+
+    <sql id="mpAccessRecordTableName">`MP_ACCESS_RECORD`</sql>
+
+    <sql id="mpUserSignupBrandTableName">`MP_USER_SIGNUP_BRAND`</sql>
+
+    <update id="updateConvertStatus">
+        UPDATE
+        <include refid="tableName"/>
+        SET STATUS = #{convertStatus}, SEND_TIME = now() WHERE ID = #{id}
+    </update>
+
+
+    <resultMap id="MyUserInfoSignUpedResultMap" type="com.sogal.wx.core.dao.domain.mine.MyUserInfoSignUpedResult">
+        <result column="ID" property="id"></result>
+        <result column="TIME_CREATED" property="timeCreated"></result>
+        <result column="USER_ID" property="userId"></result>
+        <result column="NAME" property="name"></result>
+        <result column="MOBILE" property="mobile"></result>
+        <result column="USER_PROVINCE" property="userProvince"></result>
+        <result column="USER_CITY" property="userCity"></result>
+        <result column="USER_AREA" property="userArea"></result>
+        <result column="USER_ADDR" property="userAddr"></result>
+        <result column="AVATAR_URL" property="avatarUrl"></result>
+        <result column="IS_EMISSARY" property="isEmissary"></result>
+        <result column="sourcePage" property="sourcePage"></result>
+        <result column="ENTITY_ID" property="entityId"></result>
+        <result column="STAGE" property="stage"></result>
+        <association property="userRequire"
+                     select="com.sogal.wx.core.dao.mapper.UserRequireMapper.selectUserRequireInfoByRegisterId"
+                     column="{registerId = id}" fetchType="eager">
+        </association>
+
+    </resultMap>
+    <select id="findMyUserMpSignUpInfoAtAdmin" parameterType="com.sogal.wx.core.dao.domain.mine.MyUserInfoSignUped"
+            resultMap="MyUserInfoSignUpedResultMap">
+        SELECT wur.ID,wur.TIME_CREATED,wur.USER_ID,wur.NAME,wur.MOBILE,wur.`USER_PROVINCE`, wur.`USER_CITY`,
+        wur.`USER_AREA`, wur.`USER_ADDR`, wur.`STAGE`,
+        um.AVATAR_URL,ui.IS_EMISSARY, wd.`TITLE` as sourcePage,wur.ENTITY_ID
+        FROM
+        <include refid="tableName"/>
+        wur
+        LEFT JOIN MP_USER um ON wur.USER_ID = um.ID
+        LEFT JOIN USER_AUTH_BASE ui ON um.UNION_ID = ui.UNION_ID
+        LEFT JOIN
+        <include refid="cmsArticleTableName"/>
+        wd ON wur.ENTITY_ID = wd.ID
+        WHERE wur.SHARER_NO = (SELECT USER_NO FROM MP_USER t WHERE t.ID = #{userId})
+        <include refid="findMyUserSignUpInfoAtAdminCondition"/>
+        ORDER BY wur.TIME_CREATED DESC
+        LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="countMyUserMpSignUpInfoTotalSizeAtAdmin"
+            parameterType="com.sogal.wx.core.dao.domain.mine.MyUserInfoSignUped"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM
+        <include refid="tableName"/>
+        wur
+        WHERE wur.SHARER_NO = (SELECT USER_NO FROM MP_USER t WHERE t.ID = #{userId})
+        <include refid="findMyUserSignUpInfoAtAdminCondition"/>
+    </select>
+
+    <sql id="findMyUserSignUpInfoAtAdminCondition">
+        <if test="dateCreatedBegin != null">
+            AND wur.TIME_CREATED <![CDATA[>= ]]> #{dateCreatedBegin}
+        </if>
+        <if test="dateCreatedEnd != null">
+            AND wur.TIME_CREATED <![CDATA[<= ]]> #{dateCreatedEnd}
+        </if>
+    </sql>
+
+    <insert id="insertWechatUserRegister">
+        INSERT IGNORE INTO
+        <include refid="tableName"/>
+        (
+        `ID`,
+        `USER_NO`,
+        `USER_ID`,
+        `MOBILE`,
+        `NAME`,
+        `USER_PROVINCE`,
+        `USER_CITY`,
+        `USER_AREA`,
+        `USER_ADDR`,
+        `CATEGORY`,
+        `ENTITY_ID`,
+        `SHARER_NO`
+        )VALUES(
+        #{id},
+        #{userNo},
+        #{userId},
+        #{mobile},
+        #{name},
+        #{userProvince},
+        #{userCity},
+        #{userArea},
+        #{userAddr},
+        #{category},
+        #{entityId},
+        #{sharerNo}
+        )
+    </insert>
+
+    <select id="findUserFillBaseInfoLast" parameterType="com.sogal.wx.core.dao.domain.user.WechatUserRegisterDTO"
+            resultType="com.sogal.wx.core.dao.domain.user.WechatUserFillBasicInfo">
+        SELECT wur.`ID`,wur.`NAME`,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+        (CASE WHEN urs.`MOBILE` IS NULL THEN um.`MOBILE`
+        ELSE urs.`MOBILE` END)
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+        (CASE WHEN uro.`MOBILE` IS NULL THEN um.`MOBILE`
+        ELSE uro.`MOBILE` END)
+        ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN um.`MOBILE`
+        ELSE urc.`MOBILE` END) END AS mobile,
+        wur.`USER_PROVINCE`,
+        wur.`USER_CITY`,
+        wur.`USER_AREA`,
+        wur.`USER_ADDR`
+        FROM
+        <include refid="tableName"/>
+        wur
+        LEFT JOIN MP_USER um ON wur.USER_ID = um.ID
+        LEFT JOIN USER_AUTH_BASE ui ON um.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        WHERE
+        wur.USER_NO = #{userNo} AND wur.CATEGORY = #{category}
+        ORDER BY wur.TIME_CREATED DESC
+        LIMIT 1
+    </select>
+
+    <select id="findMyCustomerRegisterTotal" parameterType="com.sogal.wx.core.dao.domain.mine.MyRecordDTO"
+            resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM
+        <include refid="tableName"/>
+        AS WUR
+        <include refid="findMyCustomerRegister"/>
+    </select>
+
+    <sql id="findMyCustomerRegister">
+        WHERE WUR.USER_ID IN (
+        <foreach collection="customer" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+        ) AND WUR.TIME_CREATED &gt; #{startTime} AND WUR.TIME_CREATED &lt; #{endTime}
+    </sql>
+
+    <select id="findMyVisitorRegisterTotal" parameterType="com.sogal.wx.core.dao.domain.mine.MyRecordDTO"
+            resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM
+        <include refid="tableName"/>
+        AS WUR
+        <include refid="findMyRegister"/>
+    </select>
+
+    <sql id="findMyRegister">
+        WHERE WUR.SHARER_NO = #{servent}  AND WUR.TIME_CREATED &gt; #{startTime} AND WUR.TIME_CREATED &lt; #{endTime}
+    </sql>
+
+    <select id="findMyCustomerRegisters" parameterType="com.sogal.wx.core.dao.domain.mine.MyRecordDTO"
+            resultType="com.sogal.wx.core.dao.domain.mine.MineCustomer">
+        SELECT
+        MP.ID,
+        MP.USER_NO,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS name,
+        WUR.MOBILE,
+        MP.NICKNAME,
+        MP.AVATAR_URL,
+        WUR.TIME_CREATED,
+        WUR.VALID,
+        WUR.INVALID_REASON,
+        CASE MP.GENDER
+        WHEN '1' THEN '男'
+        WHEN '2' THEN '女'
+        ELSE '未知' END AS gender
+        FROM
+        <include refid="tableName"/>
+        AS WUR
+        LEFT JOIN MP_USER AS MP ON WUR.USER_ID = MP.ID
+        LEFT JOIN USER_AUTH_BASE ui ON MP.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        <include refid="findMyCustomerRegister"/>
+        ORDER BY WUR.TIME_CREATED DESC LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="findMyVisitorRegisters" parameterType="com.sogal.wx.core.dao.domain.mine.MyRecordDTO"
+            resultType="com.sogal.wx.core.dao.domain.mine.MineCustomer">
+        SELECT
+        MP.ID,
+        MP.USER_NO,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME`
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME`
+        ELSE urc.`NAME` END AS name,
+        WUR.MOBILE,
+        MP.NICKNAME,
+        MP.AVATAR_URL,
+        WUR.TIME_CREATED,
+        WUR.VALID,
+        WUR.STAGE,
+        WUR.INVALID_REASON,
+        CASE MP.GENDER
+        WHEN '1' THEN '男'
+        WHEN '2' THEN '女'
+        ELSE '未知' END AS gender,
+        (SELECT COUNT(*) FROM
+        <include refid="mpAccessRecordTableName"/>
+        t WHERE WUR.USER_ID = t.VISITOR AND t.SERVANT=#{serventId}) AS clickTotal
+        FROM
+        <include refid="tableName"/>
+        AS WUR
+        LEFT JOIN MP_USER AS MP ON WUR.USER_ID = MP.ID
+        LEFT JOIN USER_AUTH_BASE ui ON MP.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        <include refid="findMyRegister"/>
+        ORDER BY WUR.TIME_CREATED DESC LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="findMySignUpInfo" resultType="com.sogal.wx.core.dao.domain.mine.MyInfoSignUpedResultAtAdmin">
+        SELECT wur.TIME_CREATED,wur.MOBILE,wur.`USER_PROVINCE`, wur.`USER_CITY`, wur.`USER_AREA`,
+        wur.`USER_ADDR`, wd.`TITLE` as sourcePage,wur.ENTITY_ID,
+        wu.ID as referrerId,wu.NICKNAME as referrerNickName
+        FROM
+        <include refid="tableName"/>
+        wur
+        LEFT JOIN MP_USER wu ON wur.SHARER_NO = wu.USER_NO
+        LEFT JOIN
+        <include refid="cmsArticleTableName"/>
+        wd ON wur.ENTITY_ID = wd.ID
+        WHERE wur.USER_ID = #{userId}
+        ORDER BY wur.TIME_CREATED DESC
+    </select>
+    <select id="findUserRegisterById" resultType="com.sogal.wx.core.dao.domain.user.WechatUserRegister">
+        SELECT *
+        FROM
+        <include refid="mpUserRegisterTableName"/>
+        WHERE ID = #{id}
+    </select>
+    <update id="markUserRegisterInvalid" parameterType="com.sogal.wx.core.dao.domain.user.WechatUserRegister">
+        UPDATE
+        <include refid="mpUserRegisterTableName"/>
+        SET STAGE ='INVALID',INVALID_REASON = #{invalidReason},INVALID_TIME = NOW()
+        WHERE ID = #{id}
+    </update>
+    <update id="updateEnrollStage" parameterType="com.sogal.wx.core.dao.domain.user.WechatUserRegister">
+        UPDATE
+        <include refid="mpUserRegisterTableName"/>
+        SET STAGE = #{stage},UPDATOR = #{updater}
+        <choose>
+            <when test="stage != null and stage.name() == 'INVALID' ">
+                ,INVALID_REASON = #{invalidReason},INVALID_TIME = NOW(),STORE_DATE = NULL
+            </when>
+            <when test="stage != null and stage.name() == 'MEASURE_STORE' ">
+                ,INVALID_REASON = NULL,INVALID_TIME = NULL,STORE_DATE = #{storeDate}
+            </when>
+            <otherwise>
+                ,INVALID_REASON = NULL,INVALID_TIME = NULL
+            </otherwise>
+        </choose>
+        WHERE ID = #{id}
+    </update>
+
+    <select id="countUserEnrollInfoByUserId" resultType="int">
+        SELECT COUNT(*) FROM
+        <include refid="mpUserRegisterTableName"/>
+        WHERE USER_ID = #{userId}
+    </select>
+
+    <select id="selectMpUserRegistersBySharerNoAndStage"
+            resultType="com.sogal.wx.core.dao.domain.user.WechatUserRegister">
+        SELECT `ID`, `USER_ID`, `SHARER_NO`, `STAGE`, `STORE_DATE`
+        FROM
+        <include refid="mpUserRegisterTableName"/>
+        WHERE `SHARER_NO` = #{sharerNo}
+        AND `STAGE` = #{stage}
+        AND DATE_FORMAT(`STORE_DATE`, '%Y-%m') = #{date}
+    </select>
+
+    <insert id="batchMpInsertUserSignupBrand" parameterType="java.util.List">
+        INSERT IGNORE INTO <include refid="mpUserSignupBrandTableName"/> (
+            ID,
+            USER_ID,
+            REGISTER_ID,
+            BRAND
+        ) VALUES
+        <foreach collection="list" index="index" separator="," item="item">
+            (
+            #{item.id},
+            #{item.userId},
+            #{item.registerId},
+            #{item.brand}
+            )
+        </foreach>
+    </insert>
+    <select id="findDspCustData72" resultType="com.sogal.wx.core.dao.domain.user.UserEssentialInfoDTO">
+        SELECT  mur.*,mur.ID AS registerId,mu.UNION_ID
+        FROM <include refid="mpUserRegisterTableName"/> mur
+        INNER JOIN MP_USER mu ON mur.USER_NO = mu.USER_NO
+        WHERE
+        mur.USER_CITY ='北京市' AND mur.`STATUS` IS NULL
+        AND mur.TIME_CREATED &gt; '2020-03-07'
+        AND mur.CATEGORY ='DESIGN'
+        ORDER BY mur.TIME_CREATED ASC
+        LIMIT 72
+    </select>
+    <select id="findUserSignupBrandByRegisterId" resultType="com.sogal.wx.core.dao.domain.user.UserSignupBrand">
+        SELECT  ID,USER_ID,REGISTER_ID,BRAND
+        FROM
+        <include refid="mpUserSignupBrandTableName"/>
+        WHERE REGISTER_ID = #{registerId}
+    </select>
+</mapper>

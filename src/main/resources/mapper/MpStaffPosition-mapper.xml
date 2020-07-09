@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.MpStaffPositionMapper">
+    <sql id="mpStaffPositionTableName">`MP_STAFF_POSITION`</sql>
+    <sql id="mpDataPrivilegeTableName">`MP_DATA_PRIVILEGE`</sql>
+
+    <insert id="insertMpStaffPosition"
+            parameterType="com.sogal.wx.core.dao.domain.position.MpStaffPosition">
+        INSERT IGNORE INTO <include refid="mpStaffPositionTableName"/> (
+            `ID`,
+            `STAFF_ID`,
+            `POSITION_ID`,
+            `EFFECTIVE_TIME`
+        ) VALUES (
+            #{id},
+            #{staffId},
+            #{positionId},
+            NOW()
+        )
+    </insert>
+    <update id="updateStaffPosition">
+        UPDATE <include refid="mpStaffPositionTableName"/>
+        SET POSITION_ID = #{positionId}
+        WHERE STAFF_ID = #{staffId} AND POSITION_ID = #{positionId}
+    </update>
+    <update id="updateStaffPositionById" parameterType="com.sogal.wx.core.dao.domain.position.MpStaffPosition">
+        UPDATE <include refid="mpStaffPositionTableName"/>
+        SET POSITION_ID = #{positionId}
+        WHERE ID = #{id}
+    </update>
+    <select id="findUserDataPrivilegeById"
+            resultType="com.sogal.wx.core.dao.domain.position.UserASDataPrivilege">
+        SELECT mdp.DATA_PRIVILEGE
+        FROM <include refid="mpStaffPositionTableName"/> msp
+        INNER JOIN <include refid="mpDataPrivilegeTableName"/> mdp ON msp.POSITION_ID = mdp.POSITION_ID
+        WHERE msp.STAFF_ID = #{staffId}
+    </select>
+
+    <select id="findMpStaffPositionByStaffId"
+            resultType="com.sogal.wx.core.dao.domain.position.MpStaffPosition">
+        SELECT msp.*
+        FROM <include refid="mpStaffPositionTableName"/> msp
+        WHERE msp.STAFF_ID = #{staffId}
+    </select>
+</mapper>

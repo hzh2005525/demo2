@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatCheckShareMapper">
+    <sql id="tableName">`MP_ACCESS_SHARE`</sql>
+
+    <insert id="addWechatCheckShare" parameterType="com.sogal.wx.core.dao.domain.share.WechatCheckShare">
+      INSERT INTO <include refid="tableName"/> (
+        ID,
+        METHOD,
+        `TYPE`,
+        SHARE_NO,
+        SHARER_NO,
+        CHECKER_NO,
+        NEWBEE,
+        SHARE_RECORD_ID
+      ) VALUES (
+        #{id},
+        #{method},
+        #{type},
+        #{shareNo},
+        #{sharerNo},
+        #{checkerNo},
+        #{newbee},
+        #{shareRecordId}
+      )
+    </insert>
+
+</mapper>

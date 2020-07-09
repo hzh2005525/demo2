@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.MpAccessTokenMapper">
+
+    <sql id="tableName">`MP_ACCESS_TOKEN`</sql>
+
+    <insert id="addMpAccessToken" parameterType="com.sogal.wx.core.dao.domain.mp.MpAccessToken">
+        INSERT INTO
+        <include refid="tableName"/>
+        (`ID`, `APP_ID`, `APP_SECRET`, `UNIQUE_CODE`, `NAME`, `ACCESS_TOKEN`,
+        `EXPIRES_TIME`, `NUM`, `IMG_URL`, `AUTHORITY`, `GZH_APPID`, `CREATOR`, `TIME_CREATED`)
+        VALUES
+        (#{id}, #{appId}, #{appSecret}, #{uniqueCode}, #{name}, #{accessToken},
+        #{expiresTime}, #{num}, #{imgUrl}, #{authority}, #{gzhAppid}, #{creator}, #{timeCreated})
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM
+        <include refid="tableName"/>
+        WHERE `ID` = #{id}
+    </delete>
+
+    <update id="updateMpAccessToken" parameterType="com.sogal.wx.core.dao.domain.mp.MpAccessToken">
+        UPDATE
+        <include refid="tableName"/>
+        SET `APP_ID` = #{appId},
+        `APP_SECRET` = #{appSecret},
+        `UNIQUE_CODE` = #{uniqueCode},
+        `NAME` = #{name},
+        `ACCESS_TOKEN` = #{accessToken},
+        `EXPIRES_TIME` = #{expiresTime},
+        `NUM` = #{num},
+        `IMG_URL` = #{imgUrl},
+        `AUTHORITY` = #{authority},
+        `GZH_APPID` = #{gzhAppid},
+        `TIME_CREATED` = #{timeCreated},
+        `UPDATER` = #{updater}
+        WHERE
+        `ID` = #{id}
+    </update>
+
+    <select id="list" resultType="com.sogal.wx.core.dao.domain.mp.MpAccessToken">
+        SELECT * FROM
+        <include refid="tableName"/>
+        ORDER BY `NUM` ASC, `TIME_UPDATED` DESC
+    </select>
+
+    <select id="selectByAppId" resultType="com.sogal.wx.core.dao.domain.mp.MpAccessToken">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE `APP_ID` = #{appId}
+    </select>
+
+</mapper>

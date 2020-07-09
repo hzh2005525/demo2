@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.UserExposeRewardCashMapper">
+
+    <sql id="tableName">`USER_EXPOSE_REWARD_CASH`</sql>
+
+    <insert id="addUserExposeRewardCashBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.expose.UserExposeRewardCash">
+        INSERT INTO
+        <include refid="tableName"/>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                `ID`,
+            </if>
+            <if test="mchAppid != null and mchAppid != ''">
+                `MCH_APPID`,
+            </if>
+            <if test="mchid != null and mchid != ''">
+                `MCHID`,
+            </if>
+            <if test="nonceStr != null and nonceStr != ''">
+                `NONCE_STR`,
+            </if>
+            <if test="cashAmount != null">
+                `CASH_AMOUNT`,
+            </if>
+            <if test="status != null">
+                `STATUS`,
+            </if>
+            <if test="partnerTradeNo != null and partnerTradeNo != ''">
+                `PARTNER_TRADE_NO`,
+            </if>
+            <if test="openid != null and openid != ''">
+                `OPENID`,
+            </if>
+            <if test="cashDesc != null and cashDesc != ''">
+                `CASH_DESC`,
+            </if>
+            <if test="spbillCreateIp != null and spbillCreateIp != ''">
+                `SPBILL_CREATE_IP`,
+            </if>
+            <if test="errCode != null and errCode != ''">
+                `ERR_CODE`,
+            </if>
+            <if test="paymentNo != null and paymentNo != ''">
+                `PAYMENT_NO`,
+            </if>
+            <if test="paymentTime != null and paymentTime != ''">
+                `PAYMENT_TIME`,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                #{id},
+            </if>
+            <if test="mchAppid != null and mchAppid != ''">
+                #{mchAppid},
+            </if>
+            <if test="mchid != null and mchid != ''">
+                #{mchid},
+            </if>
+            <if test="nonceStr != null and nonceStr != ''">
+                #{nonceStr},
+            </if>
+            <if test="cashAmount != null">
+                #{cashAmount},
+            </if>
+            <if test="status != null">
+                #{status},
+            </if>
+            <if test="partnerTradeNo != null and partnerTradeNo != ''">
+                #{partnerTradeNo},
+            </if>
+            <if test="openid != null and openid != ''">
+                #{openid},
+            </if>
+            <if test="cashDesc != null and cashDesc != ''">
+                #{cashDesc},
+            </if>
+            <if test="spbillCreateIp != null and spbillCreateIp != ''">
+                #{spbillCreateIp},
+            </if>
+            <if test="errCode != null and errCode != ''">
+                #{errCode},
+            </if>
+            <if test="paymentNo != null and paymentNo != ''">
+                #{paymentNo},
+            </if>
+            <if test="paymentTime != null and paymentTime != ''">
+                #{paymentTime},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateUserExposeRewardCashBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.expose.UserExposeRewardCash">
+        UPDATE
+        <include refid="tableName"/>
+        <set>
+            <if test="mchAppid != null and mchAppid != ''">
+                `MCH_APPID` = #{mchAppid},
+            </if>
+            <if test="mchid != null and mchid != ''">
+                `MCHID` = #{mchid},
+            </if>
+            <if test="nonceStr != null and nonceStr != ''">
+                `NONCE_STR` = #{nonceStr},
+            </if>
+            <if test="cashAmount != null">
+                `CASH_AMOUNT`= #{cashAmount},
+            </if>
+            <if test="status != null">
+                `STATUS`= #{status},
+            </if>
+            <if test="partnerTradeNo != null and partnerTradeNo != ''">
+                `PARTNER_TRADE_NO` = #{partnerTradeNo},
+            </if>
+            <if test="openid != null and openid != ''">
+                `OPENID`= #{openid},
+            </if>
+            <if test="cashDesc != null and cashDesc != ''">
+                `CASH_DESC` = #{cashDesc},
+            </if>
+            <if test="spbillCreateIp != null and spbillCreateIp != ''">
+                `SPBILL_CREATE_IP` = #{spbillCreateIp},
+            </if>
+            <if test="errCode != null">
+                `ERR_CODE` = #{errCode},
+            </if>
+            <if test="paymentNo != null and paymentNo != ''">
+                `PAYMENT_NO` = #{paymentNo},
+            </if>
+            <if test="paymentTime != null and paymentTime != ''">
+                `PAYMENT_TIME` = #{paymentTime},
+            </if>
+        </set>
+        WHERE `ID` = #{id}
+    </update>
+
+    <select id="findUserExposeRewardCashApplyCount" resultType="int">
+        SELECT COUNT(*)
+        FROM
+        <include refid="tableName"/>
+        WHERE MCH_APPID = #{mchAppid}
+        AND OPENID = #{openId}
+        AND TIME_CREATED >= #{todayStart} AND TIME_CREATED &lt;= #{todayEnd}
+    </select>
+
+    <select id="selectUserExposeRewardCashByStatusAndErrCode"
+            resultType="com.sogal.wx.core.dao.domain.expose.UserExposeRewardCash">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE STATUS = #{status}
+        AND ERR_CODE = #{errCode}
+    </select>
+
+</mapper>

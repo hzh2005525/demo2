@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatSpecialDesignMapper">
+    <sql id="tableName">`CMS_TOPIC_ARTICLE`</sql>
+
+    <insert id="insert" parameterType="com.sogal.wx.core.dao.domain.special.WechatSpecialDesign">
+        INSERT INTO
+        <include refid="tableName"/>
+        (
+        `ID`,
+        `SPECIAL_ID`,
+        `DESIGN_ID`,
+        `CREATOR`
+        )VALUES(
+        #{id},
+        #{specialId},
+        #{designId},
+        #{creator}
+        )
+    </insert>
+
+    <delete id="deleteBySpecialIdAndDesignId">
+        DELETE FROM
+        <include refid="tableName"/>
+        WHERE `SPECIAL_ID` = #{specialId} AND `DESIGN_ID` = #{designId}
+    </delete>
+
+</mapper>

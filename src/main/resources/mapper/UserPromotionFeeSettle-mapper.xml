@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.UserPromotionFeeSettleMapper">
+
+    <sql id="tableName">`USER_PROMOTION_FEE_SETTLE`</sql>
+
+    <sql id="userPromotionMonthRewardTableName">`USER_PROMOTION_MONTH_REWARD`</sql>
+
+    <insert id="addUserPromotionFeeSettleBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserPromotionFeeSettle">
+        INSERT INTO
+        <include refid="tableName"/>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                `ID`,
+            </if>
+            <if test="monthRewardId != null and monthRewardId != ''">
+                `MONTH_REWARD_ID`,
+            </if>
+            <if test="batchNum != null and batchNum != ''">
+                `BATCH_NUM`,
+            </if>
+            <if test="bourEmpNo != null and bourEmpNo != ''">
+                `BOUR_EMP_NO`,
+            </if>
+            <if test="targetServiceNo != null and targetServiceNo != ''">
+                `TARGET_SERVICE_NO`,
+            </if>
+            <if test="name != null and name != ''">
+                `NAME`,
+            </if>
+            <if test="identityCode != null and identityCode != ''">
+                `IDENTITY_CODE`,
+            </if>
+            <if test="mobile != null and mobile != ''">
+                `MOBILE`,
+            </if>
+            <if test="accountNo != null and accountNo != ''">
+                `ACCOUNT_NO`,
+            </if>
+            <if test="accountBank != null and accountBank != ''">
+                `ACCOUNT_BANK`,
+            </if>
+            <if test="labourFee != null">
+                `LABOUR_FEE`,
+            </if>
+            <if test="grantFee != null">
+                `GRANT_FEE`,
+            </if>
+            <if test="serviceFee != null">
+                `SERVICE_FEE`,
+            </if>
+            <if test="payStatus != null">
+                `PAY_STATUS`,
+            </if>
+            <if test="payTime != null and payTime != ''">
+                `PAY_TIME`,
+            </if>
+            <if test="remark != null and remark != ''">
+                `REMARK`,
+            </if>
+            <if test="billStatus != null">
+                `BILL_STATUS`,
+            </if>
+            <if test="billFailReason != null and billFailReason != ''">
+                `BILL_FAIL_REASON`,
+            </if>
+            <if test="targetRemark != null and targetRemark != ''">
+                `TARGETR_EMARK`,
+            </if>
+            <if test="timeCreated != null">
+                `TIME_CREATED`,
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="id != null and id != ''">
+                #{id},
+            </if>
+            <if test="monthRewardId != null and monthRewardId != ''">
+                #{monthRewardId},
+            </if>
+            <if test="batchNum != null and batchNum != ''">
+                #{batchNum},
+            </if>
+            <if test="bourEmpNo != null and bourEmpNo != ''">
+                #{bourEmpNo},
+            </if>
+            <if test="targetServiceNo != null and targetServiceNo != ''">
+                #{targetServiceNo},
+            </if>
+            <if test="name != null and name != ''">
+                #{name},
+            </if>
+            <if test="identityCode != null and identityCode != ''">
+                #{identityCode},
+            </if>
+            <if test="mobile != null and mobile != ''">
+                #{mobile},
+            </if>
+            <if test="accountNo != null and accountNo != ''">
+                #{accountNo},
+            </if>
+            <if test="accountBank != null and accountBank != ''">
+                #{accountBank},
+            </if>
+            <if test="labourFee != null">
+                #{labourFee},
+            </if>
+            <if test="grantFee != null">
+                #{grantFee},
+            </if>
+            <if test="serviceFee != null">
+                #{serviceFee},
+            </if>
+            <if test="payStatus != null">
+                #{payStatus},
+            </if>
+            <if test="payTime != null and payTime != ''">
+                #{payTime},
+            </if>
+            <if test="remark != null and remark != ''">
+                #{remark},
+            </if>
+            <if test="billStatus != null">
+                #{billStatus},
+            </if>
+            <if test="billFailReason != null and billFailReason != ''">
+                #{billFailReason},
+            </if>
+            <if test="targetRemark != null and targetRemark != ''">
+                #{targetRemark},
+            </if>
+            <if test="timeCreated != null">
+                #{timeCreated},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateUserPromotionFeeSettleByTargetServiceNo"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserPromotionFeeSettle">
+        UPDATE
+        <include refid="tableName"/>
+        <set>
+            <if test="bourEmpNo != null and bourEmpNo != ''">
+                `BOUR_EMP_NO` = #{bourEmpNo},
+            </if>
+            <if test="name != null and name != ''">
+                `NAME` = #{name},
+            </if>
+            <if test="identityCode != null and identityCode != ''">
+                `IDENTITY_CODE` = #{identityCode},
+            </if>
+            <if test="mobile != null and mobile != ''">
+                `MOBILE` = #{mobile},
+            </if>
+            <if test="accountNo != null and accountNo != ''">
+                `ACCOUNT_NO` = #{accountNo},
+            </if>
+            <if test="accountBank != null and accountBank != ''">
+                `ACCOUNT_BANK` = #{accountBank},
+            </if>
+            <if test="labourFee != null">
+                `LABOUR_FEE` = #{labourFee},
+            </if>
+            <if test="grantFee != null">
+                `GRANT_FEE` = #{grantFee},
+            </if>
+            <if test="serviceFee != null">
+                `SERVICE_FEE` = #{serviceFee},
+            </if>
+            <if test="payStatus != null">
+                `PAY_STATUS` = #{payStatus},
+            </if>
+            <if test="payTime != null and payTime != ''">
+                `PAY_TIME` = #{payTime},
+            </if>
+            <if test="remark != null and remark != ''">
+                `REMARK` = #{remark},
+            </if>
+            <if test="targetRemark != null and targetRemark != ''">
+                `TARGETR_EMARK` = #{targetRemark},
+            </if>
+            <if test="billStatus != null">
+                `BILL_STATUS` = #{billStatus},
+            </if>
+            <if test="billFailReason != null and billFailReason != ''">
+                `BILL_FAIL_REASON` = #{billFailReason},
+            </if>
+            <if test="targetRemark != null and targetRemark != ''">
+                `TARGETR_EMARK` = #{targetRemark},
+            </if>
+        </set>
+        WHERE `TARGET_SERVICE_NO` = #{targetServiceNo}
+    </update>
+
+    <select id="selectUserPromotionFeeSettleByTargetServiceNo"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionFeeSettle">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE TARGET_SERVICE_NO = #{targetServiceNo}
+    </select>
+
+    <update id="updateUserPromotionFeeSettleByDateAndPayStatus"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserPromotionFeeSettle">
+        UPDATE
+        <include refid="tableName"/>
+        <set>
+            <if test="billStatus != null">
+                `BILL_STATUS` = #{billStatus},
+            </if>
+            <if test="billFailReason != null and billFailReason != ''">
+                `BILL_FAIL_REASON` = #{billFailReason},
+            </if>
+        </set>
+        WHERE DATE_FORMAT(`TIME_CREATED`, '%Y-%m') = #{currentYears}
+        AND `BILL_STATUS` = 0
+    </update>
+
+    <select id="getBillDetailByStatus"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionFeeSettleDTO">
+        SELECT upfs.`ID` AS id, upfs.`NAME` AS name, upfs.`MOBILE` AS mobile, upfs.`IDENTITY_CODE` AS identityCode,
+        upfs.`ACCOUNT_NO` AS accountNo, upfs.`ACCOUNT_BANK` AS accountBank, upfs.`LABOUR_FEE` AS labourFee,
+        upfs.`SERVICE_FEE` AS serviceFee, upfs.`GRANT_FEE` AS grantFee, upmr.`SETTLE_ACCOUNT_TIME` AS settleAccountTime,
+        upmr.`ID` AS monthRewardId, upfs.`TIME_CREATED` AS timeCreated, upfs.`PAY_TIME` AS payTime,
+        upfs.`BOUR_EMP_NO` AS bourEmpNo, upfs.`BILL_STATUS` AS billStatus, upfs.`BILL_FAIL_REASON` AS billFailReason
+        FROM
+        <include refid="tableName"/>
+        upfs
+        LEFT JOIN
+        <include refid="userPromotionMonthRewardTableName"/>
+        upmr
+        ON upfs.MONTH_REWARD_ID = upmr.ID
+        WHERE upfs.`BILL_STATUS` IN
+        <foreach collection="billStatus" index="index" item="status" open="(" separator="," close=")">
+            #{status}
+        </foreach>
+        <if test="userPromotionBillQueryCondition.currentYears != null and userPromotionBillQueryCondition.currentYears != ''">
+            AND DATE_FORMAT(upfs.`TIME_CREATED`, '%Y-%m') = #{userPromotionBillQueryCondition.currentYears}
+        </if>
+        ORDER BY upfs.`TIME_CREATED` DESC
+        <if test="pageInfo != null">
+            LIMIT #{pageInfo.offset}, #{pageInfo.size}
+        </if>
+    </select>
+
+    <select id="getBillDetailByStatusCount" resultType="int">
+        SELECT COUNT(*) FROM
+        <include refid="tableName"/>
+        upfs
+        WHERE upfs.`BILL_STATUS` IN
+        <foreach collection="billStatus" index="index" item="status" open="(" separator="," close=")">
+            #{status}
+        </foreach>
+        <if test="userPromotionBillQueryCondition.currentYears != null and userPromotionBillQueryCondition.currentYears != ''">
+            AND DATE_FORMAT(upfs.`TIME_CREATED`, '%Y-%m') = #{userPromotionBillQueryCondition.currentYears}
+        </if>
+    </select>
+
+</mapper>

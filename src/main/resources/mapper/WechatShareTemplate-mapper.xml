@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatShareTemplateMapper">
+    <sql id="tableName">CMS_SHARE_TEMPLATE</sql>
+    <sql id="cmsShareTemplateTableName">CMS_SHARE_TEMPLATE</sql>
+    <sql id="cmsArticleTableName">`CMS_ARTICLE`</sql>
+
+    <sql id="wechatShareTemplateAllColumn">
+        `wst.ID`,
+        `wst.TEMPLATE_NO`,
+        `wst.TEMPLATE_TYPE`,
+        `wst.POSTER_HIGH`,
+        `wst.POSTER_WIDTH`,
+        `wst.FOREGROUND1`,
+        `wst.FOREGROUND1_X`,
+        `wst.FOREGROUND1_Y`,
+        `wst.FOREGROUND1_VALID`,
+        `wst.FOREGROUND2`,
+        `wst.FOREGROUND2_X`,
+        `wst.FOREGROUND2_Y`,
+        `wst.FOREGROUND2_VALID`,
+        `wst.APPLET_CODE`,
+        `wst.APPLET_CODE_WIDTH`,
+        `wst.APPLET_CODE_X`,
+        `wst.APPLET_CODE_Y`,
+        `wst.ARTICLE_IMAGE`,
+        `wst.ARTICLE_IMAGE_X`,
+        `wst.ARTICLE_IMAGE_Y`,
+        `wst.ARTICLE_IMAGE_VALID`,
+        `wst.ARTICLE_TITLE`,
+        `wst.ARTICLE_TITLE_X`,
+        `wst.ARTICLE_TITLE_Y`,
+        `wst.ARTICLE_TITLE_VALID`,
+        `wst.AVATAR_URL`,
+        `wst.AVATAR_URL_X`,
+        `wst.AVATAR_URL_Y`,
+        `wst.AVATAR_URL_VALID`,
+        `wst.NICK_NAME`,
+        `wst.NICK_NAME_LENGTH`,
+        `wst.NICK_NAME_X`,
+        `wst.NICK_NAME_Y`,
+        `wst.NICK_NAME_VALID`,
+        `wst.CREATOR`,
+        `wst.TIME_CREATED`,
+        `wst.UPDATOR`,
+        `wst.TIME_UPDATED`
+    </sql>
+
+    <insert id="insertShareTemplate" parameterType="com.sogal.wx.core.dao.domain.share.ShareTemplateDTO">
+        INSERT  INTO <include refid="cmsShareTemplateTableName"/> (
+            `ID`,
+            `CATEGORY`,
+            `TEMPLATE_NO`,
+            `TEMPLATE_TYPE`,
+            `BACKGROUND_IMAGE`,
+            `POSTER_NUM`,
+            `POSTER_HIGH`,
+            `POSTER_WIDTH`,
+            `FOREGROUND1`,
+            `FOREGROUND1_WIDTH`,
+            `FOREGROUND1_HIGH`,
+            `FOREGROUND1_X`,
+            `FOREGROUND1_Y`,
+            `FOREGROUND1_VALID`,
+            `FOREGROUND2`,
+            `FOREGROUND2_WIDTH`,
+            `FOREGROUND2_HIGH`,
+            `FOREGROUND2_X`,
+            `FOREGROUND2_Y`,
+            `FOREGROUND2_VALID`,
+            `APPLET_CODE`,
+            `APPLET_CODE_TYPE`,
+            `APP_ID`,
+            `APPLET_CODE_WIDTH`,
+            `APPLET_CODE_X`,
+            `APPLET_CODE_Y`,
+            `ARTICLE_IMAGE`,
+            `ARTICLE_IMAGE_HIGH`,
+            `ARTICLE_IMAGE_WIDTH`,
+            `ARTICLE_IMAGE_X`,
+            `ARTICLE_IMAGE_Y`,
+            `ARTICLE_IMAGE_VALID`,
+            `ARTICLE_TITLE`,
+            `ARTICLE_TITLE_SIZE`,
+            `ARTICLE_TITLE_HIGH`,
+            `ARTICLE_TITLE_WIDTH`,
+            `ARTICLE_TITLE_X`,
+            `ARTICLE_TITLE_Y`,
+            `ARTICLE_TITLE_VALID`,
+            `AVATAR_URL`,
+            `AVATAR_URL_WIDTH`,
+            `AVATAR_URL_X`,
+            `AVATAR_URL_Y`,
+            `AVATAR_URL_VALID`,
+            `NICK_NAME`,
+            `NICK_NAME_LENGTH`,
+            `NICK_NAME_SIZE`,
+            `NICK_NAME_HIGH` ,
+            `NICK_NAME_WIDTH`,
+            `NICK_NAME_X`,
+            `NICK_NAME_Y`,
+            `NICK_NAME_VALID`,
+            `CREATOR`,
+            `UPDATOR`
+        ) VALUES (
+          #{id},
+          #{category},
+          #{templateNo},
+          #{templateType},
+          #{backgroundImage},
+          #{posterNum},
+          #{posterHigh},
+          #{posterWidth},
+          #{foreground1},
+          #{foreground1Width},
+          #{foreground1High},
+          #{foreground1X},
+          #{foreground1Y},
+          #{foreground1Valid},
+          #{foreground2},
+          #{foreground2Width},
+          #{foreground2High},
+          #{foreground2X},
+          #{foreground2Y},
+          #{foreground2Valid},
+          #{appletCode},
+          #{appletCodeType},
+          #{appId},
+          #{appletCodeWidth},
+          #{appletCodeX},
+          #{appletCodeY},
+          #{articleImage},
+          #{articleImageHigh},
+          #{articleImageWidth},
+          #{articleImageX},
+          #{articleImageY},
+          #{articleImageValid},
+          #{articleTitle},
+          #{articleTitleSize},
+          #{articleTitleHigh},
+          #{articleTitleWidth},
+          #{articleTitleX},
+          #{articleTitleY},
+          #{articleTitleValid},
+          #{avatarUrl},
+          #{avatarUrlWidth},
+          #{avatarUrlX},
+          #{avatarUrlY},
+          #{avatarUrlValid},
+          #{nickName},
+          #{nickNameLength},
+          #{nickNameSize},
+          #{nickNameHigh},
+          #{nickNameWidth},
+          #{nickNameX},
+          #{nickNameY},
+          #{nickNameValid},
+          #{creator},
+          #{updater}
+        )
+    </insert>
+
+    <sql id="findShareTemplatePagedByCondition">
+        <where>
+            <if test="queryCondition.templateType != null">
+                wts.TEMPLATE_TYPE = #{queryCondition.templateType}
+            </if>
+        </where>
+    </sql>
+
+    <select id="findShareTemplatePagedByCondition" resultType="com.sogal.wx.core.dao.domain.share.ShareTemplateDTO">
+        SELECT wts.*,(SELECT COUNT(*) FROM <include refid="cmsArticleTableName"/> wd WHERE wts.ID = wd.TEMPLATE_ID) as quoteNum
+        FROM <include refid="tableName"/> wts
+        <include refid="findShareTemplatePagedByCondition"/>
+        <choose>
+            <when test="queryCondition.orderMethod != null and queryCondition.orderMethod == 'letter'">
+                ORDER BY wts.TEMPLATE_NO ASC
+            </when>
+            <otherwise>
+                ORDER BY quoteNum DESC,wts.TIME_CREATED DESC
+            </otherwise>
+        </choose>
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+    <select id="countShareTemplatePagedByCondition" resultType="int">
+        SELECT COUNT(*)
+        FROM <include refid="tableName"/> wts
+        <include refid="findShareTemplatePagedByCondition"/>
+    </select>
+    <select id="findShareTemplateDetailById" resultType="com.sogal.wx.core.dao.domain.share.ShareTemplate">
+        SELECT *
+        FROM <include refid="tableName"/> wts
+        WHERE wts.ID = #{id}
+    </select>
+    <select id="findShareTemplateIdByNo" resultType="java.lang.String">
+        SELECT wts.ID
+        FROM <include refid="tableName"/> wts
+        WHERE wts.TEMPLATE_NO = #{templateNo}
+        LIMIT 1
+    </select>
+    <update id="updateShareTemplateById" parameterType="com.sogal.wx.core.dao.domain.share.ShareTemplate">
+        UPDATE <include refid="tableName"/> wts
+        <set>
+            <if test="templateNo != null">
+                `TEMPLATE_NO` = #{templateNo},
+            </if>
+            <if test="backgroundImage != null">
+                `BACKGROUND_IMAGE` = #{backgroundImage},
+            </if>
+            <if test="posterNum != null">
+                POSTER_NUM = #{posterNum},
+            </if>
+            <if test="posterHigh != null">
+                POSTER_HIGH = #{posterHigh},
+            </if>
+            <if test="posterWidth != null">
+                `POSTER_WIDTH` = #{posterWidth},
+            </if>
+            <if test="foreground1 != null">
+                `FOREGROUND1` = #{foreground1},
+            </if>
+            <if test="foreground1X != null">
+                `FOREGROUND1_X` = #{foreground1X},
+            </if>
+            <if test="foreground1Width != null">
+                `FOREGROUND1_WIDTH` = #{foreground1Width},
+            </if>
+            <if test="foreground1High != null">
+                `FOREGROUND1_HIGH` = #{foreground1High},
+            </if>
+            <if test="foreground1Y != null">
+                `FOREGROUND1_Y` = #{foreground1Y},
+            </if>
+            <if test="foreground1Valid != null">
+                `FOREGROUND1_VALID` = #{foreground1Valid},
+            </if>
+
+            <if test="foreground2 != null">
+                `FOREGROUND2` = #{foreground2},
+            </if>
+            <if test="foreground2Width != null">
+                `FOREGROUND2_WIDTH` = #{foreground2Width},
+            </if>
+            <if test="foreground2High != null">
+                `FOREGROUND2_HIGH` = #{foreground2High},
+            </if>
+            <if test="foreground2X != null">
+                `FOREGROUND2_X` = #{foreground2X},
+            </if>
+            <if test="foreground2Y != null">
+                `FOREGROUND2_Y` = #{foreground2Y},
+            </if>
+            <if test="foreground2Valid != null">
+                `FOREGROUND2_VALID` = #{foreground2Valid},
+            </if>
+
+            <if test="appletCode != null">
+                `APPLET_CODE` = #{appletCode},
+            </if>
+            <if test="appletCodeType != null">
+                `APPLET_CODE_TYPE` = #{appletCodeType},
+            </if>
+            `APP_ID` = #{appId},
+            <if test="appletCodeWidth != null">
+                `APPLET_CODE_WIDTH` = #{appletCodeWidth},
+            </if>
+            <if test="appletCodeX != null">
+                `APPLET_CODE_X` = #{appletCodeX},
+            </if>
+            <if test="appletCodeY != null">
+                `APPLET_CODE_Y` = #{appletCodeY},
+            </if>
+
+            <if test="articleImage != null">
+                `ARTICLE_IMAGE` = #{articleImage},
+            </if>
+            <if test="articleImageWidth != null">
+                `ARTICLE_IMAGE_WIDTH` = #{articleImageWidth},
+            </if>
+            <if test="articleImageHigh != null">
+                `ARTICLE_IMAGE_HIGH` = #{articleImageHigh},
+            </if>
+            <if test="articleImageX != null">
+                `ARTICLE_IMAGE_X` = #{articleImageX},
+            </if>
+            <if test="articleImageY != null">
+                `ARTICLE_IMAGE_Y` = #{articleImageY},
+            </if>
+            <if test="articleImageValid != null">
+                `ARTICLE_IMAGE_VALID` = #{articleImageValid},
+            </if>
+
+            <if test="articleTitle != null">
+                `ARTICLE_TITLE` = #{articleTitle},
+            </if>
+            <if test="articleTitleSize != null">
+                `ARTICLE_TITLE_SIZE` = #{articleTitleSize},
+            </if>
+            <if test="articleTitleWidth != null">
+                `ARTICLE_TITLE_WIDTH` = #{articleTitleWidth},
+            </if>
+            <if test="articleTitleHigh != null">
+                `ARTICLE_TITLE_HIGH` = #{articleTitleHigh},
+            </if>
+            <if test="articleTitleX != null">
+                `ARTICLE_TITLE_X` = #{articleTitleX},
+            </if>
+            <if test="articleTitleY != null">
+                `ARTICLE_TITLE_Y` = #{articleTitleY},
+            </if>
+            <if test="articleTitleValid != null">
+                `ARTICLE_TITLE_VALID` = #{articleTitleValid},
+            </if>
+
+            <if test="avatarUrl != null">
+                `AVATAR_URL` = #{avatarUrl},
+            </if>
+            <if test="avatarUrlWidth != null">
+                `AVATAR_URL_WIDTH` = #{avatarUrlWidth},
+            </if>
+            <if test="avatarUrlX != null">
+                `AVATAR_URL_X` = #{avatarUrlX},
+            </if>
+            <if test="avatarUrlY != null">
+                `AVATAR_URL_Y` = #{avatarUrlY},
+            </if>
+            <if test="avatarUrlValid != null">
+                `AVATAR_URL_VALID` = #{avatarUrlValid},
+            </if>
+
+            <if test="nickName != null">
+                `NICK_NAME` = #{nickName},
+            </if>
+            <if test="nickNameLength != null">
+                `NICK_NAME_LENGTH` = #{nickNameLength},
+            </if>
+            <if test="nickNameSize != null">
+                `NICK_NAME_SIZE` = #{nickNameSize},
+            </if>
+            <if test="nickNameWidth != null">
+                `NICK_NAME_WIDTH` = #{nickNameWidth},
+            </if>
+            <if test="nickNameHigh != null">
+                `NICK_NAME_HIGH` = #{nickNameHigh},
+            </if>
+            <if test="nickNameX != null">
+                `NICK_NAME_X` = #{nickNameX},
+            </if>
+            <if test="nickNameY != null">
+                `NICK_NAME_Y` = #{nickNameY},
+            </if>
+            <if test="nickNameValid != null">
+                `NICK_NAME_VALID` = #{nickNameValid},
+            </if>
+            `UPDATOR` = #{updater}
+        </set>
+        WHERE wts.ID = #{id}
+    </update>
+    <select id="countDesignNumQuoteTemplate" resultType="int">
+        SELECT COUNT(*) FROM <include refid="cmsArticleTableName"/> wd WHERE wd.TEMPLATE_ID = #{templateId}
+    </select>
+    <delete id="deleteShareTemplateById" >
+        DELETE FROM <include refid="tableName"/>   WHERE ID = #{id}
+    </delete>
+    <select id="countByTemplateName" parameterType="java.lang.String" resultType="int">
+        SELECT COUNT(*) FROM <include refid="tableName"/> wts  WHERE wts.TEMPLATE_NO = #{templateNo}
+        <if test="id != null">
+           AND wts.ID <![CDATA[ <> ]]>  #{id}
+        </if>
+    </select>
+    <update id="updateShareTemplatePreviewImageById" parameterType="java.lang.String">
+        UPDATE <include refid="tableName"/>  SET  ARTICLE_IMAGE = #{path} WHERE ID = #{id}
+    </update>
+</mapper>

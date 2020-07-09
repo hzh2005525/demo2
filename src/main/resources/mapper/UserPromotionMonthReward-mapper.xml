@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.UserPromotionMonthRewardMapper">
+
+    <sql id="tableName">`USER_PROMOTION_MONTH_REWARD`</sql>
+
+    <sql id="userPromotionDayRewardTableName">`USER_PROMOTION_DAY_REWARD`</sql>
+
+    <sql id="userAuthPromotionTableName">`USER_AUTH_PROMOTION`</sql>
+
+    <sql id="userPromotionIdentifyCardTableName">`USER_PROMOTION_IDENTIFY_CARD`</sql>
+
+    <sql id="userPromotionFeeSettleTableName">`USER_PROMOTION_FEE_SETTLE`</sql>
+
+    <sql id="userPromotionContractTableName">`USER_PROMOTION_CONTRACT`</sql>
+
+    <select id="selectUserPromotionMonthReward"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionMonthRewardDTO">
+        SELECT
+        REWARD_TYPE AS rewardType, SUM(REWARD_AMOUNT) AS rewardAmount,
+        SUM(DEAL_AMOUNT) AS dealAmount, COUNT(*) AS orderNum
+        FROM
+        <include refid="userPromotionDayRewardTableName"/>
+        WHERE UNION_ID = #{unionId}
+        AND CURRENT_YEAR = #{currentYear}
+        AND CURRENT_MONTH = #{currentMonth}
+        GROUP BY REWARD_TYPE
+    </select>
+
+    <insert id="addUserPromotionMonthRewardBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserPromotionMonthReward">
+        INSERT INTO
+        <include refid="tableName"/>
+        (`ID`, `UNION_ID`, `STATUS`, `DEAL_AMOUNT`, `DEAL_REWARD`, `MEASURE_REWARD`, `GROUP_REWARD`, `FACE_CASH`,
+        `ORDER_NUM`, `CURRENT_YEAR`, `CURRENT_MONTH`)
+        VALUES (#{id}, #{unionId}, #{status}, #{dealAmount}, #{dealReward}, #{measureReward}, #{groupReward},
+        #{faceCash}, #{orderNum}, #{currentYear}, #{currentMonth})
+        ON DUPLICATE KEY UPDATE
+        `STATUS` = VALUES(`STATUS`),
+        `DEAL_AMOUNT` = VALUES(`DEAL_AMOUNT`),
+        `DEAL_REWARD` = VALUES(`DEAL_REWARD`),
+        `MEASURE_REWARD` = VALUES(`MEASURE_REWARD`),
+        `GROUP_REWARD` = VALUES(`GROUP_REWARD`),
+        `FACE_CASH` = VALUES(`FACE_CASH`),
+        `ORDER_NUM` = VALUES(`ORDER_NUM`)
+    </insert>
+
+    <select id="selectUserPromotionMonthRewardByUnionIdAndCy"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionMonthRewardDTO">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE UNION_ID = #{unionId}
+        AND CURRENT_YEAR = #{currentYear}
+        AND CURRENT_MONTH = #{currentMonth}
+    </select>
+
+    <select id="selectUserPromotionMonthRewardInfoByUnionIdAndCy"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionMonthRewardDTO">
+        SELECT upmr.*, uap.NAME AS name, uap.MOBILE AS mobile, uap.LEVEL AS level
+        FROM
+        <include refid="tableName"/>
+        upmr
+        LEFT JOIN
+        <include refid="userAuthPromotionTableName"/>
+        uap
+        ON upmr.UNION_ID = uap.UNION_ID
+        WHERE CURRENT_YEAR = #{currentYear}
+        AND CURRENT_MONTH = #{currentMonth}
+        AND upmr.UNION_ID IN
+        <foreach collection="unionIds" index="index" item="unionId" open="(" separator="," close=")">
+            #{unionId}
+        </foreach>
+    </select>
+
+    <select id="selectUserPromotionTotalRewardInfoByUnionId"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionMonthRewardDTO">
+        SELECT
+        IFNULL(SUM(ORDER_NUM), 0) AS orderNum,
+        IFNULL(SUM(DEAL_AMOUNT), 0) AS dealAmount,
+        IFNULL(SUM(FACE_CASH), 0) AS faceCash
+        FROM
+        <include refid="tableName"/>
+        WHERE UNION_ID = #{unionId}
+    </select>
+
+    <select id="selectUserPromotionMonthRewardListByUnionIdAndMonth"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionMonthRewardSocialDTO">
+        SELECT upmr.*, upic.`ACCOUNT_NO` AS accountNo, upfs.`TIME_CREATED` AS cashTime, upfs.`PAY_TIME` AS payTime
+        FROM
+        <include refid="tableName"/>
+        upmr
+        LEFT JOIN
+        <include refid="userPromotionIdentifyCardTableName"/>
+        upic
+        ON upmr.UNION_ID = upic.UNION_ID
+        LEFT JOIN
+        <include refid="userPromotionFeeSettleTableName"/>
+        upfs
+        ON upmr.TARGET_SERVICE_NO = upfs.TARGET_SERVICE_NO
+        <include refid="queryUserPromotionRewardQueryCondition"/>
+        ORDER BY `TIME_CREATED` DESC
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <sql id="queryUserPromotionRewardQueryCondition">
+        <where>
+            upmr.`UNION_ID` = #{userPromotionRewardQueryCondition.unionId}
+            <if test="userPromotionRewardQueryCondition.year != null">
+                AND upmr.`CURRENT_YEAR` = #{userPromotionRewardQueryCondition.year}
+            </if>
+            <if test="userPromotionRewardQueryCondition.month != null">
+                AND upmr.`CURRENT_MONTH` = #{userPromotionRewardQueryCondition.month}
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectUserPromotionMonthRewardListByUnionIdAndMonthCount" resultType="int">
+        SELECT COUNT(*) FROM
+        <include refid="tableName"/>
+        upmr
+        <include refid="queryUserPromotionRewardQueryCondition"/>
+    </select>
+
+    <select id="selectUserPromotionMonthAccount"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionMonthRewardDTO">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE UNION_ID = #{unionId}
+        <choose>
+            <when test="currentMonth != null">
+                AND (CURRENT_YEAR &lt; #{currentYear}
+                OR (CURRENT_YEAR = #{currentYear}
+                AND CURRENT_MONTH &lt; #{currentMonth}))
+            </when>
+            <otherwise>
+                AND CURRENT_YEAR &lt; #{currentYear}
+            </otherwise>
+        </choose>
+        ORDER BY `CURRENT_YEAR` DESC, `CURRENT_MONTH` DESC
+    </select>
+
+    <select id="selectUserPromotionMonthRewardById"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionMonthReward">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE ID = #{id}
+    </select>
+
+    <select id="selectPromotionApplyFeeByYearAndMonth"
+            resultType="com.sogal.wx.core.dao.domain.promotion.PromotionApplyFeeRequestDTO">
+        SELECT upmr.`ID` AS id, upic.`NAME` AS name, upic.`IDENTITY_CODE` AS identityCode, uap.`MOBILE` AS mobile,
+        upic.`ACCOUNT_NO` AS accountNo, upic.`ACCOUNT_BANK` AS accountBank, upmr.`FACE_CASH` AS labourFee
+        FROM
+        <include refid="tableName"/>
+        upmr
+        LEFT JOIN
+        <include refid="userAuthPromotionTableName"/>
+        uap
+        ON upmr.UNION_ID = uap.UNION_ID
+        LEFT JOIN
+        <include refid="userPromotionIdentifyCardTableName"/>
+        upic
+        ON uap.UNION_ID = upic.UNION_ID
+        LEFT JOIN
+        <include refid="userPromotionContractTableName"/>
+        upc
+        ON upic.AES_ID = upc.AES_ID
+        WHERE upmr.`CURRENT_YEAR` = #{year}
+        AND upmr.`CURRENT_MONTH` = #{month}
+        AND uap.`AUTH_STATUS` = 1
+        AND upic.`STATUS` = 2
+        AND upic.`BANK_STATUS` = 1
+        AND upc.`STATUS` = 1
+    </select>
+
+    <select id="selectPromotionApplyFeeByMonthIds"
+            resultType="com.sogal.wx.core.dao.domain.promotion.PromotionApplyFeeRequestDTO">
+        SELECT upmr.`ID` AS id, upic.`NAME` AS name, upic.`IDENTITY_CODE` AS identityCode, uap.`MOBILE` AS mobile,
+        upic.`ACCOUNT_NO` AS accountNo, upic.`ACCOUNT_BANK` AS accountBank, upmr.`FACE_CASH` AS labourFee
+        FROM
+        <include refid="tableName"/>
+        upmr
+        LEFT JOIN
+        <include refid="userAuthPromotionTableName"/>
+        uap
+        ON upmr.UNION_ID = uap.UNION_ID
+        LEFT JOIN
+        <include refid="userPromotionIdentifyCardTableName"/>
+        upic
+        ON uap.UNION_ID = upic.UNION_ID
+        WHERE upmr.`ID` IN
+        <foreach collection="monthIds" index="index" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <update id="updateUserPromotionMonthRewardById"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserPromotionMonthReward">
+        UPDATE
+        <include refid="tableName"/>
+        <set>
+            <if test="unionId != null and unionId != ''">
+                `UNION_ID` = #{unionId},
+            </if>
+            <if test="status != null">
+                `STATUS` = #{status},
+            </if>
+            <if test="dealAmount != null">
+                `DEAL_AMOUNT` = #{dealAmount},
+            </if>
+            <if test="dealReward != null">
+                `DEAL_REWARD` = #{dealReward},
+            </if>
+            <if test="measureReward != null">
+                `MEASURE_REWARD` = #{measureReward},
+            </if>
+            <if test="groupReward != null">
+                `GROUP_REWARD` = #{groupReward},
+            </if>
+            <if test="faceCash != null">
+                `FACE_CASH` = #{faceCash},
+            </if>
+            <if test="taxAmount != null">
+                `TAX_AMOUNT` = #{taxAmount},
+            </if>
+            <if test="realCash != null">
+                `REAL_CASH` = #{realCash},
+            </if>
+            <if test="orderNum != null">
+                `ORDER_NUM` = #{orderNum},
+            </if>
+            <if test="currentYear != null">
+                `CURRENT_YEAR` = #{currentYear},
+            </if>
+            <if test="currentMonth != null">
+                `CURRENT_MONTH` = #{currentMonth},
+            </if>
+            <if test="settleAccountTime != null and settleAccountTime != ''">
+                `SETTLE_ACCOUNT_TIME` = #{settleAccountTime},
+            </if>
+            <if test="targetServiceNo != null and targetServiceNo != ''">
+                `TARGET_SERVICE_NO` = #{targetServiceNo},
+            </if>
+        </set>
+        WHERE `ID` = #{id}
+    </update>
+
+    <select id="getCashDetailByStatus"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionMonthRewardSocialDTO">
+        SELECT upmr.`ID` AS id, upmr.`STATUS` AS status, uap.`NAME` AS name, uap.`MOBILE` AS mobile,
+        upic.`STATUS` AS cardStatus, uap.`LEVEL` AS level, upic.`IDENTITY_CODE` AS identityCode,
+        upic.`BANK_STATUS` AS bankStatus, upic.`ACCOUNT_NO` AS accountNo, upic.`ACCOUNT_BANK` AS accountBank,
+        upmr.`DEAL_AMOUNT` AS dealAmount, upmr.`DEAL_REWARD` AS dealReward, upmr.`MEASURE_REWARD` AS measureReward,
+        upmr.`GROUP_REWARD` AS groupReward, upmr.`FACE_CASH` AS faceCash, upmr.`TAX_AMOUNT` AS taxAmount,
+        upmr.`REAL_CASH` AS realCash, upmr.`CURRENT_YEAR` AS currentYear, upmr.`CURRENT_MONTH` AS currentMonth,
+        upmr.`SETTLE_ACCOUNT_TIME` AS settleAccountTime, upmr.`FUNDS_STATUS` AS fundsStatus,
+        upfs.`TIME_CREATED` AS cashTime, upfs.`PAY_TIME` AS payTime, upfs.`BOUR_EMP_NO` AS bourEmpNo,
+        upfs.`REMARK` AS remark
+        FROM
+        <include refid="tableName"/>
+        upmr
+        LEFT JOIN
+        <include refid="userAuthPromotionTableName"/>
+        uap
+        ON upmr.UNION_ID = uap.UNION_ID
+        LEFT JOIN
+        <include refid="userPromotionIdentifyCardTableName"/>
+        upic
+        ON uap.UNION_ID = upic.UNION_ID
+        LEFT JOIN
+        <include refid="userPromotionFeeSettleTableName"/>
+        upfs
+        ON upmr.TARGET_SERVICE_NO = upfs.TARGET_SERVICE_NO
+        WHERE upmr.`STATUS` IN
+        <foreach collection="monthStatus" index="index" item="monthStatus" open="(" separator="," close=")">
+            #{monthStatus}
+        </foreach>
+        <if test="userPromotionSocialQueryCondition.currentYears != null and userPromotionSocialQueryCondition.currentYears != ''">
+            AND DATE_FORMAT(upfs.`TIME_CREATED`, '%Y-%m') = #{userPromotionSocialQueryCondition.currentYears}
+        </if>
+        ORDER BY upmr.`SETTLE_ACCOUNT_TIME` DESC, upfs.`TIME_CREATED` DESC
+        <if test="pageInfo != null">
+            LIMIT #{pageInfo.offset}, #{pageInfo.size}
+        </if>
+    </select>
+
+    <select id="getCashDetailByStatusCount" resultType="int">
+        SELECT COUNT(*) FROM
+        <include refid="tableName"/>
+        upmr
+        LEFT JOIN
+        <include refid="userPromotionFeeSettleTableName"/>
+        upfs
+        ON upmr.TARGET_SERVICE_NO = upfs.TARGET_SERVICE_NO
+        WHERE upmr.`STATUS` IN
+        <foreach collection="monthStatus" index="index" item="monthStatus" open="(" separator="," close=")">
+            #{monthStatus}
+        </foreach>
+        <if test="userPromotionSocialQueryCondition.currentYears != null and userPromotionSocialQueryCondition.currentYears != ''">
+            AND DATE_FORMAT(upfs.`TIME_CREATED`, '%Y-%m') = #{userPromotionSocialQueryCondition.currentYears}
+        </if>
+    </select>
+
+    <select id="selectUserPromotionMonthRewardStatusByIds"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserPromotionMonthReward">
+        SELECT * FROM
+        <include refid="tableName"/>
+        upmr
+        WHERE upmr.`ID` IN
+        <foreach collection="monthIds" index="index" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+
+    <update id="updateUserPromotionMonthRewardBySettle">
+        UPDATE
+        <include refid="tableName"/>
+        SET
+        `STATUS` = 1,
+        `SETTLE_ACCOUNT_TIME` = #{settleAccountTime}
+        WHERE `STATUS` = 0
+        AND `CURRENT_YEAR` = #{currentYear}
+        AND `CURRENT_MONTH` = #{currentMonth}
+    </update>
+
+    <update id="updateUserPromotionMonthRewardsByIds">
+        UPDATE
+        <include refid="tableName"/>
+        SET
+        `FUNDS_NO` = #{fundsNo}
+        WHERE `ID` IN
+        <foreach collection="monthIds" index="index" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <update id="updateUserPromotionMonthRewardsFundsStatusByFundsNo">
+        UPDATE
+        <include refid="tableName"/>
+        SET
+        `FUNDS_STATUS` = #{fundsStatus}
+        WHERE `FUNDS_NO` = #{fundsNo}
+    </update>
+
+</mapper>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.WechatSearchRecordMapper">
+
+    <sql id="tableName">`MP_USER_SEARCH_RECORD`</sql>
+
+    <sql id="WechatSearchRecordAllColumn">
+          `ID`,
+          `USER_NO`,
+          `KEY_WORD`,
+          `TIME_UPDATED`
+    </sql>
+
+    <insert id="insert" parameterType="com.sogal.wx.core.dao.domain.search.WechatSearchRecord">
+        INSERT INTO
+        <include refid="tableName"/>
+        (
+        `ID`,
+        `USER_NO`,
+        `KEY_WORD`
+        )VALUES(
+        #{id},
+        #{userNo},
+        #{keyWord}
+        )
+    </insert>
+
+    <update id="updateByUniqueKey" parameterType="com.sogal.wx.core.dao.domain.search.WechatSearchRecord">
+        UPDATE
+        <include refid="tableName"/>
+        SET
+        `TIME_UPDATED` = #{timeUpdated}
+        WHERE `USER_NO` = #{userNo} AND `KEY_WORD` = #{keyWord}
+    </update>
+
+    <select id="listLimitTen" resultType="com.sogal.wx.core.dao.domain.search.WechatSearchRecord">
+        SELECT
+        <include refid="WechatSearchRecordAllColumn"/>
+        FROM
+        <include refid="tableName"/>
+        WHERE `USER_NO` = #{wechatSearchRecordQueryCondition.userNo}
+        ORDER BY `TIME_UPDATED` DESC
+        LIMIT 10
+    </select>
+
+    <select id="selectByUniqueKey" resultType="com.sogal.wx.core.dao.domain.search.WechatSearchRecord">
+        SELECT
+        <include refid="WechatSearchRecordAllColumn"/>
+        FROM
+        <include refid="tableName"/>
+        WHERE `USER_NO` = #{userNo} AND `KEY_WORD` = #{keyWord}
+    </select>
+
+</mapper>

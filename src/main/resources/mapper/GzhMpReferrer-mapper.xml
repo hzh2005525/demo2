@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.GzhMpReferrerMapper">
+    <sql id="gzhMpReferrerTableName">`GZH_MP_REFERRER`</sql>
+    <select id="findLastSharerUserIdAtGzhMpReferrerByUserId" resultType="java.lang.String">
+        SELECT mu2.ID
+        FROM MP_USER mu1
+        INNER JOIN MP_USER gu ON mu1.UNION_ID = gu.UNION_ID
+        INNER JOIN GZH_MP_REFERRER gmr ON gu.OPEN_ID = gmr.NEW_USER
+        INNER JOIN MP_USER mu2 ON gmr.REALM_SHARER_NO = mu2.USER_NO
+        WHERE  mu1.ID = #{userId} AND mu1.UNION_ID IS NOT NULL
+        AND gu.GZH_ID = #{gzhAppId} AND gmr.GZH_ID = #{gzhAppId}
+        ORDER BY gmr.CREATE_TIME DESC
+        LIMIT 1
+    </select>
+</mapper>

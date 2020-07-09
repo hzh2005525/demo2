@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.UserAuthPromotionMapper">
+
+    <sql id="tableName">`USER_AUTH_PROMOTION`</sql>
+
+    <sql id="userAuthBaseTableName">`USER_AUTH_BASE`</sql>
+
+    <sql id="mpUserTableName">`MP_USER`</sql>
+
+    <sql id="mpUserRegisterTableName">`MP_USER_REGISTER`</sql>
+
+    <sql id="userPromotionIdentifyCardTableName">`USER_PROMOTION_IDENTIFY_CARD`</sql>
+
+    <insert id="addUserAuthPromotionBySelective"
+            parameterType="com.sogal.wx.core.dao.domain.promotion.UserAuthPromotion">
+        INSERT INTO
+        <include refid="tableName"/>
+        (`ID`, `UNION_ID`, `RECOMMEND_NO`, `NAME`, `MOBILE`, `POSITION`, `POSITION_URL`, `SOURCE`, `STATUS`,
+        `TIME_CREATED`)
+        VALUES (#{id}, #{unionId}, #{recommendNo}, #{name}, #{mobile}, #{position}, #{positionUrl}, #{source},
+        #{status}, #{timeCreated})
+        ON DUPLICATE KEY UPDATE
+        `RECOMMEND_NO` = VALUES(`RECOMMEND_NO`),
+        `NAME` = VALUES(`NAME`),
+        `MOBILE` = VALUES(`MOBILE`),
+        `POSITION` = VALUES(`POSITION`),
+        `POSITION_URL` = VALUES(`POSITION_URL`),
+        `SOURCE` = VALUES(`SOURCE`),
+        `STATUS` = VALUES(`STATUS`),
+        `TIME_CREATED` = VALUES(`TIME_CREATED`)
+    </insert>
+
+    <select id="selectUserAuthPromotionByUnionId" resultType="com.sogal.wx.core.dao.domain.promotion.UserAuthPromotion">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE `UNION_ID` = #{unionId}
+    </select>
+
+    <select id="selectUserAuthPromotionList" resultType="com.sogal.wx.core.dao.domain.promotion.UserAuthPromotionInfo">
+        SELECT uap.*, mp.ID AS recommendId, mp.AVATAR_URL AS recommendAvatarUrl, mp.GENDER AS recommendGender,
+        CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+        (CASE WHEN urs.`NAME` IS NULL THEN mp.`NICKNAME`
+        ELSE urs.`NAME` END)
+        WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+        (CASE WHEN uro.`NAME` IS NULL THEN mp.`NICKNAME`
+        ELSE uro.`NAME` END)
+        ELSE (CASE WHEN urc.`NAME` IS NULL THEN mp.`NICKNAME`
+        ELSE urc.`NAME` END)
+        END AS recommendName
+        FROM
+        <include refid="tableName"/>
+        uap
+        LEFT JOIN
+        <include refid="mpUserTableName"/>
+        mp
+        ON uap.RECOMMEND_NO = mp.USER_NO
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui
+        ON mp.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        <include refid="queryUserAuthPromotionQueryCondition"/>
+        ORDER BY `TIME_CREATED` DESC
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <select id="selectUserAuthPromotionListCount" resultType="int">
+        SELECT COUNT(*) FROM
+        <include refid="tableName"/>
+        uap
+        LEFT JOIN
+        <include refid="mpUserTableName"/>
+        mp
+        ON uap.RECOMMEND_NO = mp.USER_NO
+        LEFT JOIN
+        <include refid="userAuthBaseTableName"/>
+        ui
+        ON mp.UNION_ID = ui.UNION_ID
+        LEFT JOIN USER_REPO_STAFF urs ON urs.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_COOPERATOR urc ON urc.ID = ui.REPO_ID
+        LEFT JOIN USER_REPO_OTHER uro ON uro.ID = ui.REPO_ID
+        <include refid="queryUserAuthPromotionQueryCondition"/>
+    </select>
+
+    <sql id="queryUserAuthPromotionQueryCondition">
+        <where>
+            uap.`STATUS` = #{userAuthPromotionQueryCondition.category}
+            <if test="userAuthPromotionQueryCondition.promotionName != null and userAuthPromotionQueryCondition.promotionName != ''">
+                AND ( uap.`NAME` LIKE concat('%',#{userAuthPromotionQueryCondition.promotionName},'%')
+                OR uap.`MOBILE` LIKE concat('%',#{userAuthPromotionQueryCondition.promotionName},'%'))
+            </if>
+            <if test="userAuthPromotionQueryCondition.recommendName != null and userAuthPromotionQueryCondition.recommendName != ''">
+                AND ((CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN
+                (CASE WHEN urs.`MOBILE` IS NULL THEN mp.`MOBILE` LIKE
+                concat('%',#{userAuthPromotionQueryCondition.recommendName},'%')
+                ELSE urs.`MOBILE` LIKE concat('%',#{userAuthPromotionQueryCondition.recommendName},'%') END)
+                WHEN ui.`EMISSARY_TYPE` ='其他' THEN
+                (CASE WHEN uro.`MOBILE` IS NULL THEN mp.`MOBILE`LIKE
+                concat('%',#{userAuthPromotionQueryCondition.recommendName},'%')
+                ELSE uro.`MOBILE` LIKE concat('%',#{userAuthPromotionQueryCondition.recommendName},'%') END)
+                ELSE (CASE WHEN urc.`MOBILE` IS NULL THEN mp.`MOBILE` LIKE
+                concat('%',#{userAuthPromotionQueryCondition.recommendName},'%')
+                ELSE urc.`MOBILE` LIKE concat('%',#{userAuthPromotionQueryCondition.recommendName},'%') END)
+                END)
+                OR (CASE WHEN ui.`EMISSARY_TYPE` ='员工' THEN urs.`NAME` LIKE
+                concat('%',#{userAuthPromotionQueryCondition.recommendName},'%')
+                WHEN ui.`EMISSARY_TYPE` ='其他' THEN uro.`NAME` LIKE
+                concat('%',#{userAuthPromotionQueryCondition.recommendName},'%')
+                ELSE urc.`NAME` LIKE concat('%',#{userAuthPromotionQueryCondition.recommendName},'%')
+                END))
+            </if>
+            <if test="userAuthPromotionQueryCondition.startDate != null and userAuthPromotionQueryCondition.startDate != ''">
+                AND DATE(uap.TIME_CREATED) >= #{userAuthPromotionQueryCondition.startDate}
+            </if>
+            <if test="userAuthPromotionQueryCondition.endDate != null and userAuthPromotionQueryCondition.endDate != ''">
+                AND DATE(uap.TIME_CREATED) &lt;= #{userAuthPromotionQueryCondition.endDate}
+            </if>
+        </where>
+    </sql>
+
+    <update id="updateStatusById" parameterType="com.sogal.wx.core.dao.domain.promotion.UserAuthPromotion">
+        UPDATE
+        <include refid="tableName"/>
+        SET
+        `COLLECT_GUEST_ID` = #{collectGuestId},
+        <choose>
+            <when test="collectGuestLevel != null">
+                `COLLECT_GUEST_LEVEL` = #{collectGuestLevel},
+            </when>
+            <otherwise>
+                `COLLECT_GUEST_LEVEL` = 0,
+            </otherwise>
+        </choose>
+        <if test="level != null and level != ''">
+            `LEVEL` = #{level},
+        </if>
+        <if test="authStatus != null">
+            `AUTH_STATUS` = #{authStatus},
+        </if>
+        <if test="authTime != null">
+            `AUTH_TIME` = #{authTime},
+        </if>
+        <if test="status != null">
+            `STATUS` = #{status},
+        </if>
+        `UPDATER` = #{updater}
+        WHERE
+        `ID` = #{id}
+    </update>
+
+    <select id="selectUserAuthPromotionGroupList"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserAuthPromotionInfo">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE `RECOMMEND_NO` IN
+        <foreach collection="userNoList" separator="," open="(" close=")" item="userNo">
+            #{userNo}
+        </foreach>
+        AND (`STATUS` = 0 OR `AUTH_STATUS` = 1 OR `STATUS` = 2)
+        ORDER BY `AUTH_STATUS` DESC, `STATUS` ASC, `TIME_CREATED` DESC
+    </select>
+
+    <select id="findtUserAuthPromotionByUnionIdAndAuthStatus"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserAuthPromotionInfoDTO">
+        SELECT uap.*,uab.REPO_ID,uab.EMISSARY_TYPE
+        FROM
+        <include refid="tableName"/>
+        uap
+        INNER JOIN
+        <include refid="userAuthBaseTableName"/>
+        uab ON uap.UNION_ID = uab.UNION_ID
+        WHERE uap.`UNION_ID` = #{unionId}
+        <if test="authStatus != null">
+            AND uap.`AUTH_STATUS` = #{authStatus}
+        </if>
+    </select>
+
+    <select id="findUserAuthPromotionById" resultType="com.sogal.wx.core.dao.domain.promotion.UserAuthPromotion">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE `ID` = #{id}
+    </select>
+
+    <select id="selectUserAuthPromotionDTOListByAuthStatus"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserAuthPromotionDTO">
+        SELECT uap.*, mp.USER_NO AS userNo FROM
+        <include refid="tableName"/>
+        uap
+        LEFT JOIN
+        <include refid="mpUserTableName"/>
+        mp
+        ON uap.UNION_ID = mp.UNION_ID
+        WHERE mp.CATEGORY = 'DESIGN' AND uap.AUTH_STATUS = #{authStatus}
+    </select>
+
+    <select id="selectUserAuthPromotionListByUserNoAndAuthStatus"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserAuthPromotion">
+        SELECT * FROM
+        <include refid="tableName"/>
+        WHERE `AUTH_STATUS` = #{authStatus}
+        <if test="userNo != null and userNo != ''">
+            AND `RECOMMEND_NO` = #{userNo}
+        </if>
+    </select>
+
+    <update id="updateLevelById">
+        UPDATE
+        <include refid="tableName"/>
+        SET
+        `LEVEL` = #{level}
+        WHERE
+        `ID` = #{id}
+    </update>
+
+    <update id="updateAutoEvictById">
+        UPDATE
+        <include refid="tableName"/>
+        SET
+        `AUTO_EVICT` = #{autoEvict},
+        `EVICT_REASON` = #{evictReason}
+        WHERE
+        `ID` = #{id}
+    </update>
+
+    <select id="selectUserAuthPromotionPassengersCount" resultType="int">
+        SELECT COUNT(*) FROM
+        <include refid="tableName"/>
+        uap
+        LEFT JOIN
+        <include refid="mpUserTableName"/>
+        mp
+        ON uap.UNION_ID = mp.UNION_ID
+        INNER JOIN
+        <include refid="mpUserRegisterTableName"/>
+        mur
+        ON mp.USER_NO = mur.SHARER_NO
+        WHERE mp.CATEGORY = 'DESIGN' AND uap.UNION_ID = #{unionId}
+    </select>
+
+    <select id="selectCmsUserAuthPromotionGroupList"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserAuthPromotionInfo">
+        SELECT * FROM
+        <include refid="tableName"/>
+        uap
+        <include refid="queryCmsUserAuthPromotionQueryCondition"/>
+        ORDER BY `TIME_CREATED` DESC
+        LIMIT #{pageInfo.offset}, #{pageInfo.size}
+    </select>
+
+    <sql id="queryCmsUserAuthPromotionQueryCondition">
+        <where>
+            (uap.`STATUS` = 0 OR (uap.`AUTH_STATUS` = 1) OR uap.`STATUS` = 2)
+            AND uap.`RECOMMEND_NO` = #{userAuthPromotionQueryCondition.userNo}
+            <if test="userAuthPromotionQueryCondition.promotionName != null and userAuthPromotionQueryCondition.promotionName != ''">
+                AND ( uap.`NAME` LIKE concat('%',#{userAuthPromotionQueryCondition.promotionName},'%')
+                OR uap.`MOBILE` LIKE concat('%',#{userAuthPromotionQueryCondition.promotionName},'%'))
+            </if>
+            <if test="userAuthPromotionQueryCondition.level != null and userAuthPromotionQueryCondition.level != ''">
+                AND uap.`LEVEL` = #{userAuthPromotionQueryCondition.level}
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectCmsUserAuthPromotionGroupListCount" resultType="int">
+        SELECT COUNT(*) FROM
+        <include refid="tableName"/>
+        uap
+        <include refid="queryCmsUserAuthPromotionQueryCondition"/>
+    </select>
+
+    <select id="selectPositionUrlCount" resultType="int">
+        SELECT COUNT(*) FROM
+        <include refid="tableName"/>
+        WHERE UNION_ID != #{unionId} AND POSITION_URL = #{positionUrl}
+    </select>
+
+    <select id="selectUserAuthPromotionLevelAndAuthStatus"
+            resultType="com.sogal.wx.core.dao.domain.promotion.UserAuthPromotionDTO">
+        SELECT uap.*, upic.`BANK_STATUS` AS bankStatus FROM
+        <include refid="tableName"/>
+        uap
+        LEFT JOIN
+        <include refid="userPromotionIdentifyCardTableName"/>
+        upic
+        ON uap.UNION_ID = upic.UNION_ID
+        WHERE uap.UNION_ID = #{unionId}
+    </select>
+
+</mapper>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sogal.wx.core.dao.mapper.MpServiceProviderMapper">
+    <sql id="mpServiceProviderTableName">`AS_SERVICE_PROVIDER`</sql>
+    <sql id="mpServiceStaffTableName">`AS_SERVICE_STAFF`</sql>
+
+    <insert id="insertMpServiceProvider" parameterType="com.sogal.wx.core.dao.domain.service.MpServiceProvider">
+        INSERT IGNORE INTO <include refid="mpServiceProviderTableName"/> (
+            `ID`,
+            `NAME`,
+            `LEADER_ID`,
+            `CREATOR`,
+            `UPDATER`
+        ) VALUES (
+            #{id},
+            #{name},
+            #{leaderId},
+            #{creator},
+            #{updater}
+        )
+    </insert>
+
+    <select id="findNumServiceProviderName" resultType="int">
+        SELECT COUNT(*) FROM <include refid="mpServiceProviderTableName"/>
+        WHERE `NAME` = #{name}
+        <if test="id != null">
+            AND ID <![CDATA[ <> ]]>  #{id}
+        </if>
+    </select>
+    <update id="updateServiceProvider"
+            parameterType="com.sogal.wx.core.dao.domain.service.MpServiceProvider">
+        UPDATE  <include refid="mpServiceProviderTableName"/>
+        SET `NAME` = #{name},`UPDATER`= #{updater}
+        WHERE ID = #{id}
+    </update>
+    <select id="findServiceProviders" resultType="com.sogal.wx.core.dao.domain.service.MpServiceProvider">
+        SELECT *
+        FROM <include refid="mpServiceProviderTableName"/>
+        ORDER BY TIME_CREATED ASC
+    </select>
+    <update id="updateMpServiceProviderStatus">
+        UPDATE <include refid="mpServiceProviderTableName"/>
+        SET `UPDATER`= #{updater},VALID = #{status}
+        WHERE ID = #{id}
+    </update>
+    <select id="findMpServiceProviderDetail"
+            resultType="com.sogal.wx.core.dao.domain.service.MpServiceProviderDTO">
+        SELECT msp.*,mss.MOBILE as leaderMobile
+        FROM <include refid="mpServiceProviderTableName"/> msp
+        LEFT JOIN <include refid="mpServiceStaffTableName"/> mss ON msp.LEADER_ID = mss.ID
+        WHERE msp.ID = #{id}
+    </select>
+    <select id="findASProviderById"
+            resultType="com.sogal.wx.core.dao.domain.service.MpServiceProvider">
+        SELECT *
+        FROM <include refid="mpServiceProviderTableName"/>
+        WHERE ID = #{id}
+    </select>
+    <update id="updateASProviderLeader"
+            parameterType="com.sogal.wx.core.dao.domain.service.MpServiceProvider">
+        UPDATE <include refid="mpServiceProviderTableName"/>
+        SET `UPDATER`= #{updater},LEADER_ID = #{leaderId}
+        WHERE ID = #{id}
+    </update>
+</mapper>
